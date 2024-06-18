@@ -185,7 +185,6 @@ export class ScomWidgetRepos extends Module {
           class={searchPanelStyle}
           verticalAlignment="center"
           padding={{ top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }}
-          background={{ color: Theme.background.default }}
           gap="0.5rem"
           wrap="wrap"
         >
