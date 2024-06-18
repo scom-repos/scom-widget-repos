@@ -1,0 +1,17 @@
+{
+  "env": "testnet",
+  "main": "@modules/main",
+  "moduleDir": "modules",
+  "modules": {
+    "@modules/main": {
+      "path": "main"
+    }
+  },
+  "dependencies": {
+    "@ijstech/eth-wallet": "*",
+		"@ijstech/eth-contract": "*",
+    "@scom/scom-dev-contract": "*",
+    "@scom/scom-widget-builder": "*",
+    "@scom/scom-widget-repos": "*"
+  }
+}
