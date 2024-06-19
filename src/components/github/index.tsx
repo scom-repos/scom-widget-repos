@@ -122,7 +122,8 @@ export class ScomWidgetReposGithub extends Module {
   }
 
   private async getAllRepos() {
-    const result = await getAllRepos(this.userInfo?.data?.login, this.isProject ? this.prefix : '', !this.isProject);
+    // const result = await getAllRepos(this.userInfo?.data?.login, this.isProject ? this.prefix : '', !this.isProject);
+    const result = await getAllRepos('yc-wong', 'scom', false);
     if (result?.data) {
       this.listRepos = result.data;
     } else {
@@ -139,7 +140,8 @@ export class ScomWidgetReposGithub extends Module {
       this.countPRs = [...listPRsFiltered].reduce((accumulator, currentObject) => accumulator + currentObject.open_issues, 0);
       this.prTab.caption = `Pull Requests <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
     } else {
-      this.elmPackages.listRepos = [...listPRsFiltered];
+      // this.elmPackages.listRepos = [...listPRsFiltered];
+      this.elmPackages.listRepos = this.listReposFiltered;
     }
   }
 

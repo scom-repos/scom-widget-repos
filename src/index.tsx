@@ -180,7 +180,7 @@ export class ScomWidgetRepos extends Module {
 
   render() {
     return (
-      <i-panel width="100%" height="100%">
+      <i-panel width="100%" height="100%" background={{color: Theme.background.main}}>
         <i-hstack
           class={searchPanelStyle}
           verticalAlignment="center"
@@ -188,9 +188,9 @@ export class ScomWidgetRepos extends Module {
           gap="0.5rem"
           wrap="wrap"
         >
-          <i-panel position="relative" stack={{ grow: '1' }}>
+          <i-panel stack={{ grow: '1' }}>
             <i-hstack position="absolute" height="100%" verticalAlignment="center" padding={{ left: '1rem' }}>
-              <i-icon width={14} height={14} name="search" fill={Theme.text.primary} />
+              <i-icon width={14} height={14} name="search" fill={Theme.input.fontColor} />
             </i-hstack>
             <i-input
               id="edtSearchRepo"

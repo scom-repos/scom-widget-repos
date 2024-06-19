@@ -899,26 +899,26 @@ export class ScomWidgetReposGithubRepo extends Module {
           <i-tab id="tabCommits" caption="Commits" width="50%">
             <i-vstack gap="1rem" verticalAlignment="center">
               <i-vstack gap="1rem" width="100%">
-                <i-hstack gap="2rem" verticalAlignment="center" wrap="wrap" width="100%">
-                  <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)">
-                    <i-label caption="Commit ID" />
+                <i-hstack gap="2rem" verticalAlignment="center" wrap="wrap" width="100%" mediaQueries={[{maxWidth: '767px', properties: {gap: '1rem'}}]}>
+                  <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
+                    <i-label caption="Commit ID" minWidth={80}/>
                     <i-input id="inputCommitId" class={inputStyle} height={40} width="calc(100% - 75px)" />
                   </i-hstack>
-                  <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)">
-                    <i-label caption="Title" />
+                  <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
+                    <i-label caption="Title" minWidth={80} />
                     <i-input id="inputMessage" class={inputStyle} height={40} width="calc(100% - 75px)" />
                   </i-hstack>
                 </i-hstack>
-                <i-hstack gap="2rem" verticalAlignment="center" wrap="wrap" width="100%">
-                  <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)">
-                    <i-label caption="Start Date" />
+                <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap" width="100%" mediaQueries={[{maxWidth: '767px', properties: {gap: '1rem'}}]}>
+                  <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
+                    <i-label caption="Start Date" minWidth={80} />
                     <i-vstack gap="0.25rem" width="calc(100% - 75px)">
                       <i-datepicker id="inputStartDate" type="dateTime" placeholder="dd/mm/yyyy hh:mm" class={inputDateStyle} height={40} width="100%" onChanged={this.onStartDateChanged} />
                       <i-label id="lbStartDateErr" font={{ color: Theme.colors.error.main }} />
                     </i-vstack>
                   </i-hstack>
-                  <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)">
-                    <i-label caption="End Date" />
+                  <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
+                    <i-label caption="End Date" minWidth={80} />
                     <i-vstack gap="0.25rem" width="calc(100% - 75px)">
                       <i-datepicker id="inputEndDate" type="dateTime" placeholder="dd/mm/yyyy hh:mm" class={inputDateStyle} height={40} width="100%" onChanged={this.onEndDateChanged} />
                       <i-label id="lbEndDateErr" font={{ color: Theme.colors.error.main }} />
