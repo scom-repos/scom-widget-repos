@@ -169,13 +169,13 @@ export const tabStyle = Styles.style({
                     marginBottom: 0,
                 },
                 'i-tab:not(.disabled).active': {
-                    background: Theme.action.hover,
-                    color: Theme.text.primary,
+                    background: Theme.action.activeBackground,
+                    color: Theme.action.hover,
                     fontWeight: 600,
                 },
                 'i-tab:not(.disabled):hover': {
-                    background: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))',
-                    color: Theme.text.primary,
+                    background: Theme.action.hoverBackground,
+                    color: Theme.action.hover
                 },
                 'i-tab .tab-item': {
                     padding: '0.5rem 0.75rem',
@@ -225,13 +225,13 @@ export const childTabStyle = Styles.style({
                     marginBottom: 0,
                 },
                 'i-tab:not(.disabled).active': {
-                    background: Theme.action.hover,
-                    color: Theme.text.primary,
+                    background: Theme.action.activeBackground,
+                    color: Theme.action.hover,
                     fontWeight: 600,
                 },
                 'i-tab:not(.disabled):hover': {
-                    background: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))',
-                    color: Theme.text.primary,
+                    background: Theme.action.hoverBackground,
+                    color: Theme.action.hover
                 },
                 'i-tab .tab-item': {
                     padding: '0.5rem 0.75rem',
