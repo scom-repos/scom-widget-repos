@@ -164,6 +164,19 @@ export class ScomWidgetRepos extends Module {
     })
   }
 
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this.githubElm) {
+      this.githubElm.onHide();
+    }
+  }
+
+  onHide(): void {
+    if (this.githubElm) {
+      this.githubElm.onHide();
+    }
+  }
+
   async init() {
     super.init();
     const contractInfo = this.getAttribute('contractInfo', true);

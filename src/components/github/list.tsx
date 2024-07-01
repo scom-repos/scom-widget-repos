@@ -224,9 +224,20 @@ export default class ScomWidgetReposGithubList extends Module {
   }
 
   private closeBuilder() {
+    this.widgetBuilder.resetCid();
     this.mdWidgetBuilder.visible = false;
     if (this.pnlBuilder.contains(this.widgetBuilder))
       this.pnlBuilder.removeChild(this.widgetBuilder);
+  }
+
+  onHide(): void {
+    super.onHide();
+    const children = this.vStackRepos?.children || [];
+    for (const child of children) {
+      if (child instanceof ScomWidgetReposGithubRepo) {
+        child.onHide();
+      }
+    }
   }
 
   init() {

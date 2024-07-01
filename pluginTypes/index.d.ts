@@ -427,6 +427,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         renderEmpty(): void;
         private showBuilder;
         private closeBuilder;
+        onHide(): void;
         init(): void;
         render(): any;
     }
@@ -524,6 +525,7 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
         private updateUI;
         private renderUI;
         setData(data: IGithub): void;
+        onHide(): void;
         init(): void;
         render(): any;
     }
@@ -683,6 +685,8 @@ declare module "@scom/scom-widget-repos" {
         private renderUI;
         private onRepoSearch;
         private onCreateRepoClick;
+        disconnectedCallback(): void;
+        onHide(): void;
         init(): Promise<void>;
         render(): any;
     }

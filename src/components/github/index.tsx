@@ -203,6 +203,13 @@ export class ScomWidgetReposGithub extends Module {
     this._data = data;
     this.renderUI();
   }
+
+  onHide() {
+    if (this.elmList) this.elmList.onHide();
+    if (this.elmPRs) this.elmPRs.onHide();
+    if (this.elmPackages) this.elmPackages.onHide();
+  }
+
   init() {
     super.init();
     this.isProject = this.getAttribute('isProject', true);
