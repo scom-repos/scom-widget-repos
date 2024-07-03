@@ -5,6 +5,7 @@ import { AuditResult, IAuditInfo, IAuditReportInfo, IAuditReportResultInfo, ICom
 import { getContractAddress, getTransportEndpoint } from '../store/index';
 
 const API_URL = 'https://dev.decom.app';
+const API_EMBED_URL = `${API_URL}/api/embed/v0`;
 const getIPFSBaseUrl = () => {
   return `${getTransportEndpoint()}/ipfs/`;
 }
@@ -101,7 +102,7 @@ const isActiveAuditor = async () => {
 const getAuditInfo = async (commitGuid: string) => {
   let result: IAuditInfo;
   try {
-    let response = await fetch(`${API_URL}/getAuditCommit?commitGuid=${commitGuid}`, {
+    let response = await fetch(`${API_EMBED_URL}/getAuditCommit?commitGuid=${commitGuid}`, {
       method: 'GET'
     });
     const { data } = await response.json();
@@ -162,7 +163,7 @@ const getAuditReportResult = async (commitGuid: string, auditInfo?: IAuditInfo) 
 const getAuditPRList = async (packageName: string) => {
   let result: any;
   try {
-    let response = await fetch(`${API_URL}/getAuditPRList?packageName=${packageName}`, {
+    let response = await fetch(`${API_EMBED_URL}/getAuditPRList?packageName=${packageName}`, {
       method: 'GET'
     });
     result = await response.json();
@@ -175,7 +176,7 @@ const getAuditPRList = async (packageName: string) => {
 const auditCommit = async (data: any) => {
   let result;
   try {
-    let response = await fetch(`${API_URL}/commit/audit`, {
+    let response = await fetch(`${API_EMBED_URL}/commit/audit`, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -268,7 +269,7 @@ const auditPR = async (packageOwner: string, packageName: string, mergeNumber: n
       ipfsCid,
       auditStatus
     }
-    let response = await fetch(`${API_URL}/pr/audit`, {
+    let response = await fetch(`${API_EMBED_URL}/pr/audit`, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -285,7 +286,7 @@ const auditPR = async (packageOwner: string, packageName: string, mergeNumber: n
 const getAuditPRInfo = async (mergeId: string) => {
   let result: IAuditInfo;
   try {
-    let response = await fetch(`${API_URL}/getAuditPR?mergeId=${mergeId}`, {
+    let response = await fetch(`${API_EMBED_URL}/getAuditPR?mergeId=${mergeId}`, {
       method: 'GET'
     });
     const { data } = await response.json();
@@ -399,7 +400,7 @@ const getCommits = async (offset: number, limit: number, filter?: { [key: string
 }> => {
   try {
     let queries = new URLSearchParams(filter).toString();
-    let url = `${API_URL}/commits?limit=${limit}&offset=${offset}${queries ? "&" + queries : ""}`;
+    let url = `${API_EMBED_URL}/commits?limit=${limit}&offset=${offset}${queries ? "&" + queries : ""}`;
     let response = await fetch(url, {
       method: 'GET'
     });
@@ -417,7 +418,7 @@ const getCommits = async (offset: number, limit: number, filter?: { [key: string
 const getMergeMsg = async (guid: string, repoOwner: string, repoName: string) => {
   let result: IRouterResult;
   try {
-    let response = await fetch(`${API_URL}/getPackageMsg?guid=${guid}&repoOwner=${repoOwner}&repoName=${repoName}`, {
+    let response = await fetch(`${API_EMBED_URL}/getPackageMsg?guid=${guid}&repoOwner=${repoOwner}&repoName=${repoName}`, {
       method: 'GET'
     });
     result = await response.json();
@@ -429,7 +430,7 @@ const getMergeMsg = async (guid: string, repoOwner: string, repoName: string) =>
 
 const getPackageByNames = async (packageOwner: string, packageName: string) => {
   try {
-    const url = `${API_URL}/getPackageByNames?packageOwner=${packageOwner}&packageName=${packageName}`;
+    const url = `${API_EMBED_URL}/getPackageByNames?packageOwner=${packageOwner}&packageName=${packageName}`;
     let response = await fetch(url, {
       method: 'GET'
     });
@@ -470,7 +471,7 @@ const requestAuditCommit = async (commitGuid: string, projectGuid: string, proje
       version,
       status: status ? 1 : 0
     }
-    let response = await fetch(`${API_URL}/commit/requestAudit`, {
+    let response = await fetch(`${API_EMBED_URL}/commit/requestAudit`, {
       method: 'POST',
       headers: {
         "Content-Type": "application/json"
@@ -551,7 +552,7 @@ const createRepo = async (params: { name: string, description?: string, private?
 const getProject = async (guid: string): Promise<IProject | undefined> => {
   let project: IProject;
   try {
-    let projectResponse = await fetch(`${API_URL}/project?guid=${guid}`);
+    let projectResponse = await fetch(`${API_EMBED_URL}/project?guid=${guid}`);
     let projectResult = await projectResponse.json();
     project = {
       ...projectResult.data
