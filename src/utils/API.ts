@@ -1,6 +1,6 @@
 import { application } from "@ijstech/components";
 import { Wallet, ISendTxEventsOptions } from "@ijstech/eth-wallet";
-import { Contracts } from "@scom/scom-dev-contract";
+// import { Contracts } from "@scom/scom-dev-contract";
 import { AuditResult, IAuditInfo, IAuditReportInfo, IAuditReportResultInfo, ICommit, IProject, IRouterResult, ISemanticVersion, PackageStatus } from "../interface";
 import { getContractAddress, getTransportEndpoint } from '../store/index';
 
@@ -91,8 +91,8 @@ const isActiveAuditor = async () => {
   let wallet = Wallet.getInstance();
   try {
     let contractAddress = await getContractAddress("AuditorInfo");
-    let auditorInfo = new Contracts.AuditorInfo(wallet, contractAddress);
-    isPermitted = await auditorInfo.isActiveAuditor(wallet.address);
+    // let auditorInfo = new Contracts.AuditorInfo(wallet, contractAddress);
+    // isPermitted = await auditorInfo.isActiveAuditor(wallet.address);
   } catch (err) {
     console.log('err', err)
   }
@@ -339,16 +339,16 @@ const auditPackageVersion = async (packageVersionId: number, pass: boolean, repo
   let wallet = Wallet.getInstance();
   try {
     let contractAddress = await getContractAddress("AuditInfo");
-    let auditInfo = new Contracts.AuditInfo(wallet, contractAddress);
-    registerSendTxEvents({
-      transactionHash: callback,
-      confirmation: confirmationCallback
-    });
-    receipt = await auditInfo.addAuditReport({
-      packageVersionsId: packageVersionId,
-      auditResult: pass ? AuditResult.PASSED : AuditResult.FAILED,
-      ipfsCid: reportCid
-    });
+    // let auditInfo = new Contracts.AuditInfo(wallet, contractAddress);
+    // registerSendTxEvents({
+    //   transactionHash: callback,
+    //   confirmation: confirmationCallback
+    // });
+    // receipt = await auditInfo.addAuditReport({
+    //   packageVersionsId: packageVersionId,
+    //   auditResult: pass ? AuditResult.PASSED : AuditResult.FAILED,
+    //   ipfsCid: reportCid
+    // });
   } catch (err) {
     if (callback) callback(err);
   }
@@ -360,16 +360,16 @@ const createNewPackage = async (projectId: number, name: string, ipfsCid: string
   const wallet = Wallet.getInstance();
   try {
     let contractAddress = await getContractAddress("ProjectInfo");
-    let projectInfo = new Contracts.ProjectInfo(wallet, contractAddress);
-    registerSendTxEvents({
-      transactionHash: callback,
-      confirmation: confirmationCallback
-    });
-    receipt = await projectInfo.newPackage({ projectId, name, ipfsCid, category });
-    if (receipt) {
-      let newPackageEvent = projectInfo.parseNewPackageEvent(receipt)[0];
-      packageId = newPackageEvent.packageId.toNumber();
-    }
+    // let projectInfo = new Contracts.ProjectInfo(wallet, contractAddress);
+    // registerSendTxEvents({
+    //   transactionHash: callback,
+    //   confirmation: confirmationCallback
+    // });
+    // receipt = await projectInfo.newPackage({ projectId, name, ipfsCid, category });
+    // if (receipt) {
+    //   let newPackageEvent = projectInfo.parseNewPackageEvent(receipt)[0];
+    //   packageId = newPackageEvent.packageId.toNumber();
+    // }
   } catch (err) {
     if (callback) callback(err);
   }
@@ -381,13 +381,13 @@ const createNewPackageVersion = async (projectId: number, packageId: number, ver
   const wallet = Wallet.getInstance();
   try {
     let contractAddress = await getContractAddress("ProjectInfo");
-    let projectInfo = new Contracts.ProjectInfo(wallet, contractAddress);
-    registerSendTxEvents({
-      transactionHash: callback,
-      confirmation: confirmationCallback
-    });
-    receipt = await projectInfo.newPackageVersion({ projectId, packageId, version, ipfsCid });
-    packageVersionId = projectInfo.parseNewPackageVersionEvent(receipt)?.[0]?.packageVersionId.toNumber()
+    // let projectInfo = new Contracts.ProjectInfo(wallet, contractAddress);
+    // registerSendTxEvents({
+    //   transactionHash: callback,
+    //   confirmation: confirmationCallback
+    // });
+    // receipt = await projectInfo.newPackageVersion({ projectId, packageId, version, ipfsCid });
+    // packageVersionId = projectInfo.parseNewPackageVersionEvent(receipt)?.[0]?.packageVersionId.toNumber()
   } catch (err) {
     if (callback) callback(err);
   }
@@ -504,12 +504,12 @@ const updatePackageVersionIpfsCid = async (packageVersionId: number, packageId: 
   const wallet = Wallet.getInstance();
   try {
     let contractAddress = await getContractAddress("ProjectInfo");
-    let projectInfo = new Contracts.ProjectInfo(wallet, contractAddress);
-    registerSendTxEvents({
-      transactionHash: callback,
-      confirmation: () => confirmationCallback(packageId, projectInfo.parseNewPackageVersionEvent(receipt)[0].packageVersionId || packageVersionId)
-    });
-    receipt = await projectInfo.updatePackageVersionIpfsCid({ packageVersionId, ipfsCid });
+    // let projectInfo = new Contracts.ProjectInfo(wallet, contractAddress);
+    // registerSendTxEvents({
+    //   transactionHash: callback,
+    //   confirmation: () => confirmationCallback(packageId, projectInfo.parseNewPackageVersionEvent(receipt)[0].packageVersionId || packageVersionId)
+    // });
+    // receipt = await projectInfo.updatePackageVersionIpfsCid({ packageVersionId, ipfsCid });
   } catch (err) {
     if (callback) callback(err);
   }
@@ -522,12 +522,12 @@ const updatePackageVersionToAuditing = async (packageVersionId: number, callback
   let wallet = Wallet.getInstance();
   try {
     let contractAddress = await getContractAddress("ProjectInfo");
-    let projectInfo = new Contracts.ProjectInfo(wallet, contractAddress);
-    registerSendTxEvents({
-      transactionHash: callback,
-      confirmation: confirmationCallback
-    });
-    receipt = await projectInfo.setPackageVersionToAuditing(packageVersionId);
+    // let projectInfo = new Contracts.ProjectInfo(wallet, contractAddress);
+    // registerSendTxEvents({
+    //   transactionHash: callback,
+    //   confirmation: confirmationCallback
+    // });
+    // receipt = await projectInfo.setPackageVersionToAuditing(packageVersionId);
   } catch (err) {
     if (callback) callback(err);
   }
