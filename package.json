@@ -1,6 +1,6 @@
 {
     "name": "@scom/scom-widget-repos",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "main": "dist/index.js",
     "plugin": "dist",
     "pluginTypes": "pluginTypes/index.d.ts",
@@ -9,15 +9,13 @@
         "node": ">=18.0.0"
     },
     "dependencies": {
-        "@ijstech/components": "^0.1.52",
-        "@scom/scom-widget-builder": "file:./repos/scom-widget-builder"
+        "@ijstech/components": "^0.1.52"
     },
     "devDependencies": {
         "@ijstech/cli": "^0.1.28",
         "@ijstech/eth-contract": "^0.1.8",
         "@ijstech/eth-wallet": "^0.1.29",
-        "@ijstech/compiler": "^0.1.41",
-        "@scom/scom-dev-contract": "^0.1.8"
+        "@ijstech/compiler": "^0.1.41"
     },
     "scripts": {
         "build": "rm -rf dist && npx @ijstech/compiler",
