@@ -5,7 +5,8 @@ import { IContractInfo } from '../interface';
 const state = {
   contractInfo: {},
   transportEndpoint: '',
-  mode: 'development'
+  mode: 'development',
+  storageConfig: {}
 }
 
 export const getContractInfoByChain = () => {
@@ -44,4 +45,12 @@ export const isLoggedIn = () => {
   return true;
   const isLoggedIn = application.store['isLoggedIn'];
   return isLoggedIn && isLoggedIn(Wallet.getClientInstance().address);
+}
+
+export const setStorageConfig = (config: any) => {
+  state.storageConfig = config;
+}
+
+export const getStorageConfig = () => {
+  return state.storageConfig;
 }

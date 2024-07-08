@@ -2,6 +2,7 @@ import { customModule, Module, Container, Panel, VStack, Label, observable, Pagi
 import { ScomWidgetReposGithubRepo } from "./repo";
 import { customModalStyle, githubStyle, spinnerStyle } from "./index.css";
 import { ScomWidgetBuilder } from "@scom/scom-widget-builder";
+import { getStorageConfig } from "../../store/index";
 const Theme = Styles.Theme.ThemeVars;
 
 const pageSize = 10;
@@ -210,10 +211,14 @@ export default class ScomWidgetReposGithubList extends Module {
   private showBuilder(name: string) {
     this.pnlBuilder.clearInnerHTML();
     if (!this.widgetBuilder) {
-      this.widgetBuilder = ScomWidgetBuilder.getInstance();
-      this.widgetBuilder.width = '100dvw';
-      this.widgetBuilder.height = '100dvh';
-      this.widgetBuilder.display = 'flex';
+      const config = getStorageConfig();
+      this.widgetBuilder = new ScomWidgetBuilder(undefined, {
+        ...config,
+        width: '100dvw',
+        height: '100dvh',
+        display: 'flex',
+        name: name
+      });
       this.widgetBuilder.onClosed = () => this.closeBuilder();
     }
     this.widgetBuilder.parent = this.pnlBuilder;
