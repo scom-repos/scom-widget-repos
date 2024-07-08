@@ -10,8 +10,7 @@ import {
 import { ScomWidgetReposGithub, ScomWidgetReposCreateRepo } from './components/index';
 import { searchPanelStyle } from "./index.css";
 import { IContractInfo } from "./interface";
-import { setContractInfoByChain, setTransportEndpoint } from "./store/index";
-import { ScomWidgetBuilder } from "@scom/scom-widget-builder";
+import { setContractInfoByChain, setStorageConfig, setTransportEndpoint } from "./store/index";
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -120,12 +119,11 @@ export class ScomWidgetRepos extends Module {
     setContractInfoByChain(this.contractInfo);
     setTransportEndpoint(this._data.transportEndpoint);
     if (this._data.transportEndpoint) {
-      ScomWidgetBuilder.getInstance().setConfig(
-        {
-          transportEndpoint: this._data.transportEndpoint,
-          signer: this._data.signer,
-          baseUrl: this._data.baseUrl,
-        });
+      setStorageConfig({
+        transportEndpoint: this._data.transportEndpoint,
+        signer: this._data.signer,
+        baseUrl: this._data.baseUrl
+      })
     }
     this.renderUI();
   }

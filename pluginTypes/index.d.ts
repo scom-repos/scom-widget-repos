@@ -166,6 +166,8 @@ declare module "@scom/scom-widget-repos/store/index.ts" {
     export const setTransportEndpoint: (transportEndpoint: string) => void;
     export const getTransportEndpoint: () => string;
     export const isLoggedIn: () => any;
+    export const setStorageConfig: (config: any) => void;
+    export const getStorageConfig: () => {};
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/API.ts" />
 declare module "@scom/scom-widget-repos/utils/API.ts" {
