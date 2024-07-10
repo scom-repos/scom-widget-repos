@@ -49,6 +49,7 @@ export default class ScomWidgetReposGithubList extends Module {
   private _listRepos: any[] = [];
   private _isAuditPR: boolean;
   private error: string;
+  private initedConfig: boolean = false;
   public getAllRepos: () => Promise<void>;
   public updateCountPRs: (oldNum: number, newNum: number) => void;
 
@@ -209,20 +210,11 @@ export default class ScomWidgetReposGithubList extends Module {
   }
 
   private showBuilder(name: string) {
-    this.pnlBuilder.clearInnerHTML();
-    if (!this.widgetBuilder) {
-      const config = getStorageConfig();
-      this.widgetBuilder = new ScomWidgetBuilder(undefined, {
-        ...config,
-        width: '100dvw',
-        height: '100dvh',
-        display: 'flex',
-        name: name
-      });
-      this.widgetBuilder.onClosed = () => this.closeBuilder();
+    const config: any = getStorageConfig();
+    if (!this.initedConfig && config.transportEndpoint) {
+      this.initedConfig = true;
+      this.widgetBuilder.setConfig(config);
     }
-    this.widgetBuilder.parent = this.pnlBuilder;
-    this.pnlBuilder.append(this.widgetBuilder);
     this.widgetBuilder.setValue(name);
     this.mdWidgetBuilder.visible = true;
     this.widgetBuilder.refresh();
@@ -231,8 +223,6 @@ export default class ScomWidgetReposGithubList extends Module {
   private closeBuilder() {
     this.widgetBuilder.resetCid();
     this.mdWidgetBuilder.visible = false;
-    if (this.pnlBuilder.contains(this.widgetBuilder))
-      this.pnlBuilder.removeChild(this.widgetBuilder);
   }
 
   onHide(): void {
@@ -301,7 +291,15 @@ export default class ScomWidgetReposGithubList extends Module {
           padding={{top: 0, bottom: 0, left: 0, right: 0}}
           class={customModalStyle}
         >
-          <i-panel id="pnlBuilder" width={'100dvw'} height={'100dvh'} position="absolute" overflow={'hidden'} />
+          <i-panel id="pnlBuilder" width={'100dvw'} height={'100dvh'} overflow={'hidden'}>
+            <i-scom-widget-builder
+              id="widgetBuilder"
+              width={'100dvw'}
+              height={'100dvh'}
+              display={'flex'}
+              onClosed={() => this.closeBuilder()}
+            ></i-scom-widget-builder>
+          </i-panel>
         </i-modal>
       </i-panel>
     )
