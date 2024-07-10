@@ -400,6 +400,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private _listRepos;
         private _isAuditPR;
         private error;
+        private initedConfig;
         getAllRepos: () => Promise<void>;
         updateCountPRs: (oldNum: number, newNum: number) => void;
         constructor(parent?: Container, options?: GithubListElement);
