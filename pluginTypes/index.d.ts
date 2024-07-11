@@ -470,6 +470,11 @@ declare module "@scom/scom-widget-repos/components/github/create.tsx" {
         render(): any;
     }
 }
+/// <amd-module name="@scom/scom-widget-repos/components/github/data.json.ts" />
+declare module "@scom/scom-widget-repos/components/github/data.json.ts" {
+    const _default: string[];
+    export default _default;
+}
 /// <amd-module name="@scom/scom-widget-repos/components/github/index.tsx" />
 declare module "@scom/scom-widget-repos/components/github/index.tsx" {
     import { Module, Container, ControlElement } from "@ijstech/components";
@@ -536,8 +541,8 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
 }
 /// <amd-module name="@scom/scom-widget-repos/components/audit_report/index.css.ts" />
 declare module "@scom/scom-widget-repos/components/audit_report/index.css.ts" {
-    const _default: string;
-    export default _default;
+    const _default_1: string;
+    export default _default_1;
 }
 /// <amd-module name="@scom/scom-widget-repos/components/audit_report/data.json.ts" />
 declare module "@scom/scom-widget-repos/components/audit_report/data.json.ts" {
