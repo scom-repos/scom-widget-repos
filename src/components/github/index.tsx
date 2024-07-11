@@ -3,6 +3,7 @@ import { checkGithubOwner, getAllRepos, getGithubUser, isActiveAuditor } from ".
 import { githubStyle, spinnerStyle, tabStyle } from "./index.css";
 import ScomWidgetReposGithubList from "./list";
 import { ScomWidgetReposCreateRepo } from './create';
+import dataJson from './data.json';
 const Theme = Styles.Theme.ThemeVars;
 
 interface GithubElement extends ControlElement {
@@ -125,7 +126,19 @@ export class ScomWidgetReposGithub extends Module {
     // const result = await getAllRepos(this.userInfo?.data?.login, this.isProject ? this.prefix : '', !this.isProject);
     const result = await getAllRepos('yc-wong', 'scom', false);
     if (result?.data) {
-      this.listRepos = result.data;
+      this.listRepos = [
+        ...result.data,
+        ...dataJson.map(v => {
+          return {
+            full_name: v,
+            name: v.split('/').pop(),
+            open_issues: 0,
+            owner_login: "scom-repos",
+            version: "",
+            html_url: `https://github.com/${v}`
+          }
+        })
+      ];
     } else {
       this.listRepos = [];
     }
