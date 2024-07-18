@@ -47,11 +47,12 @@ define("@scom/scom-widget-repos/interface.ts", ["require", "exports"], function 
 define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet"], function (require, exports, components_1, eth_wallet_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.isLoggedIn = exports.getTransportEndpoint = exports.setTransportEndpoint = exports.getContractInfo = exports.getContractAddress = exports.setContractInfoByChain = exports.getContractInfoByChain = void 0;
+    exports.getStorageConfig = exports.setStorageConfig = exports.isLoggedIn = exports.getTransportEndpoint = exports.setTransportEndpoint = exports.getContractInfo = exports.getContractAddress = exports.setContractInfoByChain = exports.getContractInfoByChain = void 0;
     const state = {
         contractInfo: {},
         transportEndpoint: '',
-        mode: 'development'
+        mode: 'development',
+        storageConfig: {}
     };
     const getContractInfoByChain = () => {
         return state.contractInfo;
@@ -91,6 +92,14 @@ define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstec
         return isLoggedIn && isLoggedIn(eth_wallet_1.Wallet.getClientInstance().address);
     };
     exports.isLoggedIn = isLoggedIn;
+    const setStorageConfig = (config) => {
+        state.storageConfig = config;
+    };
+    exports.setStorageConfig = setStorageConfig;
+    const getStorageConfig = () => {
+        return state.storageConfig;
+    };
+    exports.getStorageConfig = getStorageConfig;
 });
 define("@scom/scom-widget-repos/utils/API.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-widget-repos/interface.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_2, eth_wallet_2, interface_1, index_1) {
     "use strict";
@@ -939,6 +948,10 @@ define("@scom/scom-widget-repos/components/github/index.css.ts", ["require", "ex
                 clear: 'both',
                 display: 'block',
                 position: 'relative'
+            },
+            '.modal-wrapper': {
+                paddingLeft: '0 !important',
+                paddingTop: '0 !important'
             }
         }
     });
@@ -1744,7 +1757,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
     ], ScomWidgetReposGithubRepo);
     exports.ScomWidgetReposGithubRepo = ScomWidgetReposGithubRepo;
 });
-define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/repo.tsx", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-builder"], function (require, exports, components_6, repo_1, index_css_2, scom_widget_builder_1) {
+define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/repo.tsx", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_6, repo_1, index_css_2, index_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_6.Styles.Theme.ThemeVars;
@@ -1758,6 +1771,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.itemEnd = pageSize;
             this._userInfo = {};
             this._listRepos = [];
+            this.initedConfig = false;
         }
         get guid() {
             return this._guid;
@@ -1886,32 +1900,44 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.pnlLoader.visible = true;
             this.resetPaging();
             this.pnlLoader.visible = false;
+            const config = (0, index_3.getStorageConfig)();
+            const baseUrl = config?.baseUrl || '';
+            const result = this.extractUrl(baseUrl);
+            if (result.includes('scom-repos') || result.includes('ijstech')) {
+                this.showBuilder(result);
+            }
+        }
+        extractUrl(baseUrl) {
+            let path;
+            if (baseUrl && window.location.hash.startsWith(baseUrl)) {
+                let length = baseUrl[baseUrl.length - 1] == '/' ? baseUrl.length : baseUrl.length + 1;
+                path = window.location.hash.substring(length);
+            }
+            else {
+                path = window.location.hash.substring(2);
+            }
+            return path;
         }
         renderEmpty() {
             this.vStackRepos.clearInnerHTML();
             this.vStackRepos.classList.remove('list-repos');
             this.vStackRepos.appendChild(this.$render("i-label", { caption: this.error || 'There is no repository!', font: { size: '1.5rem' }, margin: { top: '3rem', left: 'auto', right: 'auto' } }));
         }
-        showBuilder(name) {
-            this.pnlBuilder.clearInnerHTML();
-            if (!this.widgetBuilder) {
-                this.widgetBuilder = scom_widget_builder_1.ScomWidgetBuilder.getInstance();
-                this.widgetBuilder.width = '100dvw';
-                this.widgetBuilder.height = '100dvh';
-                this.widgetBuilder.display = 'flex';
-                this.widgetBuilder.onClosed = () => this.closeBuilder();
-            }
-            this.widgetBuilder.parent = this.pnlBuilder;
-            this.pnlBuilder.append(this.widgetBuilder);
-            this.widgetBuilder.setValue(name);
+        async showBuilder(name) {
             this.mdWidgetBuilder.visible = true;
+            this.pnlBuilderLoader.visible = true;
+            const config = (0, index_3.getStorageConfig)();
+            if (!this.initedConfig && config.transportEndpoint) {
+                this.initedConfig = true;
+                this.widgetBuilder.setConfig(config);
+            }
+            await this.widgetBuilder.setValue(name);
             this.widgetBuilder.refresh();
+            this.pnlBuilderLoader.visible = false;
         }
         closeBuilder() {
             this.widgetBuilder.resetCid();
             this.mdWidgetBuilder.visible = false;
-            if (this.pnlBuilder.contains(this.widgetBuilder))
-                this.pnlBuilder.removeChild(this.widgetBuilder);
         }
         onHide() {
             super.onHide();
@@ -1940,7 +1966,10 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                     this.$render("i-hstack", { horizontalAlignment: "center", margin: { top: '2rem' } },
                         this.$render("i-pagination", { id: "paginationElm", margin: { bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, width: "auto", currentPage: this.pageNumber, totalPages: this.totalPage, onPageChanged: this.onSelectIndex }))),
                 this.$render("i-modal", { id: "mdWidgetBuilder", showBackdrop: true, width: '100dvw', height: '100dvh', overflow: 'hidden', padding: { top: 0, bottom: 0, left: 0, right: 0 }, class: index_css_2.customModalStyle },
-                    this.$render("i-panel", { id: "pnlBuilder", width: '100dvw', height: '100dvh', position: "absolute", overflow: 'hidden' }))));
+                    this.$render("i-panel", { width: '100dvw', height: '100dvh', overflow: 'hidden' },
+                        this.$render("i-vstack", { id: "pnlBuilderLoader", position: "absolute", width: "100%", height: "100%", horizontalAlignment: "center", verticalAlignment: "center", padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, background: { color: Theme.background.main }, visible: false },
+                            this.$render("i-panel", { class: index_css_2.spinnerStyle })),
+                        this.$render("i-scom-widget-builder", { id: "widgetBuilder", width: '100dvw', height: '100dvh', display: 'flex', onClosed: () => this.closeBuilder() })))));
         }
     };
     __decorate([
@@ -1952,7 +1981,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
     ], ScomWidgetReposGithubList);
     exports.default = ScomWidgetReposGithubList;
 });
-define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_7, index_css_3, index_3, index_4) {
+define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_7, index_css_3, index_4, index_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = void 0;
@@ -2035,7 +2064,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                 this.mdAlert.onConfirm = onConfirm;
         }
         async handleConfirmClick() {
-            if (!(0, index_4.isLoggedIn)()) {
+            if (!(0, index_5.isLoggedIn)()) {
                 this.setMessage({
                     status: 'error',
                     content: 'Please login to create your repository'
@@ -2059,7 +2088,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                     name: `${this.projectPrefix}-${name}`,
                     description: this.edtDescription.value
                 };
-                const result = await (0, index_3.createRepo)(repoInfo);
+                const result = await (0, index_4.createRepo)(repoInfo);
                 if (!result || result.error) {
                     this.setMessage({
                         status: 'error',
@@ -2119,7 +2148,17 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
     ], ScomWidgetReposCreateRepo);
     exports.ScomWidgetReposCreateRepo = ScomWidgetReposCreateRepo;
 });
-define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx"], function (require, exports, components_8, API_2, index_css_4, create_1) {
+define("@scom/scom-widget-repos/components/github/data.json.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    ///<amd-module name='@scom/scom-widget-repos/components/github/data.json.ts'/> 
+    exports.default = [
+        "scom-repos/scom-widget-builder",
+        "scom-repos/scom-docs-widget",
+        "scom-repos/scom-social",
+    ];
+});
+define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx", "@scom/scom-widget-repos/components/github/data.json.ts"], function (require, exports, components_8, API_2, index_css_4, create_1, data_json_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
@@ -2199,7 +2238,19 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
             // const result = await getAllRepos(this.userInfo?.data?.login, this.isProject ? this.prefix : '', !this.isProject);
             const result = await (0, API_2.getAllRepos)('yc-wong', 'scom', false);
             if (result?.data) {
-                this.listRepos = result.data;
+                this.listRepos = [
+                    ...result.data,
+                    ...data_json_1.default.map(v => {
+                        return {
+                            full_name: v,
+                            name: v.split('/').pop(),
+                            open_issues: 0,
+                            owner_login: "scom-repos",
+                            version: "",
+                            html_url: `https://github.com/${v}`
+                        };
+                    })
+                ];
             }
             else {
                 this.listRepos = [];
@@ -2359,7 +2410,7 @@ define("@scom/scom-widget-repos/components/audit_report/data.json.ts", ["require
         'Does the DApp register an excessive amount of whitelisted smart contracts (i.e. registered in SC-Registry but not interact in codebase)?'
     ];
 });
-define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts"], function (require, exports, components_10, index_css_5, data_json_1, eth_wallet_5, index_5, interface_3) {
+define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts"], function (require, exports, components_10, index_css_5, data_json_2, eth_wallet_5, index_6, interface_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposAuditReport = void 0;
@@ -2377,7 +2428,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             this.mergeInfo = {};
             this.auditReportInfo = {};
             this.getPackageFiles = async () => {
-                const res = await (0, index_5.getAllFiles)(this.commitGuid);
+                const res = await (0, index_6.getAllFiles)(this.commitGuid);
                 if (res?.files) {
                     const files = res.files;
                     return files;
@@ -2387,7 +2438,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             this.submitAuditReport = async () => {
                 this.btnSubmit.rightIcon.visible = true;
                 if (!this.isAuditPR) {
-                    let auditInfo = await (0, index_5.getAuditInfo)(this.commitGuid);
+                    let auditInfo = await (0, index_6.getAuditInfo)(this.commitGuid);
                     if (auditInfo.auditStatus !== interface_3.PackageStatus.AUDITING) {
                         this.setMessage({
                             status: 'error',
@@ -2407,7 +2458,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 const { packageOwner, packageName } = resultInfo;
                 const { number, commit_sha, created_at } = this.mergeInfo;
                 const reportFileName = this.isAuditPR ? `Audit-Report-PR-${packageOwner}-${packageName}-${number}-${commit_sha}.md` : `Audit-Report-${this.commitGuid}.md`;
-                const ipfsReportCid = await (0, index_5.uploadDataToIpfs)(JSON.stringify(resultInfo), reportFileName);
+                const ipfsReportCid = await (0, index_6.uploadDataToIpfs)(JSON.stringify(resultInfo), reportFileName);
                 if (ipfsReportCid) {
                     // Upload all files to ipfs
                     let ipfsCid = '';
@@ -2445,7 +2496,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                     this.mdAlert.showModal();
                     let res;
                     if (this.isAuditPR) {
-                        res = await (0, index_5.auditPR)(packageOwner, packageName, number, commit_sha, ipfsReportCid, ipfsCid, this.auditReportInfo.result);
+                        res = await (0, index_6.auditPR)(packageOwner, packageName, number, commit_sha, ipfsReportCid, ipfsCid, this.auditReportInfo.result);
                         if (res?.success) {
                             this.setMessage({
                                 status: 'success',
@@ -2471,7 +2522,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                             if (err) {
                                 this.setMessage({
                                     status: 'error',
-                                    content: (0, index_5.parseContractError)(err.message)
+                                    content: (0, index_6.parseContractError)(err.message)
                                 });
                                 this.mdAlert.showModal();
                             }
@@ -2481,7 +2532,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                     title: 'Transaction Submitted',
                                     link: {
                                         caption: receipt,
-                                        href: (0, index_5.getExplorerTxUrl)(receipt)
+                                        href: (0, index_6.getExplorerTxUrl)(receipt)
                                     }
                                 });
                                 this.mdAlert.showModal();
@@ -2496,7 +2547,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                 ipfsCid,
                                 auditStatus: result
                             };
-                            res = await (0, index_5.auditCommit)(data);
+                            res = await (0, index_6.auditCommit)(data);
                             if (res?.success) {
                                 this.setMessage({
                                     status: 'success',
@@ -2517,7 +2568,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                 this.btnSubmit.rightIcon.visible = false;
                             }
                         };
-                        await (0, index_5.auditPackageVersion)(this.auditReportInfo.packageVersionId, this.auditReportInfo.result === interface_3.PackageStatus.AUDIT_PASSED, ipfsReportCid, callback, confirmationCallback);
+                        await (0, index_6.auditPackageVersion)(this.auditReportInfo.packageVersionId, this.auditReportInfo.result === interface_3.PackageStatus.AUDIT_PASSED, ipfsReportCid, callback, confirmationCallback);
                     }
                 }
                 else {
@@ -2593,13 +2644,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         async fetchAuditPR() {
             const { owner, repo, prNumber, mergeId } = this.prInfo;
             if (mergeId) {
-                const result = await (0, index_5.getAuditPRReportInfo)(mergeId);
+                const result = await (0, index_6.getAuditPRReportInfo)(mergeId);
                 if (result) {
                     this.auditReportInfo = result;
                     return;
                 }
             }
-            const result = await (0, index_5.getPull)(owner, repo, prNumber);
+            const result = await (0, index_6.getPull)(owner, repo, prNumber);
             if (result?.data) {
                 this.mergeInfo = result.data;
                 const { number, title, base, commit_sha } = result.data;
@@ -2622,13 +2673,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 return;
             }
             if (!this.auditReportInfo.checklist || !this.auditReportInfo.checklist.length) {
-                this.auditReportInfo.checklist = new Array(data_json_1.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
+                this.auditReportInfo.checklist = new Array(data_json_2.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
             }
         }
         async fetchAuditPackage() {
-            this.auditReportInfo = await (0, index_5.getAuditReportInfo)(this.commitGuid);
+            this.auditReportInfo = await (0, index_6.getAuditReportInfo)(this.commitGuid);
             if (!this.auditReportInfo.checklist || !this.auditReportInfo.checklist.length) {
-                this.auditReportInfo.checklist = new Array(data_json_1.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
+                this.auditReportInfo.checklist = new Array(data_json_2.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
             }
         }
         initReportState() {
@@ -2653,7 +2704,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             }
             else {
                 this.lbPRTitle.caption = this.auditReportInfo.mergeTitle;
-                this.lbPRNumber.caption = `#${this.auditReportInfo.mergeNumber} opened ${(0, index_5.getTimeAgo)(this.mergeInfo.created_at)} by ${this.mergeInfo.user_login}`;
+                this.lbPRNumber.caption = `#${this.auditReportInfo.mergeNumber} opened ${(0, index_6.getTimeAgo)(this.mergeInfo.created_at)} by ${this.mergeInfo.user_login}`;
                 this.lbPRSha.caption = `Merge SHA: ${this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha}`;
             }
         }
@@ -2679,7 +2730,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 this.$render("i-label", { caption: 'Auditing Checklist' })));
             this.checklist.append(this.$render("i-hstack", { height: '3.875rem', verticalAlignment: 'center', horizontalAlignment: 'center', background: { color: Theme.colors.primary.main } },
                 this.$render("i-label", { caption: 'Comments' })));
-            data_json_1.checklistItems.forEach((item, i) => {
+            data_json_2.checklistItems.forEach((item, i) => {
                 const placeholder = this.reportStatus === ReportStatus.EDIT ? "Fill comment if fail" : "";
                 this.checklist.append(this.$render("i-hstack", { height: '100%', verticalAlignment: 'center', horizontalAlignment: 'start', background: { color: '#34343A' }, border: { color: '#636363', width: '0 1px 1px 0', style: 'solid' } },
                     this.$render("i-checkbox", { opacity: 1, checked: this.auditReportInfo.checklist[i].checked, height: '100%', width: '100%', caption: item, enabled: enable, onChanged: (target) => this.saveCheckBoxValue(target, i) })));
@@ -2774,7 +2825,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         }
         renderAuditSummary() {
             this.auditSummary.innerHTML = '';
-            const lastAuditDate = this.auditReportInfo.auditDate ? (0, index_5.formatDate)(this.auditReportInfo.auditDate * 1000, "DD MMM YYYY") : '-';
+            const lastAuditDate = this.auditReportInfo.auditDate ? (0, index_6.formatDate)(this.auditReportInfo.auditDate * 1000, "DD MMM YYYY") : '-';
             const auditor = this.auditReportInfo.auditedBy ? components_10.FormatUtils.truncateWalletAddress(this.auditReportInfo.auditedBy) : '-';
             this.auditSummary.append(this.$render("i-vstack", { width: '100%', verticalAlignment: 'center' },
                 !this.isAuditPR ? this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
@@ -2905,13 +2956,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
     ], ScomWidgetReposAuditReport);
     exports.ScomWidgetReposAuditReport = ScomWidgetReposAuditReport;
 });
-define("@scom/scom-widget-repos/components/index.ts", ["require", "exports", "@scom/scom-widget-repos/components/github/index.tsx", "@scom/scom-widget-repos/components/audit_report/index.tsx"], function (require, exports, index_6, index_7) {
+define("@scom/scom-widget-repos/components/index.ts", ["require", "exports", "@scom/scom-widget-repos/components/github/index.tsx", "@scom/scom-widget-repos/components/audit_report/index.tsx"], function (require, exports, index_7, index_8) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposAuditReport = exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
-    Object.defineProperty(exports, "ScomWidgetReposGithub", { enumerable: true, get: function () { return index_6.ScomWidgetReposGithub; } });
-    Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return index_6.ScomWidgetReposCreateRepo; } });
-    Object.defineProperty(exports, "ScomWidgetReposAuditReport", { enumerable: true, get: function () { return index_7.ScomWidgetReposAuditReport; } });
+    Object.defineProperty(exports, "ScomWidgetReposGithub", { enumerable: true, get: function () { return index_7.ScomWidgetReposGithub; } });
+    Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return index_7.ScomWidgetReposCreateRepo; } });
+    Object.defineProperty(exports, "ScomWidgetReposAuditReport", { enumerable: true, get: function () { return index_8.ScomWidgetReposAuditReport; } });
 });
 define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_11) {
     "use strict";
@@ -2936,7 +2987,7 @@ define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/
         }
     });
 });
-define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/index.ts", "@scom/scom-widget-repos/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-builder"], function (require, exports, components_12, index_8, index_css_6, index_9, scom_widget_builder_2) {
+define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/index.ts", "@scom/scom-widget-repos/index.css.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_12, index_9, index_css_6, index_10) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetRepos = void 0;
@@ -2991,13 +3042,13 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
         async setData(value) {
             this._data = value;
-            (0, index_9.setContractInfoByChain)(this.contractInfo);
-            (0, index_9.setTransportEndpoint)(this._data.transportEndpoint);
+            (0, index_10.setContractInfoByChain)(this.contractInfo);
+            (0, index_10.setTransportEndpoint)(this._data.transportEndpoint);
             if (this._data.transportEndpoint) {
-                scom_widget_builder_2.ScomWidgetBuilder.getInstance().setConfig({
+                (0, index_10.setStorageConfig)({
                     transportEndpoint: this._data.transportEndpoint,
                     signer: this._data.signer,
-                    baseUrl: this._data.baseUrl,
+                    baseUrl: this._data.baseUrl
                 });
             }
             this.renderUI();
@@ -3019,7 +3070,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
         async onCreateRepoClick() {
             if (!this.createRepoElm) {
-                this.createRepoElm = new index_8.ScomWidgetReposCreateRepo(undefined, {
+                this.createRepoElm = new index_9.ScomWidgetReposCreateRepo(undefined, {
                     id: this.guid,
                     prefix: this.prefix
                 });
