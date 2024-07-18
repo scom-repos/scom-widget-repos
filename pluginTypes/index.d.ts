@@ -383,7 +383,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private lbRepos;
         private vStackRepos;
         private iconRefresh;
-        private pnlBuilder;
+        private pnlBuilderLoader;
         private totalPage;
         private pageNumber;
         private itemStart;
@@ -427,6 +427,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private onSelectIndex;
         private resetPaging;
         private renderUI;
+        private extractUrl;
         renderEmpty(): void;
         private showBuilder;
         private closeBuilder;

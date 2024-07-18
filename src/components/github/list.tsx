@@ -30,7 +30,7 @@ export default class ScomWidgetReposGithubList extends Module {
   private lbRepos: Label;
   private vStackRepos: Panel;
   private iconRefresh: Icon;
-  private pnlBuilder: Panel;
+  private pnlBuilderLoader: VStack;
   @observable()
   private totalPage = 0;
   private pageNumber = 0;
@@ -201,6 +201,23 @@ export default class ScomWidgetReposGithubList extends Module {
     this.pnlLoader.visible = true;
     this.resetPaging();
     this.pnlLoader.visible = false;
+    const config: any = getStorageConfig();
+    const baseUrl = config?.baseUrl || '';
+    const result = this.extractUrl(baseUrl);
+    if (result.includes('scom-repos') || result.includes('ijstech')) {
+      this.showBuilder(result);
+    }
+  }
+
+  private extractUrl(baseUrl: string) {
+    let path: string;
+    if (baseUrl && window.location.hash.startsWith(baseUrl)) {
+      let length = baseUrl[baseUrl.length - 1] == '/' ? baseUrl.length : baseUrl.length + 1;
+      path = window.location.hash.substring(length);
+    } else {
+      path = window.location.hash.substring(2);
+    }
+    return path;
   }
 
   renderEmpty() {
@@ -209,15 +226,17 @@ export default class ScomWidgetReposGithubList extends Module {
     this.vStackRepos.appendChild(<i-label caption={this.error || 'There is no repository!'} font={{ size: '1.5rem' }} margin={{ top: '3rem', left: 'auto', right: 'auto' }} />);
   }
 
-  private showBuilder(name: string) {
+  private async showBuilder(name: string) {
+    this.mdWidgetBuilder.visible = true;
+    this.pnlBuilderLoader.visible = true;
     const config: any = getStorageConfig();
     if (!this.initedConfig && config.transportEndpoint) {
       this.initedConfig = true;
       this.widgetBuilder.setConfig(config);
     }
-    this.widgetBuilder.setValue(name);
-    this.mdWidgetBuilder.visible = true;
+    await this.widgetBuilder.setValue(name);
     this.widgetBuilder.refresh();
+    this.pnlBuilderLoader.visible = false;
   }
 
   private closeBuilder() {
@@ -291,7 +310,20 @@ export default class ScomWidgetReposGithubList extends Module {
           padding={{top: 0, bottom: 0, left: 0, right: 0}}
           class={customModalStyle}
         >
-          <i-panel id="pnlBuilder" width={'100dvw'} height={'100dvh'} overflow={'hidden'}>
+          <i-panel width={'100dvw'} height={'100dvh'} overflow={'hidden'}>
+            <i-vstack
+              id="pnlBuilderLoader"
+              position="absolute"
+              width="100%"
+              height="100%"
+              horizontalAlignment="center"
+              verticalAlignment="center"
+              padding={{ top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }}
+              background={{ color: Theme.background.main }}
+              visible={false}
+            >
+              <i-panel class={spinnerStyle} />
+            </i-vstack>
             <i-scom-widget-builder
               id="widgetBuilder"
               width={'100dvw'}
