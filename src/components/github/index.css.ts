@@ -262,7 +262,7 @@ export const customModalStyle = Styles.style({
             display: 'block',
             position: 'relative'
         },
-        '.modal-wrapper': {
+        '> .modal-wrapper': {
             paddingLeft: '0 !important',
             paddingTop: '0 !important'
         }
