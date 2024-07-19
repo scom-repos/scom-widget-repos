@@ -949,7 +949,7 @@ define("@scom/scom-widget-repos/components/github/index.css.ts", ["require", "ex
                 display: 'block',
                 position: 'relative'
             },
-            '.modal-wrapper': {
+            '> .modal-wrapper': {
                 paddingLeft: '0 !important',
                 paddingTop: '0 !important'
             }
