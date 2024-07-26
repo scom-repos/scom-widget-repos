@@ -2156,6 +2156,7 @@ define("@scom/scom-widget-repos/components/github/data.json.ts", ["require", "ex
         "scom-repos/scom-widget-builder",
         "scom-repos/scom-docs-widget",
         "scom-repos/scom-social",
+        "scom-repos/noto-fan"
     ];
 });
 define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx", "@scom/scom-widget-repos/components/github/data.json.ts"], function (require, exports, components_8, API_2, index_css_4, create_1, data_json_1) {
