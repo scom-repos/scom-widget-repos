@@ -264,7 +264,9 @@ export const customModalStyle = Styles.style({
         },
         '> .modal-wrapper': {
             paddingLeft: '0 !important',
-            paddingTop: '0 !important'
+            paddingTop: '0 !important',
+            maxHeight: '100%',
+            overflow: 'hidden !important'
         }
     }
 })
