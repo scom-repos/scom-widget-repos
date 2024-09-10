@@ -431,6 +431,8 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         renderEmpty(): void;
         private showBuilder;
         private closeBuilder;
+        private onBuilderOpen;
+        private onBuilderClose;
         onHide(): void;
         init(): void;
         render(): any;

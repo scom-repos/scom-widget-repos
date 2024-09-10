@@ -244,6 +244,16 @@ export default class ScomWidgetReposGithubList extends Module {
     this.mdWidgetBuilder.visible = false;
   }
 
+  private onBuilderOpen() {
+    const html = document.getElementsByTagName('html')[0];
+    html.style.scrollbarGutter = 'auto';
+  }
+
+  private onBuilderClose() {
+    const html = document.getElementsByTagName('html')[0];
+    html.style.scrollbarGutter = '';
+  }
+
   onHide(): void {
     super.onHide();
     const children = this.vStackRepos?.children || [];
@@ -308,6 +318,8 @@ export default class ScomWidgetReposGithubList extends Module {
           height={'100dvh'}
           overflow={'hidden'}
           padding={{top: 0, bottom: 0, left: 0, right: 0}}
+          onOpen={this.onBuilderOpen}
+          onClose={this.onBuilderClose}
           class={customModalStyle}
         >
           <i-panel width={'100dvw'} height={'100dvh'} overflow={'hidden'}>
