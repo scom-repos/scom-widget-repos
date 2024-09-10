@@ -1941,6 +1941,14 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.widgetBuilder.resetCid();
             this.mdWidgetBuilder.visible = false;
         }
+        onBuilderOpen() {
+            const html = document.getElementsByTagName('html')[0];
+            html.style.scrollbarGutter = 'auto';
+        }
+        onBuilderClose() {
+            const html = document.getElementsByTagName('html')[0];
+            html.style.scrollbarGutter = '';
+        }
         onHide() {
             super.onHide();
             const children = this.vStackRepos?.children || [];
@@ -1967,7 +1975,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                     this.$render("i-vstack", { id: "vStackRepos", width: "100%" }),
                     this.$render("i-hstack", { horizontalAlignment: "center", margin: { top: '2rem' } },
                         this.$render("i-pagination", { id: "paginationElm", margin: { bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, width: "auto", currentPage: this.pageNumber, totalPages: this.totalPage, onPageChanged: this.onSelectIndex }))),
-                this.$render("i-modal", { id: "mdWidgetBuilder", showBackdrop: true, width: '100dvw', height: '100dvh', overflow: 'hidden', padding: { top: 0, bottom: 0, left: 0, right: 0 }, class: index_css_2.customModalStyle },
+                this.$render("i-modal", { id: "mdWidgetBuilder", showBackdrop: true, width: '100dvw', height: '100dvh', overflow: 'hidden', padding: { top: 0, bottom: 0, left: 0, right: 0 }, onOpen: this.onBuilderOpen, onClose: this.onBuilderClose, class: index_css_2.customModalStyle },
                     this.$render("i-panel", { width: '100dvw', height: '100dvh', overflow: 'hidden' },
                         this.$render("i-vstack", { id: "pnlBuilderLoader", position: "absolute", width: "100%", height: "100%", horizontalAlignment: "center", verticalAlignment: "center", padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, background: { color: Theme.background.main }, visible: false },
                             this.$render("i-panel", { class: index_css_2.spinnerStyle })),
