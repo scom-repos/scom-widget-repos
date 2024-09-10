@@ -247,11 +247,13 @@ export default class ScomWidgetReposGithubList extends Module {
   private onBuilderOpen() {
     const html = document.getElementsByTagName('html')[0];
     html.style.scrollbarGutter = 'auto';
+    html.style.overflow = 'hidden';
   }
 
   private onBuilderClose() {
     const html = document.getElementsByTagName('html')[0];
     html.style.scrollbarGutter = '';
+    html.style.overflow = '';
   }
 
   onHide(): void {

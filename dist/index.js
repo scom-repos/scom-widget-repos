@@ -1944,10 +1944,12 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
         onBuilderOpen() {
             const html = document.getElementsByTagName('html')[0];
             html.style.scrollbarGutter = 'auto';
+            html.style.overflow = 'hidden';
         }
         onBuilderClose() {
             const html = document.getElementsByTagName('html')[0];
             html.style.scrollbarGutter = '';
+            html.style.overflow = '';
         }
         onHide() {
             super.onHide();
