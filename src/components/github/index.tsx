@@ -128,16 +128,16 @@ export class ScomWidgetReposGithub extends Module {
     if (result?.data) {
       this.listRepos = [
         ...result.data,
-        ...dataJson.map(v => {
-          return {
-            full_name: v,
-            name: v.split('/').pop(),
-            open_issues: 0,
-            owner_login: "scom-repos",
-            version: "",
-            html_url: `https://github.com/${v}`
-          }
-        })
+        // ...dataJson.map(v => {
+        //   return {
+        //     full_name: v,
+        //     name: v.split('/').pop(),
+        //     open_issues: 0,
+        //     owner_login: "scom-repos",
+        //     version: "",
+        //     html_url: `https://github.com/${v}`
+        //   }
+        // })
       ];
     } else {
       this.listRepos = [];
