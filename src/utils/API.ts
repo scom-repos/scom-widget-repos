@@ -64,17 +64,18 @@ const getGithubUser = async () => {
 
 const getAllRepos = async (owner?: string, prefix?: string, withPRs?: boolean) => {
   let result: any;
-  const queryParams = [];
-  if (owner) {
-    queryParams.push(`owner=${owner}`);
-  }
-  if (prefix) {
-    queryParams.push(`prefix=${prefix}`);
-  }
-  if (withPRs) {
-    queryParams.push(`withPRs=${withPRs}`);
-  }
-  const queryString = queryParams.join('&');
+  // const queryParams = [];
+  // if (owner) {
+  //   queryParams.push(`owner=${owner}`);
+  // }
+  // if (prefix) {
+  //   queryParams.push(`prefix=${prefix}`);
+  // }
+  // if (withPRs) {
+  //   queryParams.push(`withPRs=${withPRs}`);
+  // }
+  // const queryString = queryParams.join('&');
+  const queryString = 'org=scom-repos';
   try {
     let response = await fetch(`${API_URL}/github/all-repos${queryString ? `?${queryString}` : ''}`, {
       method: 'GET'
