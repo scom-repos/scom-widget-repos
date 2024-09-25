@@ -186,7 +186,7 @@ export class ScomWidgetRepos extends Module {
     const transportEndpoint = this.getAttribute('transportEndpoint', true);
     const signer = this.getAttribute('signer', true);
     const baseUrl = this.getAttribute('baseUrl', true);
-    this.setData({ guid, prefix, isProject, projectId, isProjectOwner, contractInfo, transportEndpoint, signer, baseUrl });
+    // this.setData({ guid, prefix, isProject, projectId, isProjectOwner, contractInfo, transportEndpoint, signer, baseUrl });
   }
 
   render() {
