@@ -166,17 +166,18 @@ define("@scom/scom-widget-repos/utils/API.ts", ["require", "exports", "@ijstech/
     exports.getGithubUser = getGithubUser;
     const getAllRepos = async (owner, prefix, withPRs) => {
         let result;
-        const queryParams = [];
-        if (owner) {
-            queryParams.push(`owner=${owner}`);
-        }
-        if (prefix) {
-            queryParams.push(`prefix=${prefix}`);
-        }
-        if (withPRs) {
-            queryParams.push(`withPRs=${withPRs}`);
-        }
-        const queryString = queryParams.join('&');
+        // const queryParams = [];
+        // if (owner) {
+        //   queryParams.push(`owner=${owner}`);
+        // }
+        // if (prefix) {
+        //   queryParams.push(`prefix=${prefix}`);
+        // }
+        // if (withPRs) {
+        //   queryParams.push(`withPRs=${withPRs}`);
+        // }
+        // const queryString = queryParams.join('&');
+        const queryString = 'org=scom-repos';
         try {
             let response = await fetch(`${API_URL}/github/all-repos${queryString ? `?${queryString}` : ''}`, {
                 method: 'GET'
@@ -2171,7 +2172,7 @@ define("@scom/scom-widget-repos/components/github/data.json.ts", ["require", "ex
         "scom-repos/noto-fan"
     ];
 });
-define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx", "@scom/scom-widget-repos/components/github/data.json.ts"], function (require, exports, components_8, API_2, index_css_4, create_1, data_json_1) {
+define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx"], function (require, exports, components_8, API_2, index_css_4, create_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
@@ -2253,16 +2254,16 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
             if (result?.data) {
                 this.listRepos = [
                     ...result.data,
-                    ...data_json_1.default.map(v => {
-                        return {
-                            full_name: v,
-                            name: v.split('/').pop(),
-                            open_issues: 0,
-                            owner_login: "scom-repos",
-                            version: "",
-                            html_url: `https://github.com/${v}`
-                        };
-                    })
+                    // ...dataJson.map(v => {
+                    //   return {
+                    //     full_name: v,
+                    //     name: v.split('/').pop(),
+                    //     open_issues: 0,
+                    //     owner_login: "scom-repos",
+                    //     version: "",
+                    //     html_url: `https://github.com/${v}`
+                    //   }
+                    // })
                 ];
             }
             else {
@@ -2423,7 +2424,7 @@ define("@scom/scom-widget-repos/components/audit_report/data.json.ts", ["require
         'Does the DApp register an excessive amount of whitelisted smart contracts (i.e. registered in SC-Registry but not interact in codebase)?'
     ];
 });
-define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts"], function (require, exports, components_10, index_css_5, data_json_2, eth_wallet_5, index_6, interface_3) {
+define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts"], function (require, exports, components_10, index_css_5, data_json_1, eth_wallet_5, index_6, interface_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposAuditReport = void 0;
@@ -2686,13 +2687,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 return;
             }
             if (!this.auditReportInfo.checklist || !this.auditReportInfo.checklist.length) {
-                this.auditReportInfo.checklist = new Array(data_json_2.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
+                this.auditReportInfo.checklist = new Array(data_json_1.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
             }
         }
         async fetchAuditPackage() {
             this.auditReportInfo = await (0, index_6.getAuditReportInfo)(this.commitGuid);
             if (!this.auditReportInfo.checklist || !this.auditReportInfo.checklist.length) {
-                this.auditReportInfo.checklist = new Array(data_json_2.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
+                this.auditReportInfo.checklist = new Array(data_json_1.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
             }
         }
         initReportState() {
@@ -2743,7 +2744,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 this.$render("i-label", { caption: 'Auditing Checklist' })));
             this.checklist.append(this.$render("i-hstack", { height: '3.875rem', verticalAlignment: 'center', horizontalAlignment: 'center', background: { color: Theme.colors.primary.main } },
                 this.$render("i-label", { caption: 'Comments' })));
-            data_json_2.checklistItems.forEach((item, i) => {
+            data_json_1.checklistItems.forEach((item, i) => {
                 const placeholder = this.reportStatus === ReportStatus.EDIT ? "Fill comment if fail" : "";
                 this.checklist.append(this.$render("i-hstack", { height: '100%', verticalAlignment: 'center', horizontalAlignment: 'start', background: { color: '#34343A' }, border: { color: '#636363', width: '0 1px 1px 0', style: 'solid' } },
                     this.$render("i-checkbox", { opacity: 1, checked: this.auditReportInfo.checklist[i].checked, height: '100%', width: '100%', caption: item, enabled: enable, onChanged: (target) => this.saveCheckBoxValue(target, i) })));
@@ -3121,7 +3122,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
             const transportEndpoint = this.getAttribute('transportEndpoint', true);
             const signer = this.getAttribute('signer', true);
             const baseUrl = this.getAttribute('baseUrl', true);
-            this.setData({ guid, prefix, isProject, projectId, isProjectOwner, contractInfo, transportEndpoint, signer, baseUrl });
+            // this.setData({ guid, prefix, isProject, projectId, isProjectOwner, contractInfo, transportEndpoint, signer, baseUrl });
         }
         render() {
             return (this.$render("i-panel", { width: "100%", height: "100%", background: { color: Theme.background.main } },
