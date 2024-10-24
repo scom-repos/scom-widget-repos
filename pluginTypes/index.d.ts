@@ -401,6 +401,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private _isAuditPR;
         private error;
         private initedConfig;
+        private _redirectUri;
         getAllRepos: () => Promise<void>;
         updateCountPRs: (oldNum: number, newNum: number) => void;
         constructor(parent?: Container, options?: GithubListElement);
@@ -421,6 +422,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         get listReposPagination(): any;
         get isAuditPR(): boolean;
         set isAuditPR(value: boolean);
+        onShow(options?: any): void;
         private renderDetailRepos;
         private renderRepos;
         private onRefresh;
@@ -536,6 +538,7 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
         private updateUI;
         private renderUI;
         setData(data: IGithub): void;
+        onShow(options?: any): void;
         onHide(): void;
         init(): void;
         render(): any;
@@ -697,6 +700,7 @@ declare module "@scom/scom-widget-repos" {
         private onRepoSearch;
         private onCreateRepoClick;
         disconnectedCallback(): void;
+        onShow(options?: any): void;
         onHide(): void;
         init(): Promise<void>;
         render(): any;

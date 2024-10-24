@@ -1775,6 +1775,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this._userInfo = {};
             this._listRepos = [];
             this.initedConfig = false;
+            this._redirectUri = '';
         }
         get guid() {
             return this._guid;
@@ -1833,6 +1834,10 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
         }
         set isAuditPR(value) {
             this._isAuditPR = value;
+        }
+        onShow(options) {
+            this._redirectUri = options?.redirect || '';
+            this.renderUI();
         }
         async renderDetailRepos() {
             if (!this.listRepos?.length) {
@@ -1905,7 +1910,8 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.pnlLoader.visible = false;
             const config = (0, index_3.getStorageConfig)();
             const baseUrl = config?.baseUrl || '';
-            const result = this.extractUrl(baseUrl);
+            let result = this.extractUrl(baseUrl);
+            result = result.split('?')[0];
             if (result.includes('scom-repos') || result.includes('ijstech')) {
                 this.showBuilder(result);
             }
@@ -1934,12 +1940,19 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                 this.initedConfig = true;
                 this.widgetBuilder.setConfig(config);
             }
+            this.widgetBuilder.readonly = !!this._redirectUri;
             await this.widgetBuilder.setValue(name);
             this.widgetBuilder.refresh();
             this.pnlBuilderLoader.visible = false;
         }
         closeBuilder() {
-            this.widgetBuilder.resetCid();
+            if (this._redirectUri) {
+                window.location.assign(decodeURIComponent(this._redirectUri));
+                this._redirectUri = '';
+            }
+            else {
+                this.widgetBuilder.resetCid();
+            }
             this.mdWidgetBuilder.visible = false;
         }
         onBuilderOpen() {
@@ -2341,6 +2354,14 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
             this._data = data;
             this.renderUI();
         }
+        onShow(options) {
+            const query = window.location.hash.split('?')[1];
+            const redirect = new URLSearchParams(query).get('redirect');
+            if (redirect)
+                this.elmPackages.onShow({ redirect });
+            else
+                this.renderUI();
+        }
         onHide() {
             if (this.elmList)
                 this.elmList.onHide();
@@ -2354,7 +2375,6 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
             this.isProject = this.getAttribute('isProject', true);
             this.isProjectOwner = this.getAttribute('isProjectOwner', true);
             this.prefix = this.getAttribute('prefix', true);
-            this.updateUI();
         }
         render() {
             return (this.$render("i-panel", { width: "100%", height: "100%", margin: { left: 'auto', right: 'auto' }, background: { color: Theme.background.main }, class: index_css_4.githubStyle },
@@ -3105,6 +3125,10 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
             if (this.githubElm) {
                 this.githubElm.onHide();
             }
+        }
+        onShow(options) {
+            if (this.githubElm)
+                this.githubElm.onShow();
         }
         onHide() {
             if (this.githubElm) {

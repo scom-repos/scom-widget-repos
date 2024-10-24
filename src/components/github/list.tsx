@@ -50,6 +50,7 @@ export default class ScomWidgetReposGithubList extends Module {
   private _isAuditPR: boolean;
   private error: string;
   private initedConfig: boolean = false;
+  private _redirectUri: string = '';
   public getAllRepos: () => Promise<void>;
   public updateCountPRs: (oldNum: number, newNum: number) => void;
 
@@ -130,6 +131,11 @@ export default class ScomWidgetReposGithubList extends Module {
     this._isAuditPR = value;
   }
 
+  onShow(options?: any): void {
+    this._redirectUri = options?.redirect || '';
+    this.renderUI()
+  }
+
   private async renderDetailRepos() {
     if (!this.listRepos?.length) {
       this.renderEmpty();
@@ -203,7 +209,8 @@ export default class ScomWidgetReposGithubList extends Module {
     this.pnlLoader.visible = false;
     const config: any = getStorageConfig();
     const baseUrl = config?.baseUrl || '';
-    const result = this.extractUrl(baseUrl);
+    let result = this.extractUrl(baseUrl);
+    result = result.split('?')[0];
     if (result.includes('scom-repos') || result.includes('ijstech')) {
       this.showBuilder(result);
     }
@@ -234,13 +241,19 @@ export default class ScomWidgetReposGithubList extends Module {
       this.initedConfig = true;
       this.widgetBuilder.setConfig(config);
     }
+    this.widgetBuilder.readonly = !!this._redirectUri;
     await this.widgetBuilder.setValue(name);
     this.widgetBuilder.refresh();
     this.pnlBuilderLoader.visible = false;
   }
 
   private closeBuilder() {
-    this.widgetBuilder.resetCid();
+    if (this._redirectUri) {
+      window.location.assign(decodeURIComponent(this._redirectUri));
+      this._redirectUri = '';
+    } else {
+      this.widgetBuilder.resetCid();
+    }
     this.mdWidgetBuilder.visible = false;
   }
 

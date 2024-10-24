@@ -169,6 +169,10 @@ export class ScomWidgetRepos extends Module {
     }
   }
 
+  onShow(options?: any): void {
+    if (this.githubElm) this.githubElm.onShow();
+  }
+
   onHide(): void {
     if (this.githubElm) {
       this.githubElm.onHide();
