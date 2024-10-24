@@ -217,6 +217,15 @@ export class ScomWidgetReposGithub extends Module {
     this.renderUI();
   }
 
+  onShow(options?: any): void {
+    const query = window.location.hash.split('?')[1];
+    const redirect = new URLSearchParams(query).get('redirect');
+    if (redirect)
+      this.elmPackages.onShow({ redirect });
+    else
+      this.renderUI();
+  }
+
   onHide() {
     if (this.elmList) this.elmList.onHide();
     if (this.elmPRs) this.elmPRs.onHide();
@@ -228,7 +237,6 @@ export class ScomWidgetReposGithub extends Module {
     this.isProject = this.getAttribute('isProject', true);
     this.isProjectOwner = this.getAttribute('isProjectOwner', true);
     this.prefix = this.getAttribute('prefix', true);
-    this.updateUI();
   }
 
   render() {
