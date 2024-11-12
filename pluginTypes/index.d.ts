@@ -384,6 +384,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private vStackRepos;
         private iconRefresh;
         private pnlBuilderLoader;
+        private filterSwitch;
         private totalPage;
         private pageNumber;
         private itemStart;
@@ -419,7 +420,8 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         set userInfo(value: any);
         set listRepos(value: any);
         get listRepos(): any;
-        get listReposPagination(): any;
+        get filteredRepos(): any[];
+        get listReposPagination(): any[];
         get isAuditPR(): boolean;
         set isAuditPR(value: boolean);
         onShow(options?: any): void;
@@ -435,6 +437,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private closeBuilder;
         private onBuilderOpen;
         private onBuilderClose;
+        private onSwitchFilter;
         onHide(): void;
         init(): void;
         render(): any;
@@ -536,6 +539,7 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
         private updateElms;
         private updateCountPRs;
         private updateUI;
+        private onHandleFilter;
         private renderUI;
         setData(data: IGithub): void;
         onShow(options?: any): void;

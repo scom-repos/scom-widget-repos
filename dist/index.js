@@ -1826,8 +1826,16 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
         get listRepos() {
             return this._listRepos;
         }
+        get filteredRepos() {
+            let list = [...this.listRepos];
+            const onlyPRs = this.filterSwitch?.checked ?? false;
+            if (onlyPRs) {
+                list = list.filter(v => v.open_issues > 0).sort((a, b) => (0, components_6.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
+            }
+            return [...list];
+        }
         get listReposPagination() {
-            return this.listRepos.slice(this.itemStart, this.itemEnd);
+            return this.filteredRepos.slice(this.itemStart, this.itemEnd);
         }
         get isAuditPR() {
             return this._isAuditPR;
@@ -1840,7 +1848,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.renderUI();
         }
         async renderDetailRepos() {
-            if (!this.listRepos?.length) {
+            if (!this.filteredRepos?.length) {
                 this.renderEmpty();
             }
             else {
@@ -1865,28 +1873,25 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             }
         }
         renderRepos() {
-            this.totalPage = Math.ceil(this.listRepos.length / pageSize);
+            this.totalPage = Math.ceil(this.filteredRepos.length / pageSize);
             this.paginationElm.visible = this.totalPage > 1;
             this.lbOrg.caption = this.userInfo?.data?.org || this.userInfo?.data?.login || '';
-            this.lbRepos.caption = `(${this.listRepos.length} ${this.listRepos.length !== 1 ? 'repositories' : 'repository'})`;
+            this.lbRepos.caption = `(${this.filteredRepos.length} ${this.filteredRepos.length !== 1 ? 'repositories' : 'repository'})`;
             const hasUser = !!this.userInfo?.data?.login;
             this.lbRepos.visible = hasUser;
             this.iconRefresh.visible = hasUser;
             this.renderDetailRepos();
         }
-        async onRefresh(showLoading) {
-            if (showLoading) {
-                this.renderUI();
-            }
-            else {
-                this.iconRefresh.enabled = false;
-                await this.getAllRepos();
-                this.resetPaging();
-                this.iconRefresh.enabled = true;
-            }
+        async onRefresh() {
+            this.pnlLoader.visible = true;
+            this.iconRefresh.enabled = false;
+            await this.getAllRepos();
+            this.resetPaging();
+            this.iconRefresh.enabled = true;
+            this.pnlLoader.visible = false;
         }
         onSelectIndex() {
-            if (!this.listRepos.length)
+            if (!this.filteredRepos.length)
                 return;
             this.pageNumber = this.paginationElm.currentPage;
             this.itemStart = (this.pageNumber - 1) * pageSize;
@@ -1965,6 +1970,9 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             html.style.scrollbarGutter = '';
             html.style.overflow = '';
         }
+        onSwitchFilter(target) {
+            this.renderRepos();
+        }
         onHide() {
             super.onHide();
             const children = this.vStackRepos?.children || [];
@@ -1987,7 +1995,8 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                     this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", wrap: "wrap" },
                         this.$render("i-label", { id: "lbOrg", font: { size: '1rem', bold: true, color: Theme.colors.primary.main } }),
                         this.$render("i-label", { id: "lbRepos", font: { size: '1rem' }, opacity: 0.8 }),
-                        this.$render("i-icon", { id: "iconRefresh", visible: false, class: "icon-hover", name: "sync-alt", width: "1.25rem", height: "1.25rem", cursor: "pointer", onClick: () => this.onRefresh() })),
+                        this.$render("i-icon", { id: "iconRefresh", visible: false, class: "icon-hover", name: "sync-alt", width: "1.25rem", height: "1.25rem", cursor: "pointer", onClick: this.onRefresh }),
+                        this.$render("i-switch", { id: "filterSwitch", checked: false, uncheckedTrackColor: Theme.colors.secondary.main, checkedTrackColor: Theme.colors.primary.main, tooltip: { content: 'Show only PRs', placement: 'bottom' }, onChanged: this.onSwitchFilter })),
                     this.$render("i-vstack", { id: "vStackRepos", width: "100%" }),
                     this.$render("i-hstack", { horizontalAlignment: "center", margin: { top: '2rem' } },
                         this.$render("i-pagination", { id: "paginationElm", margin: { bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, width: "auto", currentPage: this.pageNumber, totalPages: this.totalPage, onPageChanged: this.onSelectIndex }))),
@@ -2315,6 +2324,13 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
                 this.elmPRs.getAllRepos = () => this.getAllRepos();
                 this.elmPRs.updateCountPRs = (oldNum, newNum) => this.updateCountPRs(oldNum, newNum);
             }
+        }
+        onHandleFilter(onlyPRs) {
+            let list = [...this.listRepos];
+            if (onlyPRs) {
+                list = list.filter(v => v.open_issues > 0).sort((a, b) => (0, components_8.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
+            }
+            this.elmPackages.listRepos = list;
         }
         async renderUI() {
             const isAuditor = await (0, API_2.isActiveAuditor)();

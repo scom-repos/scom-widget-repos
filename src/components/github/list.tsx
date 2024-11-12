@@ -1,4 +1,4 @@
-import { customModule, Module, Container, Panel, VStack, Label, observable, Pagination, Icon, customElements, ControlElement, Styles, Modal } from "@ijstech/components";
+import { customModule, Module, Container, Panel, VStack, Label, observable, Pagination, Icon, customElements, ControlElement, Styles, Modal, Switch, moment } from "@ijstech/components";
 import { ScomWidgetReposGithubRepo } from "./repo";
 import { customModalStyle, githubStyle, spinnerStyle } from "./index.css";
 import { ScomWidgetBuilder } from "@scom/scom-widget-builder";
@@ -31,6 +31,7 @@ export default class ScomWidgetReposGithubList extends Module {
   private vStackRepos: Panel;
   private iconRefresh: Icon;
   private pnlBuilderLoader: VStack;
+  private filterSwitch: Switch;
   @observable()
   private totalPage = 0;
   private pageNumber = 0;
@@ -119,8 +120,17 @@ export default class ScomWidgetReposGithubList extends Module {
     return this._listRepos;
   }
 
+  get filteredRepos() {
+    let list = [...this.listRepos];
+    const onlyPRs = this.filterSwitch?.checked ?? false;
+    if (onlyPRs) {
+      list = list.filter(v => v.open_issues > 0).sort((a, b) => moment(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
+    }
+    return [...list];
+  }
+
   get listReposPagination() {
-    return this.listRepos.slice(this.itemStart, this.itemEnd);
+    return this.filteredRepos.slice(this.itemStart, this.itemEnd);
   }
 
   get isAuditPR() {
@@ -137,7 +147,7 @@ export default class ScomWidgetReposGithubList extends Module {
   }
 
   private async renderDetailRepos() {
-    if (!this.listRepos?.length) {
+    if (!this.filteredRepos?.length) {
       this.renderEmpty();
     } else {
       const nodeItems = [];
@@ -162,29 +172,27 @@ export default class ScomWidgetReposGithubList extends Module {
   }
 
   private renderRepos() {
-    this.totalPage = Math.ceil(this.listRepos.length / pageSize);
+    this.totalPage = Math.ceil(this.filteredRepos.length / pageSize);
     this.paginationElm.visible = this.totalPage > 1;
     this.lbOrg.caption = this.userInfo?.data?.org || this.userInfo?.data?.login || '';
-    this.lbRepos.caption = `(${this.listRepos.length} ${this.listRepos.length !== 1 ? 'repositories' : 'repository'})`;
+    this.lbRepos.caption = `(${this.filteredRepos.length} ${this.filteredRepos.length !== 1 ? 'repositories' : 'repository'})`;
     const hasUser = !!this.userInfo?.data?.login;
     this.lbRepos.visible = hasUser;
     this.iconRefresh.visible = hasUser;
     this.renderDetailRepos();
   }
 
-  private async onRefresh(showLoading?: boolean) {
-    if (showLoading) {
-      this.renderUI();
-    } else {
-      this.iconRefresh.enabled = false;
-      await this.getAllRepos();
-      this.resetPaging();
-      this.iconRefresh.enabled = true;
-    }
+  private async onRefresh() {
+    this.pnlLoader.visible = true;
+    this.iconRefresh.enabled = false;
+    await this.getAllRepos();
+    this.resetPaging();
+    this.iconRefresh.enabled = true;
+    this.pnlLoader.visible = false;
   }
 
   private onSelectIndex() {
-    if (!this.listRepos.length) return;
+    if (!this.filteredRepos.length) return;
     this.pageNumber = this.paginationElm.currentPage;
     this.itemStart = (this.pageNumber - 1) * pageSize;
     this.itemEnd = this.itemStart + pageSize;
@@ -269,6 +277,10 @@ export default class ScomWidgetReposGithubList extends Module {
     html.style.overflow = '';
   }
 
+  private onSwitchFilter(target: Switch) {
+    this.renderRepos();
+  }
+
   onHide(): void {
     super.onHide();
     const children = this.vStackRepos?.children || [];
@@ -312,7 +324,23 @@ export default class ScomWidgetReposGithubList extends Module {
           <i-hstack gap="0.5rem" verticalAlignment="center" wrap="wrap">
             <i-label id="lbOrg" font={{ size: '1rem', bold: true, color: Theme.colors.primary.main }} />
             <i-label id="lbRepos" font={{ size: '1rem' }} opacity={0.8} />
-            <i-icon id="iconRefresh" visible={false} class="icon-hover" name="sync-alt" width="1.25rem" height="1.25rem" cursor="pointer" onClick={() => this.onRefresh()} />
+            <i-icon
+              id="iconRefresh"
+              visible={false}
+              class="icon-hover"
+              name="sync-alt"
+              width="1.25rem" height="1.25rem"
+              cursor="pointer"
+              onClick={this.onRefresh}
+            />
+            <i-switch
+              id="filterSwitch"
+              checked={false}
+              uncheckedTrackColor={Theme.colors.secondary.main}
+              checkedTrackColor={Theme.colors.primary.main}
+              tooltip={{content: 'Show only PRs', placement: 'bottom'}}
+              onChanged={this.onSwitchFilter}
+            />
           </i-hstack>
           <i-vstack id="vStackRepos" width="100%" />
           <i-hstack horizontalAlignment="center" margin={{ top: '2rem' }}>

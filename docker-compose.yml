@@ -7,7 +7,7 @@ services:
       - .:/app
     command: bash -c "cd /app && rm -rf node_modules && rm -f package-lock.json && npm i && cd test && rm -rf node_modules && rm -f package-lock.json && npm i && cd .."
   build: 
-    user: nodegit statu
+    user: node
     image: node:18
     volumes:
       - .:/app
