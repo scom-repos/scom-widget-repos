@@ -2325,13 +2325,6 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
                 this.elmPRs.updateCountPRs = (oldNum, newNum) => this.updateCountPRs(oldNum, newNum);
             }
         }
-        onHandleFilter(onlyPRs) {
-            let list = [...this.listRepos];
-            if (onlyPRs) {
-                list = list.filter(v => v.open_issues > 0).sort((a, b) => (0, components_8.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
-            }
-            this.elmPackages.listRepos = list;
-        }
         async renderUI() {
             const isAuditor = await (0, API_2.isActiveAuditor)();
             const isPackagesPage = window.location.hash.startsWith("#/packages");

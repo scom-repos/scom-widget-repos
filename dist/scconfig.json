@@ -1,10 +1,11 @@
 {
     "name": "@scom/scom-widget-repos",
     "type": "widget",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "dependencies": [
         "@ijstech/components",
         "@ijstech/eth-wallet",
+        "@scom/scom-code-editor",
         "@scom/scom-designer",
         "@scom/scom-widget-builder"
     ]

@@ -539,7 +539,6 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
         private updateElms;
         private updateCountPRs;
         private updateUI;
-        private onHandleFilter;
         private renderUI;
         setData(data: IGithub): void;
         onShow(options?: any): void;
