@@ -11,6 +11,7 @@ import { ScomWidgetReposGithub, ScomWidgetReposCreateRepo } from './components/i
 import { searchPanelStyle } from "./index.css";
 import { IContractInfo } from "./interface";
 import { setContractInfoByChain, setStorageConfig, setTransportEndpoint } from "./store/index";
+import { mainJson } from "./languages/index";
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -180,6 +181,7 @@ export class ScomWidgetRepos extends Module {
   }
 
   async init() {
+    this.i18n.init({...mainJson});
     super.init();
     const contractInfo = this.getAttribute('contractInfo', true);
     const prefix = this.getAttribute('prefix', true);
@@ -212,14 +214,14 @@ export class ScomWidgetRepos extends Module {
               width="100%"
               height={40}
               border={{ width: 1, style: 'solid', color: Theme.divider, radius: 8 }}
-              placeholder={"Search repositories..."}
+              placeholder={"$search_repositories"}
               onChanged={this.onRepoSearch}
             />
           </i-panel>
           <i-button
             id="btnCreateRepo"
             height={40}
-            caption="Create Repository"
+            caption="$create_repository"
             padding={{ top: '0.25rem', bottom: '0.25rem', left: '1rem', right: '1rem' }}
             border={{ radius: 8 }}
             font={{ color: Theme.colors.primary.contrastText }}

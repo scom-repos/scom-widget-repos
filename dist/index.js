@@ -969,26 +969,26 @@ define("@scom/scom-widget-repos/utils/index.ts", ["require", "exports", "@ijstec
         return (0, components_4.moment)(date).format(formatType);
     };
     exports.formatDate = formatDate;
-    const getTimeAgo = (timestamp) => {
+    const getTimeAgo = (timestamp, i18n) => {
         const currentTime = (0, components_4.moment)();
         const pastTime = (0, components_4.moment)(timestamp);
         const duration = components_4.moment.duration(currentTime.diff(pastTime));
         if (duration.years() > 0) {
-            return `${duration.years()} year${duration.years() > 1 ? 's' : ''} ago`;
+            return i18n.get(duration.years() > 1 ? 'years_ago' : 'year_ago', { value: `${duration.years()}` });
         }
         if (duration.months() > 0) {
-            return `${duration.months()} month${duration.months() > 1 ? 's' : ''} ago`;
+            return i18n.get(duration.months() > 1 ? 'months_ago' : 'month_ago', { value: `${duration.months()}` });
         }
         if (duration.days() > 0) {
-            return `${duration.days()} day${duration.days() > 1 ? 's' : ''} ago`;
+            return i18n.get(duration.days() > 1 ? 'days_ago' : 'day_ago', { value: `${duration.days()}` });
         }
         if (duration.hours() > 0) {
-            return `${duration.hours()} hour${duration.hours() > 1 ? 's' : ''} ago`;
+            return i18n.get(duration.hours() > 1 ? 'hours_ago' : 'hour_ago', { value: `${duration.hours()}` });
         }
         if (duration.minutes() > 0) {
-            return `${duration.minutes()} minute${duration.minutes() > 1 ? 's' : ''} ago`;
+            return i18n.get(duration.minutes() > 1 ? 'minutes_ago' : 'minute_ago', { value: `${duration.minutes()}` });
         }
-        return 'just now';
+        return i18n.get('just_now');
     };
     exports.getTimeAgo = getTimeAgo;
     const getExplorerTxUrl = (txHash, chainId) => {
@@ -1035,7 +1035,295 @@ define("@scom/scom-widget-repos/utils/index.ts", ["require", "exports", "@ijstec
     };
     exports.compareVersions = compareVersions;
 });
-define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/interface.ts", "@ijstech/eth-wallet"], function (require, exports, components_5, index_2, index_css_1, interface_2, eth_wallet_4) {
+define("@scom/scom-widget-repos/languages/main.json.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    ///<amd-module name='@scom/scom-widget-repos/languages/main.json.ts'/> 
+    exports.default = {
+        "en": {
+            "create_repository": "Create Repository",
+            "transaction_submitted": "Transaction Submitted",
+            "failed_to_upload_data_to_ipfs": "Failed to upload data to IPFS.",
+            "opened_by": "# {{qty}} opened {{date}} by {{by}}",
+            "pull_requests": "Pull Requests",
+            "search_repositories": "Search repositories...",
+            "year_ago": "{{value}} year ago",
+            "years_ago": "{{value}} years ago",
+            "month_ago": "{{value}} month ago",
+            "months_ago": "{{value}} months ago",
+            "day_ago": "{{value}} day ago",
+            "days_ago": "{{value}} days ago",
+            "hour_ago": "{{value}} hour ago",
+            "hours_ago": "{{value}} hours ago",
+            "minute_ago": "{{value}} minute ago",
+            "minutes_ago": "{{value}} minutes ago",
+            "just_now": "just now"
+        },
+        "zh-hant": {},
+        "vi": {
+            "create_repository": "Tạo Kho lưu trữ",
+            "transaction_submitted": "Giao dịch đã được gửi đi",
+            "failed_to_upload_data_to_ipfs": "Tải dữ liệu lên IPFS thất bại.",
+            "opened_by": "# {{qty}} được tạo {{date}} bởi {{by}}",
+            "pull_requests": "Yêu cầu đóng góp",
+            "search_repositories": "Tìm kiếm kho lưu trữ...",
+            "year_ago": "{{value}} năm trước",
+            "years_ago": "{{value}} năm trước",
+            "month_ago": "{{value}} tháng trước",
+            "months_ago": "{{value}} tháng trước",
+            "day_ago": "{{value}} ngày trước",
+            "days_ago": "{{value}} ngày trước",
+            "hour_ago": "{{value}} giờ trước",
+            "hours_ago": "{{value}} giờ trước",
+            "minute_ago": "{{value}} phút trước",
+            "minutes_ago": "{{value}} phút trước",
+            "just_now": "gần đây"
+        }
+    };
+});
+define("@scom/scom-widget-repos/languages/audit.json.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    ///<amd-module name='@scom/scom-widget-repos/languages/audit.json.ts'/> 
+    exports.default = {
+        "en": {
+            "auditing_checklist": "Auditing Checklist",
+            "comments": "Comments",
+            "project_name": "Project Name",
+            "fill_comment_if_fail": "Fill comment if fail",
+            "invalid_commit_audit_report_not_found": "Invalid commit, audit report not found",
+            "cannot_fetch_pull_request_info": "Cannot fetch pull request info!",
+            "commit_id_sha": "Commit ID (SHA)",
+            "all": "All",
+            "you_have_to_add_comment_to_the_failed_checklist_item": "You have to add comment to the failed checklist item",
+            "audit_summary": "Audit Summary",
+            "sign_and_submit": "Sign & Submit",
+            "next": "Next",
+            "version": "Version",
+            "owner": "Owner",
+            "title": "Title",
+            "package_name": "Package Name",
+            "package_owner": "Package Owner",
+            "pr_number": "PR Number",
+            "merge_sha": "Merge SHA",
+            "ipfs_code_source": "IPFS Code Source",
+            "audit_date": "Audit Date",
+            "audit_by": "Audit By",
+            "audit_result": "Audit Result",
+            "not_under_auditing": "Not under auditing",
+            "uploading_audit_report_to_ipfs": "Uploading Audit Report to IPFS",
+            "auditing": "Auditing",
+            "audit_successfully": "Audit successfully",
+            "failed_to_audit": "Failed to audit",
+            "audit_procedure": "Audit Procedure",
+            "by_key": "by",
+            "view_code": "View Code",
+            "you_are_going_to_audit_the_dapp_checklist": "* You are going to audit the DApp checklist.",
+            "if_you_are_first_time_to_go_over_the_checklist_you_could_find_the_guideline": "If you are first time to go over the checklist, you could find the guideline",
+            "here": "here",
+            "back": "Back",
+            "audit_checklist": "Audit Checklist",
+            "auditor_comment": "Auditor Comment",
+            "checklist_item": "Checklist Item",
+            "checklist": "Checklist",
+            "loading": "Loading...",
+            "submit": "Submit"
+        },
+        "zh-hant": {},
+        "vi": {
+            "auditing_checklist": "Danh sách kiểm tra",
+            "comments": "Bình luận",
+            "project_name": "Tên dự án",
+            "fill_comment_if_fail": "Điền bình luận nếu thất bại",
+            "invalid_commit_audit_report_not_found": "Báo cáo kiểm tra không hợp lệ, báo cáo không tìm thấy",
+            "cannot_fetch_pull_request_info": "Không thể lấy thông tin pull request!",
+            "commit_id_sha": "Commit ID (SHA)",
+            "all": "Tất cả",
+            "you_have_to_add_comment_to_the_failed_checklist_item": "Bạn phải thêm bình luận vào mục danh sách kiểm tra thất bại",
+            "audit_summary": "Tóm tắt kiểm tra",
+            "sign_and_submit": "Ký và gửi",
+            "next": "Tiếp theo",
+            "version": "Phiên bản",
+            "owner": "Chủ sở hữu",
+            "title": "Tiêu đề",
+            "package_name": "Tên gói",
+            "package_owner": "Chủ sở hữu gói",
+            "pr_number": "Số PR",
+            "merge_sha": "Merge SHA",
+            "ipfs_code_source": "Mã nguồn IPFS",
+            "audit_date": "Ngày kiểm tra",
+            "audit_by": "Kiểm tra bởi",
+            "audit_result": "Kết quả kiểm tra",
+            "not_under_auditing": "Không ở chế độ kiểm tra",
+            "uploading_audit_report_to_ipfs": "Đang tải lên báo cáo kiểm tra lên IPFS",
+            "auditing": "Đang kiểm tra",
+            "audit_successfully": "Đã kiểm tra thành công",
+            "failed_to_audit": "Không thể kiểm tra",
+            "transaction_submitted": "Giao dịch đã được gửi",
+            "failed_to_upload_data_to_ipfs": "Tải dữ liệu lên IPFS thất bại",
+            "audit_procedure": "Hành vi kiểm tra",
+            "by_key": "bởi",
+            "view_code": "Xem mã",
+            "you_are_going_to_audit_the_dapp_checklist": "* Bạn sắp có muốn kiểm tra danh sách ứng dụng.",
+            "if_you_are_first_time_to_go_over_the_checklist_you_could_find_the_guideline": "Nếu bạn là người đầu tiên để xem qua danh sách, bạn có thể tìm thấy hướng dẫn",
+            "here": "ở đây",
+            "back": "Quay lại",
+            "audit_checklist": "Danh sách kiểm tra",
+            "auditor_comment": "Bình luận kiểm tra",
+            "checklist_item": "Mục danh sách kiểm tra",
+            "checklist": "Danh sách kiểm tra",
+            "loading": "Đang tải...",
+            "submit": "Gửi"
+        }
+    };
+});
+define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    ///<amd-module name='@scom/scom-widget-repos/languages/repo.json.ts'/> 
+    exports.default = {
+        "en": {
+            "please_add_a_prefix_to_the_project_first": "Please add a prefix to the project first.",
+            "please_login_to_create_your_repository": "Please login to create your repository",
+            "repository_name_is_required": "Repository name is required.",
+            "failed_to_create_your_repository": "Failed to create your repository.",
+            "your_repository_has_been_created_successfully": "Your repository has been created successfully.",
+            "create_new_repository": "Create new repository",
+            "repository_name": "Repository name",
+            "description": "Description",
+            "confirm": "Confirm",
+            "all": "All",
+            "repositories": "repositories",
+            "repository": "repository",
+            "there_is_no_repository": "There is no repository!",
+            "show_only_PRs": "Show only PRs",
+            "updated": "Updated {{date}}",
+            "prs": "PRs",
+            "view_record": "View Record",
+            "merge": "Merge",
+            "review": "Review",
+            "submit_for_audit": "Submit for Audit",
+            "there_is_no_pull_request": "There is no pull request",
+            "are_you_sure_you_want_to_merge": "Are you sure you want to merge #${prNumber} in ${repo}?",
+            "this_pr_is_not_reviewed_by_the_auditor_yet": "This PR is not reviewed by the auditor yet.",
+            "this_pr_has_been_audited_with_failed_status": "This PR has been audited with failed status.",
+            "pending_review": "Pending Review",
+            "pending_audit": "Pending Audit",
+            "passed_review": "Passed Review",
+            "audit_passed": "Audit Passed",
+            "failed_review": "Failed Review",
+            "audit_failed": "Audit Failed",
+            "start_time_cannot_be_earlier_than_end_time": "Start time cannot be earlier than end time",
+            "end_time_cannot_be_earlier_than_start_time": "End time cannot be earlier than start time",
+            "commits": "Commits",
+            "publish": "Publish",
+            "there_is_no_commit": "There is no commit",
+            "merge_pull_request": "Merge pull request",
+            "merging": "Merging",
+            "merging...": "Merging...",
+            "failed_to_merge": "Failed to merge",
+            "failed_to_get_message": "Failed to get message",
+            "merged_successfully": "Merged successfully",
+            "submitting": "Submitting",
+            "failed_to_submit": "Failed to submit",
+            "cannot_submit_an_old_version": "Cannot submit an old version",
+            "this_version_has_already_been_submitted": "This version has already been submitted",
+            "failed_to_upload_data_to_ipfs": "Failed to upload data to IPFS",
+            "submitted_successfully": "Submitted successfully",
+            "edit": "Edit",
+            "commit_id": "Commit ID",
+            "title": "Title",
+            "start_date": "Start Date",
+            "end_date": "End Date",
+            "search": "Search",
+            "clear": "Clear",
+            "sync": "Sync",
+            "branch": "Branch:",
+            "version": "Version:",
+            "audit_report": "Audit Report",
+            "commit_id_sha": "Commit ID (SHA):",
+            "success": "Success",
+            "merged": "Merged",
+            "error": "Error",
+            "committed": "committed"
+        },
+        "zh-hant": {},
+        "vi": {
+            "please_add_a_prefix_to_the_project_first": "Vui lòng thêm tiền tố cho tên dự án.",
+            "please_login_to_create_your_repository": "Vui lòng đăng nhập để tạo kho lưu trữ",
+            "repository_name_is_required": "Tên kho lưu trữ là bắt buộc.",
+            "failed_to_create_your_repository": "Không thể tạo kho lưu trữ của bạn.",
+            "your_repository_has_been_created_successfully": "Kho lưu trữ của bạn đã được tạo thành công.",
+            "create_new_repository": "Tạo Kho lưu trữ mới",
+            "repository_name": "Tên Kho lưu trữ",
+            "description": "Mô tả",
+            "confirm": "Xác nhận",
+            "all": "Tất cả",
+            "repositories": "kho lưu trữ",
+            "repository": "kho lưu trữ",
+            "there_is_no_repository": "Chưa có kho lưu trữ nào!",
+            "show_only_PRs": "Chỉ hiển thị PRs",
+            "updated": "Đã cập nhật {{date}}",
+            "prs": "PRs",
+            "view_record": "Xem bản ghi",
+            "merge": "Gộp",
+            "review": "Đánh giá",
+            "submit_for_audit": "Gửi để kiểm tra",
+            "there_is_no_pull_request": "Không có pull request nào",
+            "are_you_sure_you_want_to_merge": "Bạn có chắc chắn muốn gộp #${prNumber} vào ${repo}?",
+            "this_pr_is_not_reviewed_by_the_auditor_yet": "PR này chưa được đánh giá bởi người đánh giá.",
+            "this_pr_has_been_audited_with_failed_status": "PR này chưa thông qua kiểm tra.",
+            "pending_review": "Đang đánh giá",
+            "pending_audit": "Đang kiểm tra",
+            "passed_review": "Đánh giá đạt",
+            "audit_passed": "Kiểm tra đạt",
+            "failed_review": "Đánh giá chưa đạt",
+            "audit_failed": "Kiểm tra chưa đạt",
+            "start_time_cannot_be_earlier_than_end_time": "Thời gian bắt đầu không thể sớm hơn thời gian kết thúc",
+            "end_time_cannot_be_earlier_than_start_time": "Thời gian kết thúc không thể sớm hơn thời gian bắt đầu",
+            "commits": "Commits",
+            "publish": "Xuất bản",
+            "there_is_no_commit": "Không có commit nào",
+            "merge_pull_request": "Gộp Pull request",
+            "merging": "Đang gộp",
+            "merging...": "Đang gộp...",
+            "failed_to_merge": "Không thể gộp",
+            "failed_to_get_message": "Không thể lấy thông điệp",
+            "merged_successfully": "Đã gộp thành công",
+            "submitting": "Đang gửi",
+            "failed_to_submit": "Không thể gửi",
+            "cannot_submit_an_old_version": "Không thể gửi phiên bản cũ",
+            "this_version_has_already_been_submitted": "Phiên bản này đã được gửi",
+            "failed_to_upload_data_to_ipfs": "Tải dữ liệu lên IPFS thất bại",
+            "submitted_successfully": "Đã gửi thành công",
+            "edit": "Chỉnh sửa",
+            "commit_id": "Commit ID",
+            "title": "Tiêu đề",
+            "start_date": "Ngày bắt đầu",
+            "end_date": "Ngày kết thúc",
+            "search": "Tìm kiếm",
+            "clear": "Xóa",
+            "sync": "Đồng bộ",
+            "branch": "Đường:",
+            "version": "Phiên bản:",
+            "audit_report": "Báo cáo kiểm tra",
+            "commit_id_sha": "Commit ID (SHA):",
+            "success": "Thành công",
+            "merged": "Đã gộp",
+            "error": "Lỗi",
+            "committed": "đã được commit"
+        }
+    };
+});
+define("@scom/scom-widget-repos/languages/index.ts", ["require", "exports", "@scom/scom-widget-repos/languages/main.json.ts", "@scom/scom-widget-repos/languages/audit.json.ts", "@scom/scom-widget-repos/languages/repo.json.ts"], function (require, exports, main_json_1, audit_json_1, repo_json_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.repoJson = exports.auditJson = exports.mainJson = void 0;
+    exports.mainJson = main_json_1.default;
+    exports.auditJson = audit_json_1.default;
+    exports.repoJson = repo_json_1.default;
+});
+define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/interface.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_5, index_2, index_css_1, interface_2, eth_wallet_4, index_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposGithubRepo = void 0;
@@ -1104,7 +1392,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                         const val = date;
                         inputEndDate.min = val.format('YYYY-MM-DD HH:mm');
                         if (this.inputEndDate.value?.isBefore(val)) {
-                            this.lbStartDateErr.caption = 'Start time cannot be earlier than end time';
+                            this.lbStartDateErr.caption = '$start_time_cannot_be_earlier_than_end_time';
                         }
                     }
                     else {
@@ -1123,7 +1411,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                         const val = date;
                         inputStartDate.max = val.format('YYYY-MM-DD HH:mm');
                         if (this.inputStartDate.value?.isAfter(value)) {
-                            this.lbEndDateErr.caption = 'End time cannot be earlier than start time';
+                            this.lbEndDateErr.caption = '$end_time_cannot_be_earlier_than_start_time';
                         }
                     }
                     else {
@@ -1153,21 +1441,21 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             const { name, owner_login, open_issues, html_url, pushed_at, full_name, version } = this.data;
             this.packageInfo = await (0, index_2.getPackageByNames)(owner_login, name);
             this.lbName.caption = name;
-            this.lbPublish.caption = `Publish ${name} repository`;
+            this.lbPublish.caption = this.i18n.get('$publish', { name, repo: full_name });
             this.lbPath.caption = full_name;
             this.lbVersion.caption = version || '-';
             const hasPR = open_issues > 0;
             this.lbCount.caption = `${open_issues}`;
-            this.tabPRs.caption = `PRs <span style="color: var(--colors-primary-main)">(${open_issues})</span>`;
+            this.tabPRs.caption = `${this.i18n.get('$prs')} <span style="color: var(--colors-primary-main)">(${open_issues})</span>`;
             this.lbCount.background = { color: hasPR ? Theme.colors.primary.main : Theme.colors.info.main };
             this.hStackCount.cursor = hasPR ? 'pointer' : 'default';
             this.hStackCount.onClick = () => hasPR ? this.onShowDetail() : {};
             this.hStackLink.onClick = () => this.openLink(html_url);
-            this.lbPushedAt.caption = `Updated ${(0, index_2.getTimeAgo)(pushed_at)}`;
+            this.lbPushedAt.caption = this.i18n.get('$updated', { date: (0, index_2.getTimeAgo)(pushed_at, this.i18n) });
             if (this.timer)
                 clearInterval(this.timer);
             this.timer = setInterval(() => {
-                this.lbPushedAt.caption = `Updated ${(0, index_2.getTimeAgo)(pushed_at)}`;
+                this.lbPushedAt.caption = this.i18n.get('$updated', { date: (0, index_2.getTimeAgo)(pushed_at, this.i18n) });
             }, 60000);
         }
         clearListTimer() {
@@ -1187,12 +1475,20 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             for (const pr of this.listPR) {
                 const { mergeId, html_url, number, title, created_at, user_login, base, status } = pr;
                 const lbTimer = new components_5.Label(undefined, {
-                    caption: `#${number} opened ${(0, index_2.getTimeAgo)(created_at)} by ${user_login}`,
+                    caption: this.i18n.get('$opened_by', {
+                        qty: `${number}`,
+                        date: (0, index_2.getTimeAgo)(created_at, this.i18n),
+                        by: user_login
+                    }),
                     font: { size: '0.75rem' },
                     opacity: 0.8
                 });
                 const interval = setInterval(() => {
-                    lbTimer.caption = `#${number} opened ${(0, index_2.getTimeAgo)(created_at)} by ${user_login}`;
+                    lbTimer.caption = this.i18n.get('$opened_by', {
+                        qty: `${number}`,
+                        date: (0, index_2.getTimeAgo)(created_at, this.i18n),
+                        by: user_login
+                    });
                 }, 60000);
                 this.listTimer.push(interval);
                 nodeItems.push(this.$render("i-hstack", { gap: "0.625rem", margin: { bottom: '1rem' }, padding: { top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }, background: { color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }, boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)", border: { radius: '0.375rem' }, verticalAlignment: "center", horizontalAlignment: "space-between" },
@@ -1203,27 +1499,27 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                         lbTimer),
                     this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center" },
                         this.$render("i-label", { caption: this.getStatusText(status, true), font: { size: '0.875rem' }, background: { color: this.getStatusColor(status) }, border: { radius: '1rem' }, padding: { left: '0.625rem', right: '0.625rem', top: '0.3125rem', bottom: '0.3125rem' }, minWidth: '5.5rem', class: "text-center" }),
-                        status !== interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: "View Record", background: { color: '#212128' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onViewRecord(mergeId, base.base_login, base.base_name, number) }) : [],
-                        this.isAuditPR && status === interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: 'Review', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onAuditPR(base.base_login, base.base_name, number) }) : [],
-                        this.isGithubOwner || this.isProjectOwner ? this.$render("i-button", { caption: 'Merge', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: (btn) => this.onMergePR(btn, base.base_login, base.base_name, number, status) }) : [])));
+                        status !== interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: "$view_record", background: { color: '#212128' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onViewRecord(mergeId, base.base_login, base.base_name, number) }) : [],
+                        this.isAuditPR && status === interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: '$review', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onAuditPR(base.base_login, base.base_name, number) }) : [],
+                        this.isGithubOwner || this.isProjectOwner ? this.$render("i-button", { caption: '$merge', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: (btn) => this.onMergePR(btn, base.base_login, base.base_name, number, status) }) : [])));
             }
             if (!nodeItems.length) {
                 nodeItems.push(this.$render("i-hstack", { gap: "0.625rem", margin: { bottom: '1rem' }, padding: { top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }, background: { color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }, boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)", border: { radius: '0.375rem' }, verticalAlignment: "center", horizontalAlignment: "center" },
-                    this.$render("i-label", { caption: "There is no pull request" })));
+                    this.$render("i-label", { caption: "$there_is_no_pull_request" })));
             }
             this.vStackListPR.clearInnerHTML();
             this.vStackListPR.append(...nodeItems);
         }
         getStatusMessage(status, prNumber, repo) {
-            let text = `Are you sure you want to merge #${prNumber} in ${repo}?`;
+            let text = this.i18n.get('$are_you_sure_you_want_to_merge', { prNumber: `${prNumber}`, repo });
             if (!this.guid)
                 return text;
             switch (status) {
                 case interface_2.PackageStatus.AUDITING:
-                    text = `<span style="color: ${Theme.colors.warning.main}">This PR is not reviewed by the auditor yet. ${text}</span>`;
+                    text = `<span style="color: ${Theme.colors.warning.main}">${this.i18n.get('$this_pr_is_not_reviewed_by_the_auditor_yet')} ${text}</span>`;
                     break;
                 case interface_2.PackageStatus.AUDIT_FAILED:
-                    text = `<span style="color: ${Theme.colors.error.main}">This PR has been audited with failed status. ${text}</span>`;
+                    text = `<span style="color: ${Theme.colors.error.main}">${this.i18n.get('$this_pr_has_been_audited_with_failed_status')} ${text}</span>`;
                     break;
             }
             return text;
@@ -1252,20 +1548,20 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             let text = '';
             switch (status) {
                 case interface_2.PackageStatus.AUDITING:
-                    text = isPR ? "Pending Review" : "Pending Audit";
+                    text = isPR ? "$pending_review" : "$pending_audit";
                     break;
                 case interface_2.PackageStatus.AUDIT_PASSED:
                     if (isDefault)
-                        return "Submit for Audit";
-                    text = isPR ? "Passed Review" : "Audit Passed";
+                        return "$submit_for_audit";
+                    text = isPR ? "$passed_review" : "$audit_passed";
                     break;
                 case interface_2.PackageStatus.AUDIT_FAILED:
                     if (isDefault)
-                        return "Submit for Audit";
-                    text = isPR ? "Failed Review" : "Audit Failed";
+                        return "$submit_for_audit";
+                    text = isPR ? "$failed_review" : "$audit_failed";
                     break;
                 default:
-                    text = isPR ? "Pending Review" : "Submit for Audit";
+                    text = isPR ? "$pending_review" : "$submit_for_audit";
             }
             return text;
         }
@@ -1377,7 +1673,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             this.iconDetail.enabled = true;
         }
         renderCommits() {
-            this.tabCommits.caption = `Commits <span style="color: var(--colors-primary-main)">(${this.totalCommits})</span>`;
+            this.tabCommits.caption = `${this.i18n.get('$commits')} <span style="color: var(--colors-primary-main)">(${this.totalCommits})</span>`;
             let nodeItems = [];
             const { guid } = this.packageInfo;
             for (const commit of this.commits) {
@@ -1387,18 +1683,18 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                         this.$render("i-hstack", { gap: "0.5rem" },
                             this.$render("i-label", { caption: message, wordBreak: "break-word", font: { size: '0.875rem', bold: true } }),
                             this.$render("i-icon", { name: "external-link-alt", class: "icon-hover", cursor: "pointer", width: "0.9rem", height: "0.9rem", onClick: () => this.openLink(url) })),
-                        this.$render("i-label", { caption: `Version: ${version || '-'}`, font: { size: '0.875rem' } }),
-                        this.$render("i-label", { caption: `${committer} committed ${(0, index_2.getTimeAgo)(date)}`, font: { size: '0.75rem' }, opacity: 0.8 })),
+                        this.$render("i-label", { caption: `${this.i18n.get('$version')} ${version || '-'}`, font: { size: '0.875rem' } }),
+                        this.$render("i-label", { caption: `${committer} ${this.i18n.get('$committed')} ${(0, index_2.getTimeAgo)(date, this.i18n)}`, font: { size: '0.75rem' }, opacity: 0.8 })),
                     this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center", wrap: "wrap" },
                         auditStatus ? this.$render("i-label", { caption: this.getStatusText(auditStatus), font: { size: '0.875rem' }, background: { color: this.getStatusColor(auditStatus) }, border: { radius: '1rem' }, padding: { left: '0.625rem', right: '0.625rem', top: '0.3125rem', bottom: '0.3125rem' }, minWidth: '5.5rem', class: "text-center" }) : [],
-                        auditStatus && auditStatus !== interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: "View Record", background: { color: '#212128' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onViewCommitRecord(commit.guid) }) : [],
-                        this.isAuditPR && auditStatus === interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: 'Audit', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onAuditCommit(commit.guid) }) : [],
-                        this.isProject && this.isProjectOwner && !auditStatus ? this.$render("i-button", { id: `btn-${sha}`, caption: 'Submit for Audit', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onShowRequestAudit(commit.guid, guid, sha, version) }) : [],
-                        this.isProject && this.isProjectOwner && auditStatus === interface_2.PackageStatus.AUDIT_PASSED ? this.$render("i-button", { caption: 'Publish', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, onClick: () => this.onPublish(commit.guid) }) : [])));
+                        auditStatus && auditStatus !== interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: "$view_record", background: { color: '#212128' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onViewCommitRecord(commit.guid) }) : [],
+                        this.isAuditPR && auditStatus === interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: '$audit', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onAuditCommit(commit.guid) }) : [],
+                        this.isProject && this.isProjectOwner && !auditStatus ? this.$render("i-button", { id: `btn-${sha}`, caption: '$submit_for_audit', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onShowRequestAudit(commit.guid, guid, sha, version) }) : [],
+                        this.isProject && this.isProjectOwner && auditStatus === interface_2.PackageStatus.AUDIT_PASSED ? this.$render("i-button", { caption: '$publish', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, onClick: () => this.onPublish(commit.guid) }) : [])));
             }
             if (!nodeItems.length) {
                 nodeItems.push(this.$render("i-hstack", { gap: "0.625rem", margin: { bottom: '1rem' }, padding: { top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }, background: { color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }, boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)", border: { radius: '0.375rem' }, verticalAlignment: "center", horizontalAlignment: "center" },
-                    this.$render("i-label", { caption: "There is no commit" })));
+                    this.$render("i-label", { caption: "$there_is_no_commit" })));
             }
             this.vStackListCommit.clearInnerHTML();
             this.vStackListCommit.append(...nodeItems);
@@ -1430,7 +1726,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             else {
                 this.setMessage({
                     status: 'confirm',
-                    title: 'Merge pull request',
+                    title: '$merge_pull_request',
                     content: this.getStatusMessage(status, prNumber, repo),
                     onConfirm: () => this.mergeOnePR(button, owner, repo, prNumber)
                 });
@@ -1440,21 +1736,21 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
         async mergeOnePR(button, owner, repo, prNumber) {
             this.setMessage({
                 status: 'warning',
-                title: 'Merge',
-                content: 'Merging...',
+                title: '$merge',
+                content: '$merging...',
             });
             this.mdAlert.showModal();
-            button.caption = 'Merging';
+            button.caption = '$merging';
             button.enabled = false;
             button.rightIcon.visible = true;
             const showError = (msg) => {
                 this.setMessage({
                     status: 'error',
-                    title: 'Error',
-                    content: msg || 'Failed to merge'
+                    title: '$error',
+                    content: msg || '$failed_to_merge'
                 });
                 this.mdAlert.showModal();
-                button.caption = 'Merge';
+                button.caption = '$merge';
                 button.enabled = true;
                 button.rightIcon.visible = false;
             };
@@ -1464,7 +1760,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                 if (this.guid) {
                     const { data } = await (0, index_2.getMergeMsg)(this.guid, owner, repo);
                     if (!data) {
-                        showError('Failed to get message');
+                        showError('$failed_to_get_message');
                         return;
                     }
                     message = btoa(data);
@@ -1480,8 +1776,8 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                 else {
                     this.setMessage({
                         status: 'success',
-                        title: 'Success',
-                        content: 'Merged successfully'
+                        title: '$success',
+                        content: '$merged_successfully'
                     });
                     this.mdAlert.showModal();
                     const oldPRs = Number(this.listPR.length);
@@ -1490,7 +1786,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                         await this.onRefresh();
                     }
                     else {
-                        button.caption = 'Merged';
+                        button.caption = '$merged';
                         button.enabled = false;
                         button.rightIcon.visible = false;
                         this.refreshPR(true);
@@ -1523,7 +1819,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
         resetPublishInfo() {
             this.lbCommitId.caption = '';
             this.lbCommitVersion.caption = '';
-            this.btnPublish.caption = 'Submit for Audit';
+            this.btnPublish.caption = '$submit_for_audit';
             this.btnPublish.enabled = true;
             this.btnPublish.rightIcon.visible = false;
             this.mdPublish.visible = false;
@@ -1539,17 +1835,17 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                     content: 'Submitting...',
                 });
                 this.mdAlert.showModal();
-                this.btnPublish.caption = 'Submitting';
+                this.btnPublish.caption = '$submitting';
                 this.btnPublish.enabled = false;
                 this.btnPublish.rightIcon.visible = true;
                 const showError = (msg) => {
                     this.setMessage({
                         status: 'error',
                         title: 'Error',
-                        content: msg || 'Failed to submit'
+                        content: msg || '$failed_to_submit'
                     });
                     this.mdAlert.showModal();
-                    this.btnPublish.caption = 'Submit for Audit';
+                    this.btnPublish.caption = '$submit_for_audit';
                     this.btnPublish.enabled = true;
                     this.btnPublish.rightIcon.visible = false;
                 };
@@ -1576,7 +1872,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                     const requestedAudit = this.commits.filter(f => f.auditStatus);
                     let isOldVersion = requestedAudit.length ? requestedAudit.every((v) => !(0, index_2.compareVersions)(v.version, version)) : false;
                     if (isOldVersion) {
-                        showError('Cannot submit an old version');
+                        showError('$cannot_submit_an_old_version');
                         return;
                     }
                     else {
@@ -1585,13 +1881,13 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                             return ver[0] === finVersion.major && ver[1] === finVersion.minor && ver[2] === finVersion.patch && v.auditStatus !== interface_2.PackageStatus.AUDIT_FAILED;
                         });
                         if (isCurrentVersion) {
-                            showError('This version has already been submitted');
+                            showError('$this_version_has_already_been_submitted');
                             return;
                         }
                     }
                     const ipfsCid = await (0, index_2.uploadDataToIpfs)('commitDetail', JSON.stringify(commitInfo, null, 2));
                     if (!ipfsCid) {
-                        showError('Failed to upload data to IPFS');
+                        showError('$failed_to_upload_data_to_ipfs');
                         return;
                     }
                     const callback = async (err, receipt) => {
@@ -1602,7 +1898,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                         else if (receipt) {
                             this.setMessage({
                                 status: 'success',
-                                title: 'Transaction Submitted',
+                                title: '$transaction_submitted',
                                 link: {
                                     caption: receipt,
                                     href: (0, index_2.getExplorerTxUrl)(receipt)
@@ -1622,7 +1918,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                             this.setMessage({
                                 status: 'success',
                                 title: 'Success',
-                                content: 'Submitted successfully'
+                                content: '$submitted_successfully'
                             });
                             this.mdAlert.showModal();
                         }
@@ -1674,6 +1970,11 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             }
         }
         init() {
+            const i18nData = {};
+            for (const key in index_3.repoJson) {
+                i18nData[key] = { ...(index_3.repoJson[key] || {}), ...(index_3.mainJson[key] || {}) };
+            }
+            this.i18n.init({ ...i18nData });
             super.init();
             this.isInitialized = true;
             this.pagiCommitList.currentPage = 1;
@@ -1700,36 +2001,36 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                         this.$render("i-hstack", { gap: "0.5rem", width: "calc(52% - 9rem)", minWidth: "11rem", verticalAlignment: "center" },
                             this.$render("i-label", { id: "lbPushedAt", font: { size: '0.875rem' }, opacity: 0.8 }),
                             this.$render("i-icon", { id: "iconRefresh", name: "sync-alt", class: "icon-hover", cursor: "pointer", width: "0.9rem", height: "0.9rem", minWidth: "0.9rem", onClick: () => this.onRefreshData() }))),
-                    this.$render("i-button", { id: "btnEdit", caption: "Edit", stack: { shrink: '0' }, icon: { name: 'pen', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenBuilder }),
+                    this.$render("i-button", { id: "btnEdit", caption: "$edit", stack: { shrink: '0' }, icon: { name: 'pen', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenBuilder }),
                     this.$render("i-icon", { id: "iconDetail", name: "angle-down", class: "icon-expansion", cursor: "pointer", width: "1.75rem", height: "1.75rem", onClick: this.onShowDetail })),
                 this.$render("i-tabs", { id: "tabs", visible: false, class: index_css_1.childTabStyle, width: "100%", height: "100%", mode: "horizontal", position: "relative", zIndex: 0 },
-                    this.$render("i-tab", { id: "tabPRs", caption: "PRs", width: "50%" },
+                    this.$render("i-tab", { id: "tabPRs", caption: "$prs", width: "50%" },
                         this.$render("i-vstack", { id: "vStackListPR", verticalAlignment: "center" })),
                     this.$render("i-tab", { id: "tabCommits", caption: "Commits", width: "50%" },
                         this.$render("i-vstack", { gap: "1rem", verticalAlignment: "center" },
                             this.$render("i-vstack", { gap: "1rem", width: "100%" },
                                 this.$render("i-hstack", { gap: "2rem", verticalAlignment: "center", wrap: "wrap", width: "100%", mediaQueries: [{ maxWidth: '767px', properties: { gap: '1rem' } }] },
                                     this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "space-between", minWidth: "calc(50% - 1rem)", stack: { grow: '1' } },
-                                        this.$render("i-label", { caption: "Commit ID", minWidth: 80 }),
+                                        this.$render("i-label", { caption: "$commit_id", minWidth: 80 }),
                                         this.$render("i-input", { id: "inputCommitId", class: index_css_1.inputStyle, height: 40, width: "calc(100% - 75px)" })),
                                     this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "space-between", minWidth: "calc(50% - 1rem)", stack: { grow: '1' } },
-                                        this.$render("i-label", { caption: "Title", minWidth: 80 }),
+                                        this.$render("i-label", { caption: "$title", minWidth: 80 }),
                                         this.$render("i-input", { id: "inputMessage", class: index_css_1.inputStyle, height: 40, width: "calc(100% - 75px)" }))),
                                 this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center", wrap: "wrap", width: "100%", mediaQueries: [{ maxWidth: '767px', properties: { gap: '1rem' } }] },
                                     this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "space-between", minWidth: "calc(50% - 1rem)", stack: { grow: '1' } },
-                                        this.$render("i-label", { caption: "Start Date", minWidth: 80 }),
+                                        this.$render("i-label", { caption: "$start_date", minWidth: 80 }),
                                         this.$render("i-vstack", { gap: "0.25rem", width: "calc(100% - 75px)" },
                                             this.$render("i-datepicker", { id: "inputStartDate", type: "dateTime", placeholder: "dd/mm/yyyy hh:mm", class: index_css_1.inputDateStyle, height: 40, width: "100%", onChanged: this.onStartDateChanged }),
                                             this.$render("i-label", { id: "lbStartDateErr", font: { color: Theme.colors.error.main } }))),
                                     this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "space-between", minWidth: "calc(50% - 1rem)", stack: { grow: '1' } },
-                                        this.$render("i-label", { caption: "End Date", minWidth: 80 }),
+                                        this.$render("i-label", { caption: "$end_date", minWidth: 80 }),
                                         this.$render("i-vstack", { gap: "0.25rem", width: "calc(100% - 75px)" },
                                             this.$render("i-datepicker", { id: "inputEndDate", type: "dateTime", placeholder: "dd/mm/yyyy hh:mm", class: index_css_1.inputDateStyle, height: 40, width: "100%", onChanged: this.onEndDateChanged }),
                                             this.$render("i-label", { id: "lbEndDateErr", font: { color: Theme.colors.error.main } })))),
                                 this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center", horizontalAlignment: "end", wrap: "wrap" },
-                                    this.$render("i-button", { id: "btnSync", caption: "Sync", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onSyncCommits }),
-                                    this.$render("i-button", { id: "btnSearch", caption: "Search", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onSearchCommits }),
-                                    this.$render("i-button", { id: "btnClear", caption: "Clear", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onClearSearch }))),
+                                    this.$render("i-button", { id: "btnSync", caption: "$sync", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onSyncCommits }),
+                                    this.$render("i-button", { id: "btnSearch", caption: "$search", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onSearchCommits }),
+                                    this.$render("i-button", { id: "btnClear", caption: "$clear", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onClearSearch }))),
                             this.$render("i-vstack", { id: "vStackListCommit", verticalAlignment: "center" }),
                             this.$render("i-vstack", { horizontalAlignment: 'center' },
                                 this.$render("i-pagination", { id: "pagiCommitList", width: "auto", margin: { top: '1rem' }, pageSize: this.pageSize }))))),
@@ -1740,16 +2041,16 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                             this.$render("i-icon", { name: "times", fill: Theme.colors.primary.main, width: "1.25rem", height: "1.25rem", cursor: "pointer", onClick: this.onClosePublish })),
                         this.$render("i-vstack", { width: "100%", gap: "0.5rem", margin: { top: '1rem' } },
                             this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", margin: { bottom: '0.25rem' } },
-                                this.$render("i-label", { caption: "Branch:" }),
+                                this.$render("i-label", { caption: "$branch" }),
                                 this.$render("i-label", { caption: "main", font: { size: '1rem', color: Theme.colors.primary.main } })),
                             this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center" },
-                                this.$render("i-label", { caption: "Version:" }),
+                                this.$render("i-label", { caption: "$version" }),
                                 this.$render("i-label", { id: "lbCommitVersion", font: { size: '1rem', color: Theme.colors.primary.main } })),
                             this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center" },
-                                this.$render("i-label", { caption: "Commit ID (SHA):" }),
+                                this.$render("i-label", { caption: "$commit_id_sha" }),
                                 this.$render("i-label", { id: "lbCommitId", font: { size: '1rem', color: Theme.colors.primary.main } }))),
-                        this.$render("i-button", { id: "btnPublish", caption: "Submit for Audit", width: "12.5rem", margin: { top: '1rem', left: 'auto', right: 'auto' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onRequestAudit() }))),
-                this.$render("i-modal", { id: 'viewReportModal', maxWidth: "55rem", title: "Audit Report", closeIcon: { name: 'times' }, popupPlacement: "center" },
+                        this.$render("i-button", { id: "btnPublish", caption: "$submit_for_audit", width: "12.5rem", margin: { top: '1rem', left: 'auto', right: 'auto' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onRequestAudit() }))),
+                this.$render("i-modal", { id: 'viewReportModal', maxWidth: "55rem", title: "$audit_report", closeIcon: { name: 'times' }, popupPlacement: "center" },
                     this.$render("i-panel", { padding: { top: '1rem', bottom: '1rem' } },
                         this.$render("i-scom-widget-repos--audit-report", { id: "auditReport", isPopup: true, display: "block", height: 'calc(100vh - 68px)', overflow: { y: 'auto' } }))),
                 this.$render("i-alert", { id: "mdAlert" })));
@@ -1760,7 +2061,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
     ], ScomWidgetReposGithubRepo);
     exports.ScomWidgetReposGithubRepo = ScomWidgetReposGithubRepo;
 });
-define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/repo.tsx", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_6, repo_1, index_css_2, index_3) {
+define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/repo.tsx", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_6, repo_1, index_css_2, index_4, index_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_6.Styles.Theme.ThemeVars;
@@ -1876,7 +2177,8 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.totalPage = Math.ceil(this.filteredRepos.length / pageSize);
             this.paginationElm.visible = this.totalPage > 1;
             this.lbOrg.caption = this.userInfo?.data?.org || this.userInfo?.data?.login || '';
-            this.lbRepos.caption = `(${this.filteredRepos.length} ${this.filteredRepos.length !== 1 ? 'repositories' : 'repository'})`;
+            const repoNum = this.filteredRepos.length;
+            this.lbRepos.caption = `(${repoNum} ${repoNum !== 1 ? this.i18n.get('$repositories') : this.i18n.get('$repository')})`;
             const hasUser = !!this.userInfo?.data?.login;
             this.lbRepos.visible = hasUser;
             this.iconRefresh.visible = hasUser;
@@ -1913,7 +2215,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.pnlLoader.visible = true;
             this.resetPaging();
             this.pnlLoader.visible = false;
-            const config = (0, index_3.getStorageConfig)();
+            const config = (0, index_4.getStorageConfig)();
             const baseUrl = config?.baseUrl || '';
             let result = this.extractUrl(baseUrl);
             result = result.split('?')[0];
@@ -1935,12 +2237,12 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
         renderEmpty() {
             this.vStackRepos.clearInnerHTML();
             this.vStackRepos.classList.remove('list-repos');
-            this.vStackRepos.appendChild(this.$render("i-label", { caption: this.error || 'There is no repository!', font: { size: '1.5rem' }, margin: { top: '3rem', left: 'auto', right: 'auto' } }));
+            this.vStackRepos.appendChild(this.$render("i-label", { caption: this.error || '$there_is_no_repository', font: { size: '1.5rem' }, margin: { top: '3rem', left: 'auto', right: 'auto' } }));
         }
         async showBuilder(name) {
             this.mdWidgetBuilder.visible = true;
             this.pnlBuilderLoader.visible = true;
-            const config = (0, index_3.getStorageConfig)();
+            const config = (0, index_4.getStorageConfig)();
             if (!this.initedConfig && config.transportEndpoint) {
                 this.initedConfig = true;
                 this.widgetBuilder.setConfig(config);
@@ -1983,6 +2285,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             }
         }
         init() {
+            this.i18n.init({ ...index_5.repoJson });
             super.init();
             this.isProjectOwner = this.getAttribute('isProjectOwner', true, false);
             this.isProject = this.getAttribute('isProject', true, false);
@@ -1996,7 +2299,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                         this.$render("i-label", { id: "lbOrg", font: { size: '1rem', bold: true, color: Theme.colors.primary.main } }),
                         this.$render("i-label", { id: "lbRepos", font: { size: '1rem' }, opacity: 0.8 }),
                         this.$render("i-icon", { id: "iconRefresh", visible: false, class: "icon-hover", name: "sync-alt", width: "1.25rem", height: "1.25rem", cursor: "pointer", onClick: this.onRefresh }),
-                        this.$render("i-switch", { id: "filterSwitch", checked: false, uncheckedTrackColor: Theme.colors.secondary.main, checkedTrackColor: Theme.colors.primary.main, tooltip: { content: 'Show only PRs', placement: 'bottom' }, onChanged: this.onSwitchFilter })),
+                        this.$render("i-switch", { id: "filterSwitch", checked: false, uncheckedTrackColor: Theme.colors.secondary.main, checkedTrackColor: Theme.colors.primary.main, tooltip: { content: '$show_only_PRs', placement: 'bottom' }, onChanged: this.onSwitchFilter })),
                     this.$render("i-vstack", { id: "vStackRepos", width: "100%" }),
                     this.$render("i-hstack", { horizontalAlignment: "center", margin: { top: '2rem' } },
                         this.$render("i-pagination", { id: "paginationElm", margin: { bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, width: "auto", currentPage: this.pageNumber, totalPages: this.totalPage, onPageChanged: this.onSelectIndex }))),
@@ -2016,7 +2319,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
     ], ScomWidgetReposGithubList);
     exports.default = ScomWidgetReposGithubList;
 });
-define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_7, index_css_3, index_4, index_5) {
+define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_7, index_css_3, index_6, index_7, index_8) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = void 0;
@@ -2031,6 +2334,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
             return self;
         }
         init() {
+            this.i18n.init({ ...index_8.repoJson });
             super.init();
             this.onClosed = this.getAttribute('onClosed', true) || this.onClosed;
             const id = this.getAttribute('id', true);
@@ -2056,7 +2360,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
             if (!this.projectPrefix) {
                 this.setMessage({
                     status: 'error',
-                    content: 'Please add a prefix to the project first.',
+                    content: '$please_add_a_prefix_to_the_project_first',
                     onClose: () => {
                         if (typeof this.onClosed === 'function')
                             this.onClosed();
@@ -2099,10 +2403,10 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                 this.mdAlert.onConfirm = onConfirm;
         }
         async handleConfirmClick() {
-            if (!(0, index_5.isLoggedIn)()) {
+            if (!(0, index_7.isLoggedIn)()) {
                 this.setMessage({
                     status: 'error',
-                    content: 'Please login to create your repository'
+                    content: '$please_login_to_create_your_repository'
                 });
                 this.mdAlert.showModal();
                 return;
@@ -2111,7 +2415,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
             if (!name) {
                 this.setMessage({
                     status: 'error',
-                    content: 'Repository name is required.'
+                    content: '$repository_name_is_required'
                 });
                 this.mdAlert.showModal();
                 return;
@@ -2123,18 +2427,18 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                     name: `${this.projectPrefix}-${name}`,
                     description: this.edtDescription.value
                 };
-                const result = await (0, index_4.createRepo)(repoInfo);
+                const result = await (0, index_6.createRepo)(repoInfo);
                 if (!result || result.error) {
                     this.setMessage({
                         status: 'error',
-                        content: result?.error || 'Failed to create your repository.'
+                        content: result?.error || '$failed_to_create_your_repository'
                     });
                     this.mdAlert.showModal();
                 }
                 else {
                     this.setMessage({
                         status: 'success',
-                        content: `Your repository has been created successfully.`,
+                        content: '$your_repository_has_been_created_successfully',
                         onClose: () => {
                             if (typeof this.onClosed === 'function')
                                 this.onClosed();
@@ -2149,7 +2453,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
             catch (err) {
                 this.setMessage({
                     status: 'error',
-                    content: 'Failed to create your repository.'
+                    content: '$failed_to_create_your_repository'
                 });
                 this.mdAlert.showModal();
             }
@@ -2161,20 +2465,20 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                 this.$render("i-panel", { width: "100%", height: "100%", overflow: { y: 'auto' } },
                     this.$render("i-vstack", { width: "100%", padding: { top: "1rem", bottom: "1.5rem", left: "1rem", right: "1rem" }, gap: "1.5rem" },
                         this.$render("i-hstack", { horizontalAlignment: "space-between", gap: "8px" },
-                            this.$render("i-label", { caption: "Create new repository", font: { size: '1.25rem', weight: 600 }, lineHeight: 1.5 })),
+                            this.$render("i-label", { caption: "$create_new_repository", font: { size: '1.25rem', weight: 600 }, lineHeight: 1.5 })),
                         this.$render("i-vstack", { width: "100%", gap: "0.5rem" },
                             this.$render("i-panel", null,
-                                this.$render("i-label", { display: "inline", caption: "Repository name", margin: { right: "0.25rem" } }),
+                                this.$render("i-label", { display: "inline", caption: "$repository_name", margin: { right: "0.25rem" } }),
                                 this.$render("i-label", { display: "inline", caption: "*", font: { color: Theme.colors.error.main } })),
                             this.$render("i-hstack", { gap: "0.15rem", verticalAlignment: "center", border: { width: 1, style: 'solid', color: Theme.divider, radius: 5 } },
                                 this.$render("i-label", { id: "lbPrefix", padding: { left: '0.75rem' }, font: { bold: true, color: Theme.colors.primary.main } }),
                                 this.$render("i-input", { id: "edtName", class: index_css_3.inputStyle, inputType: 'text', height: 40, width: '100%', onChanged: this.updateButton }))),
                         this.$render("i-vstack", { width: "100%", gap: "0.5rem" },
-                            this.$render("i-label", { caption: "Description" }),
+                            this.$render("i-label", { caption: "$description" }),
                             this.$render("i-panel", { class: "form-control" },
                                 this.$render("i-input", { id: "edtDescription", class: index_css_3.textareaStyle, inputType: 'textarea', rows: 3, height: 'unset', width: '100%' }))),
                         this.$render("i-hstack", { justifyContent: 'end', alignItems: 'center' },
-                            this.$render("i-button", { id: "btnConfirm", height: 40, minWidth: 120, enabled: false, caption: 'Confirm', rightIcon: { spin: true, visible: false }, padding: { top: '0.25rem', bottom: '0.25rem', left: '1rem', right: '1rem' }, font: { color: Theme.colors.primary.contrastText }, onClick: this.handleConfirmClick.bind(this) })))),
+                            this.$render("i-button", { id: "btnConfirm", height: 40, minWidth: 120, enabled: false, caption: '$confirm', rightIcon: { spin: true, visible: false }, padding: { top: '0.25rem', bottom: '0.25rem', left: '1rem', right: '1rem' }, font: { color: Theme.colors.primary.contrastText }, onClick: this.handleConfirmClick.bind(this) })))),
                 this.$render("i-alert", { id: "mdAlert" })));
         }
     };
@@ -2183,18 +2487,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
     ], ScomWidgetReposCreateRepo);
     exports.ScomWidgetReposCreateRepo = ScomWidgetReposCreateRepo;
 });
-define("@scom/scom-widget-repos/components/github/data.json.ts", ["require", "exports"], function (require, exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    ///<amd-module name='@scom/scom-widget-repos/components/github/data.json.ts'/> 
-    exports.default = [
-        "scom-repos/scom-widget-builder",
-        "scom-repos/scom-docs-widget",
-        "scom-repos/scom-social",
-        "scom-repos/noto-fan"
-    ];
-});
-define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx"], function (require, exports, components_8, API_2, index_css_4, create_1) {
+define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_8, API_2, index_css_4, create_1, index_9) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
@@ -2299,7 +2592,7 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
                 this.elmList.listRepos = this.listReposFiltered;
                 this.elmPRs.listRepos = [...listPRsFiltered];
                 this.countPRs = [...listPRsFiltered].reduce((accumulator, currentObject) => accumulator + currentObject.open_issues, 0);
-                this.prTab.caption = `Pull Requests <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
+                this.prTab.caption = `${this.i18n.get('$pull_requests')} <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
             }
             else {
                 // this.elmPackages.listRepos = [...listPRsFiltered];
@@ -2308,7 +2601,7 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
         }
         updateCountPRs(oldNum, newNum) {
             this.countPRs = this.countPRs - oldNum + newNum;
-            this.prTab.caption = `Pull Requests <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
+            this.prTab.caption = `${this.i18n.get('$pull_requests')} <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
         }
         updateUI() {
             if (!this.tabs)
@@ -2380,6 +2673,7 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
                 this.elmPackages.onHide();
         }
         init() {
+            this.i18n.init({ ...index_9.repoJson });
             super.init();
             this.isProject = this.getAttribute('isProject', true);
             this.isProjectOwner = this.getAttribute('isProjectOwner', true);
@@ -2392,9 +2686,9 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
                 this.$render("i-panel", { id: "pnlPackages", visible: false, width: "100%", height: "100%" },
                     this.$render("i-scom-widget-repos--github-list", { id: "elmPackages" })),
                 this.$render("i-tabs", { id: "tabs", visible: false, class: index_css_4.tabStyle, width: "100%", height: "100%", padding: { top: "0.5rem", bottom: "0.5rem", left: "1rem", right: "1rem" }, mode: "horizontal" },
-                    this.$render("i-tab", { caption: "All" },
+                    this.$render("i-tab", { caption: "$all" },
                         this.$render("i-scom-widget-repos--github-list", { id: "elmList", isProject: true })),
-                    this.$render("i-tab", { id: "prTab", caption: "Pull Requests" },
+                    this.$render("i-tab", { id: "prTab", caption: "$pull_requests" },
                         this.$render("i-scom-widget-repos--github-list", { id: "elmPRs" })))));
         }
     };
@@ -2453,7 +2747,7 @@ define("@scom/scom-widget-repos/components/audit_report/data.json.ts", ["require
         'Does the DApp register an excessive amount of whitelisted smart contracts (i.e. registered in SC-Registry but not interact in codebase)?'
     ];
 });
-define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts"], function (require, exports, components_10, index_css_5, data_json_1, eth_wallet_5, index_6, interface_3) {
+define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_10, index_css_5, data_json_1, eth_wallet_5, index_10, interface_3, index_11) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposAuditReport = void 0;
@@ -2471,7 +2765,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             this.mergeInfo = {};
             this.auditReportInfo = {};
             this.getPackageFiles = async () => {
-                const res = await (0, index_6.getAllFiles)(this.commitGuid);
+                const res = await (0, index_10.getAllFiles)(this.commitGuid);
                 if (res?.files) {
                     const files = res.files;
                     return files;
@@ -2481,11 +2775,11 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             this.submitAuditReport = async () => {
                 this.btnSubmit.rightIcon.visible = true;
                 if (!this.isAuditPR) {
-                    let auditInfo = await (0, index_6.getAuditInfo)(this.commitGuid);
+                    let auditInfo = await (0, index_10.getAuditInfo)(this.commitGuid);
                     if (auditInfo.auditStatus !== interface_3.PackageStatus.AUDITING) {
                         this.setMessage({
                             status: 'error',
-                            content: 'Not under auditing'
+                            content: '$not_under_auditing'
                         });
                         this.mdAlert.showModal();
                         this.btnSubmit.rightIcon.visible = false;
@@ -2494,14 +2788,14 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 }
                 this.setMessage({
                     status: 'loading',
-                    content: 'Uploading Audit Report to IPFS',
+                    content: '$uploading_audit_report_to_ipfs',
                 });
                 this.mdAlert.showModal();
                 const resultInfo = { ...this.auditReportInfo };
                 const { packageOwner, packageName } = resultInfo;
                 const { number, commit_sha, created_at } = this.mergeInfo;
                 const reportFileName = this.isAuditPR ? `Audit-Report-PR-${packageOwner}-${packageName}-${number}-${commit_sha}.md` : `Audit-Report-${this.commitGuid}.md`;
-                const ipfsReportCid = await (0, index_6.uploadDataToIpfs)(JSON.stringify(resultInfo), reportFileName);
+                const ipfsReportCid = await (0, index_10.uploadDataToIpfs)(JSON.stringify(resultInfo), reportFileName);
                 if (ipfsReportCid) {
                     // Upload all files to ipfs
                     let ipfsCid = '';
@@ -2534,16 +2828,16 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                     }*/
                     this.setMessage({
                         status: 'warning',
-                        content: 'Auditing'
+                        content: '$auditing'
                     });
                     this.mdAlert.showModal();
                     let res;
                     if (this.isAuditPR) {
-                        res = await (0, index_6.auditPR)(packageOwner, packageName, number, commit_sha, ipfsReportCid, ipfsCid, this.auditReportInfo.result);
+                        res = await (0, index_10.auditPR)(packageOwner, packageName, number, commit_sha, ipfsReportCid, ipfsCid, this.auditReportInfo.result);
                         if (res?.success) {
                             this.setMessage({
                                 status: 'success',
-                                content: 'Audit successfully',
+                                content: '$audit_successfully',
                                 onClose: () => {
                                     window.history.back();
                                 }
@@ -2554,7 +2848,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                         else {
                             this.setMessage({
                                 status: 'error',
-                                content: res?.error?.message || 'Failed to audit'
+                                content: res?.error?.message || '$failed_to_audit'
                             });
                             this.mdAlert.showModal();
                             this.btnSubmit.rightIcon.visible = false;
@@ -2565,17 +2859,17 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                             if (err) {
                                 this.setMessage({
                                     status: 'error',
-                                    content: (0, index_6.parseContractError)(err.message)
+                                    content: (0, index_10.parseContractError)(err.message)
                                 });
                                 this.mdAlert.showModal();
                             }
                             else if (receipt) {
                                 this.setMessage({
                                     status: 'success',
-                                    title: 'Transaction Submitted',
+                                    title: '$transaction_submitted',
                                     link: {
                                         caption: receipt,
-                                        href: (0, index_6.getExplorerTxUrl)(receipt)
+                                        href: (0, index_10.getExplorerTxUrl)(receipt)
                                     }
                                 });
                                 this.mdAlert.showModal();
@@ -2590,11 +2884,11 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                 ipfsCid,
                                 auditStatus: result
                             };
-                            res = await (0, index_6.auditCommit)(data);
+                            res = await (0, index_10.auditCommit)(data);
                             if (res?.success) {
                                 this.setMessage({
                                     status: 'success',
-                                    content: 'Audit successfully',
+                                    content: '$audit_successfully',
                                     onClose: () => {
                                         window.location.assign("#/audit-commit");
                                     }
@@ -2605,19 +2899,19 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                             else {
                                 this.setMessage({
                                     status: 'error',
-                                    content: res?.error?.message || 'Failed to audit'
+                                    content: res?.error?.message || '$failed_to_audit'
                                 });
                                 this.mdAlert.showModal();
                                 this.btnSubmit.rightIcon.visible = false;
                             }
                         };
-                        await (0, index_6.auditPackageVersion)(this.auditReportInfo.packageVersionId, this.auditReportInfo.result === interface_3.PackageStatus.AUDIT_PASSED, ipfsReportCid, callback, confirmationCallback);
+                        await (0, index_10.auditPackageVersion)(this.auditReportInfo.packageVersionId, this.auditReportInfo.result === interface_3.PackageStatus.AUDIT_PASSED, ipfsReportCid, callback, confirmationCallback);
                     }
                 }
                 else {
                     this.setMessage({
                         status: 'error',
-                        content: 'Failed to upload data to IPFS.'
+                        content: '$failed_to_upload_data_to_ipfs'
                     });
                     this.mdAlert.showModal();
                     this.btnSubmit.rightIcon.visible = false;
@@ -2653,6 +2947,11 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 this.onSetupPage();
         }
         async init() {
+            const i18nData = {};
+            for (const key in index_11.auditJson) {
+                i18nData[key] = { ...(index_11.auditJson[key] || {}), ...(index_11.mainJson[key] || {}) };
+            }
+            this.i18n.init({ ...i18nData });
             this.classList.add(index_css_5.default);
             this.isPopUp = this.getAttribute("isPopUp") || "";
             super.init();
@@ -2668,7 +2967,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             if (!isPR && !this.auditReportInfo.auditStatus) {
                 this.setMessage({
                     status: 'error',
-                    content: 'Invalid commit, audit report not found',
+                    content: '$invalid_commit_audit_report_not_found',
                     onClose: () => {
                         window.location.assign("#/audit-commit");
                     }
@@ -2687,13 +2986,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         async fetchAuditPR() {
             const { owner, repo, prNumber, mergeId } = this.prInfo;
             if (mergeId) {
-                const result = await (0, index_6.getAuditPRReportInfo)(mergeId);
+                const result = await (0, index_10.getAuditPRReportInfo)(mergeId);
                 if (result) {
                     this.auditReportInfo = result;
                     return;
                 }
             }
-            const result = await (0, index_6.getPull)(owner, repo, prNumber);
+            const result = await (0, index_10.getPull)(owner, repo, prNumber);
             if (result?.data) {
                 this.mergeInfo = result.data;
                 const { number, title, base, commit_sha } = result.data;
@@ -2706,7 +3005,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             else {
                 this.setMessage({
                     status: 'error',
-                    content: 'Cannot fetch pull request info!',
+                    content: '$cannot_fetch_pull_request_info',
                     onClose: () => {
                         window.location.assign("#/review-pr");
                     }
@@ -2720,7 +3019,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             }
         }
         async fetchAuditPackage() {
-            this.auditReportInfo = await (0, index_6.getAuditReportInfo)(this.commitGuid);
+            this.auditReportInfo = await (0, index_10.getAuditReportInfo)(this.commitGuid);
             if (!this.auditReportInfo.checklist || !this.auditReportInfo.checklist.length) {
                 this.auditReportInfo.checklist = new Array(data_json_1.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
             }
@@ -2741,14 +3040,18 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 this.imgLogo.url = this.auditReportInfo.imgUrl;
                 this.lblProjectName.caption = this.auditReportInfo.projectName;
                 this.lblProjectName.link.href = this.auditReportInfo.projectId === undefined || this.auditReportInfo.projectId === null ? "" : `#/projects/${this.auditReportInfo.projectId}`;
-                this.lbPRTitle.caption = `Title: ${this.auditReportInfo.message}`;
-                this.lbPRSha.caption = `Commit ID (SHA): ${this.auditReportInfo.commitId}`;
+                this.lbPRTitle.caption = `${this.i18n.get('$title')}: ${this.auditReportInfo.message}`;
+                this.lbPRSha.caption = `${this.i18n.get('$commit_id_sha')}: ${this.auditReportInfo.commitId}`;
                 this.lbPRNumber.caption = '';
             }
             else {
                 this.lbPRTitle.caption = this.auditReportInfo.mergeTitle;
-                this.lbPRNumber.caption = `#${this.auditReportInfo.mergeNumber} opened ${(0, index_6.getTimeAgo)(this.mergeInfo.created_at)} by ${this.mergeInfo.user_login}`;
-                this.lbPRSha.caption = `Merge SHA: ${this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha}`;
+                this.lbPRNumber.caption = this.i18n.get('$opened_by', {
+                    qty: `${this.auditReportInfo.mergeNumber ?? ''}`,
+                    date: (0, index_10.getTimeAgo)(this.mergeInfo.created_at, this.i18n),
+                    by: this.mergeInfo.user_login
+                });
+                this.lbPRSha.caption = `${this.i18n.get('$merge_sha')}: ${this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha}`;
             }
         }
         guidelineMsgDisable() {
@@ -2770,11 +3073,11 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 enable = true;
             }
             this.checklist.append(this.$render("i-hstack", { height: '3.875rem', verticalAlignment: 'center', horizontalAlignment: 'center', border: { right: { color: '#636363', width: '1px', style: 'solid' } }, background: { color: Theme.colors.primary.main } },
-                this.$render("i-label", { caption: 'Auditing Checklist' })));
+                this.$render("i-label", { caption: '$auditing_checklist' })));
             this.checklist.append(this.$render("i-hstack", { height: '3.875rem', verticalAlignment: 'center', horizontalAlignment: 'center', background: { color: Theme.colors.primary.main } },
-                this.$render("i-label", { caption: 'Comments' })));
+                this.$render("i-label", { caption: '$comments' })));
             data_json_1.checklistItems.forEach((item, i) => {
-                const placeholder = this.reportStatus === ReportStatus.EDIT ? "Fill comment if fail" : "";
+                const placeholder = this.reportStatus === ReportStatus.EDIT ? "$fill_comment_if_fail" : "";
                 this.checklist.append(this.$render("i-hstack", { height: '100%', verticalAlignment: 'center', horizontalAlignment: 'start', background: { color: '#34343A' }, border: { color: '#636363', width: '0 1px 1px 0', style: 'solid' } },
                     this.$render("i-checkbox", { opacity: 1, checked: this.auditReportInfo.checklist[i].checked, height: '100%', width: '100%', caption: item, enabled: enable, onChanged: (target) => this.saveCheckBoxValue(target, i) })));
                 this.checklist.append(this.$render("i-hstack", { height: '100%', verticalAlignment: 'center', horizontalAlignment: 'center', background: { color: '#34343A' }, border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
@@ -2809,7 +3112,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 if (missingComment) {
                     this.setMessage({
                         status: 'warning',
-                        content: 'You have to add comment to the failed checklist item'
+                        content: '$you_have_to_add_comment_to_the_failed_checklist_item'
                     });
                     this.mdAlert.showModal();
                     return;
@@ -2837,7 +3140,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         }
         pageChangeState() {
             if (this.reportStatus == ReportStatus.EDIT) {
-                this.btnSubmit.caption = 'Next';
+                this.btnSubmit.caption = '$next';
                 this.btnSubmit.enabled = true;
                 this.DAppPanel.visible = true;
                 this.aduitComment.enabled = true;
@@ -2846,7 +3149,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 this.auditSummaryPanel.visible = false;
             }
             else if (this.reportStatus == ReportStatus.REVIEW) {
-                this.btnSubmit.caption = 'Sign & Submit';
+                this.btnSubmit.caption = '$sign_and_submit';
                 this.btnSubmit.enabled = true;
                 this.aduitComment.enabled = false;
                 this.DAppPanel.visible = false;
@@ -2868,17 +3171,17 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         }
         renderAuditSummary() {
             this.auditSummary.innerHTML = '';
-            const lastAuditDate = this.auditReportInfo.auditDate ? (0, index_6.formatDate)(this.auditReportInfo.auditDate * 1000, "DD MMM YYYY") : '-';
+            const lastAuditDate = this.auditReportInfo.auditDate ? (0, index_10.formatDate)(this.auditReportInfo.auditDate * 1000, "DD MMM YYYY") : '-';
             const auditor = this.auditReportInfo.auditedBy ? components_10.FormatUtils.truncateWalletAddress(this.auditReportInfo.auditedBy) : '-';
             this.auditSummary.append(this.$render("i-vstack", { width: '100%', verticalAlignment: 'center' },
                 !this.isAuditPR ? this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'Project Name', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$project_name', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: this.auditReportInfo.projectName ?? "", padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))) : [],
                 !this.isAuditPR ? this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'Version', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$version', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: this.auditReportInfo.version ?? "", padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))) : [],
                 !this.isAuditPR ? this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
@@ -2888,47 +3191,47 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                         this.$render("i-label", { caption: this.auditReportInfo.owner ? components_10.FormatUtils.truncateWalletAddress(this.auditReportInfo.owner) : '-', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))) : [],
                 this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'Title', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$title', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: this.isAuditPR ? this.auditReportInfo.mergeTitle : this.auditReportInfo.message, padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))),
                 this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'Package Name', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$package_name', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: !this.isAuditPR ? this.auditReportInfo.packageName : this.prInfo.repo, padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))),
                 this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'Package Owner', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$package_owner', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: !this.isAuditPR ? this.auditReportInfo.packageOwner : this.prInfo.owner, padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))),
                 this.isAuditPR ? this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'PR Number', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$pr_number', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: this.auditReportInfo.mergeNumber ?? this.mergeInfo.number, padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))) : [],
                 this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: this.isAuditPR ? 'Merge SHA' : 'Commit ID (SHA)', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: this.isAuditPR ? '$merge_sha' : '$commit_id_sha', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: this.isAuditPR ? this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha : this.auditReportInfo.commitId, wordBreak: 'break-all', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))),
                 !this.isAuditPR ? this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'IPFS Code Source', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$ipfs_code_source', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: this.auditReportInfo.ipfsCid, class: 'pointer', link: { href: this.auditReportInfo.ipfsCid ? `https://ipfs.io/ipfs/${this.auditReportInfo.ipfsCid}/` : "" }, padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }, font: { color: '#1F86FF' }, wordBreak: "break-all" }))) : [],
                 this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'Audit Date', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$audit_date', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: lastAuditDate, padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))),
                 this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'Audit By', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$audit_by', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
                         this.$render("i-label", { caption: auditor, padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))),
                 this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
-                        this.$render("i-label", { caption: 'Audit Result', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
+                        this.$render("i-label", { caption: '$audit_result', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } },
                         this.$render("i-label", { id: 'auditResultLabel', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }, caption: this.auditReportInfo.result ? 'Pass' : 'Fail', background: { color: this.auditReportInfo.result ? Theme.colors.success.main : Theme.colors.error.main }, border: { radius: '1rem' } })))));
         }
@@ -2950,14 +3253,14 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                 }
                             }
                         ] },
-                        this.$render("i-label", { grid: { area: 'titleArea' }, caption: 'Audit Procedure', font: { size: '1.25rem', bold: true }, margin: { top: '0.625rem', bottom: '1.25rem' } }),
+                        this.$render("i-label", { grid: { area: 'titleArea' }, caption: '$audit_procedure', font: { size: '1.25rem', bold: true }, margin: { top: '0.625rem', bottom: '1.25rem' } }),
                         this.$render("i-image", { grid: { area: 'logoArea' }, id: 'imgLogo', height: '4.375rem', width: '4.375rem', margin: { right: '0.625rem' } }),
                         this.$render("i-hstack", { grid: { area: 'DAppNameAndVersionArea' }, verticalAlignment: 'center' },
                             this.$render("i-label", { id: 'DAppName', font: { size: '1.5625rem' }, margin: { right: '1.875rem' } }),
                             this.$render("i-label", { id: 'DAppVersion', font: { size: '1rem' } })),
                         this.$render("i-vstack", { gap: "0.1rem", grid: { area: 'ProjectNameArea' } },
                             this.$render("i-hstack", { id: "hStackProjectName", verticalAlignment: 'center' },
-                                this.$render("i-label", { caption: 'by', font: { size: '0.8rem' }, margin: { right: '0.3125rem' } }),
+                                this.$render("i-label", { caption: '$by', font: { size: '0.8rem' }, margin: { right: '0.3125rem' } }),
                                 this.$render("i-label", { id: 'lblProjectName', font: { size: '0.8rem', color: '#3994FF' } })),
                             this.$render("i-vstack", { id: "vStackPRName", gap: "0.1rem", verticalAlignment: "center", width: "fit-content" },
                                 this.$render("i-label", { id: "lbPRTitle", font: { size: '0.8rem' }, margin: { right: '0.3125rem' } }),
@@ -2968,29 +3271,29 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                     this.$render("i-vstack", { width: '100%', maxWidth: '1200px' },
                         this.$render("i-hstack", { id: 'guidelineMsg', width: '100%', background: { color: '#34343A' }, padding: { left: '1rem', right: '1rem', top: '0.625rem', bottom: '0.625rem' }, border: { radius: '0.375rem' }, margin: { top: '0.625rem', bottom: '0.625rem' }, visible: !this.isPopUp },
                             this.$render("i-vstack", { stack: { basis: '95%' }, verticalAlignment: 'center' },
-                                this.$render("i-label", { caption: '* You are going to audit the DApp checklist.', font: { size: '1rem' } }),
+                                this.$render("i-label", { caption: '$you_are_going_to_audit_the_dapp_checklist', font: { size: '1rem' } }),
                                 this.$render("i-panel", null,
-                                    this.$render("i-label", { caption: 'If you are first time to go over the checklist, you could find the guideline', display: 'inline', font: { size: '1rem' }, margin: { right: '0.3125rem' } }),
-                                    this.$render("i-label", { class: 'pointer', display: 'inline', caption: 'here', font: { size: '1rem', color: '#3994FF' } }))),
+                                    this.$render("i-label", { caption: '$if_you_are_first_time_to_go_over_the_checklist_you_could_find_the_guideline', display: 'inline', font: { size: '1rem' }, margin: { right: '0.3125rem' } }),
+                                    this.$render("i-label", { class: 'pointer', display: 'inline', caption: '$here', font: { size: '1rem', color: '#3994FF' } }))),
                             this.$render("i-vstack", { stack: { basis: '5%' }, verticalAlignment: 'center' },
                                 this.$render("i-icon", { class: 'pointer', name: 'times-circle', width: '1.125rem', height: '1.125rem', fill: Theme.colors.primary.main, onClick: this.guidelineMsgDisable }))),
                         this.$render("i-vstack", { id: 'auditSummaryPanel', width: '100%' },
-                            this.$render("i-label", { caption: 'Audit Summary', font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
+                            this.$render("i-label", { caption: '$audit_summary', font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
                             this.$render("i-hstack", { width: '100%', horizontalAlignment: 'center', margin: { top: '0.625rem' } },
                                 this.$render("i-hstack", { id: 'auditSummary', minWidth: '37.5rem' }))),
-                        this.$render("i-label", { caption: 'Audit Checklist', font: { size: '1rem' }, margin: { top: '1.875rem', bottom: '0.625rem' } }),
+                        this.$render("i-label", { caption: "$audit_checklist", font: { size: '1rem' }, margin: { top: '1.875rem', bottom: '0.625rem' } }),
                         this.$render("i-grid-layout", { id: 'checklist', margin: { top: '0.625rem', bottom: '0.625rem' }, templateColumns: ['60%', '40%'] }),
-                        this.$render("i-label", { caption: 'Auditor Comment', font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
+                        this.$render("i-label", { caption: '$auditor_comment', font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
                         this.$render("i-input", { id: 'aduitComment', width: '100%', height: 'auto', rows: 12, inputType: 'textarea', margin: { top: '0.625rem', bottom: '0.625rem' }, background: { color: '#34343A' }, resize: 'auto-grow', opacity: 1 }),
                         this.$render("i-hstack", { id: 'btnPanel', width: '100%', margin: { top: '0.625rem', bottom: '0.625rem' }, visible: false },
                             this.$render("i-hstack", { width: '50%', horizontalAlignment: 'start' },
-                                this.$render("i-button", { caption: 'Back', font: { size: '0.875rem' }, width: '12.5rem', height: '2.5rem', border: { radius: '0.5rem' }, padding: { left: '1.25rem', right: '1.25rem', top: '0.2125rem', bottom: '0.2125rem' }, background: { color: '#34343A' }, onClick: this.backBtn })),
+                                this.$render("i-button", { caption: '$back', font: { size: '0.875rem' }, width: '12.5rem', height: '2.5rem', border: { radius: '0.5rem' }, padding: { left: '1.25rem', right: '1.25rem', top: '0.2125rem', bottom: '0.2125rem' }, background: { color: '#34343A' }, onClick: this.backBtn })),
                             this.$render("i-hstack", { width: '50%', horizontalAlignment: 'end' },
-                                this.$render("i-button", { id: 'btnSubmit', caption: 'Next', font: { size: '0.875rem' }, width: '12.5rem', height: '2.5rem', border: { radius: '0.5rem' }, enabled: false, padding: { left: '1.25rem', right: '1.25rem', top: '0.2125rem', bottom: '0.2125rem' }, background: { color: Theme.colors.primary.main }, onClick: this.NextOrSubmitBtn, rightIcon: { spin: true, visible: false } }))))),
+                                this.$render("i-button", { id: 'btnSubmit', caption: "$next", font: { size: '0.875rem' }, width: '12.5rem', height: '2.5rem', border: { radius: '0.5rem' }, enabled: false, padding: { left: '1.25rem', right: '1.25rem', top: '0.2125rem', bottom: '0.2125rem' }, background: { color: Theme.colors.primary.main }, onClick: this.NextOrSubmitBtn, rightIcon: { spin: true, visible: false } }))))),
                 this.$render("i-modal", { id: 'mdLoading', width: "7.8125rem", minWidth: "125px", closeOnBackdropClick: false },
                     this.$render("i-vstack", { horizontalAlignment: "center", verticalAlignment: "center", border: { radius: '0.25rem' }, padding: { top: '1rem', bottom: '1rem', left: '1rem', right: '1rem' } },
                         this.$render("i-icon", { name: "spinner", spin: true, width: "2.25rem", height: "2.25rem", fill: Theme.text.primary }),
-                        this.$render("i-label", { caption: "Loading...", font: { size: '1.5em' }, class: "i-loading-spinner_text" }))),
+                        this.$render("i-label", { caption: "$loading", font: { size: '1.5em' }, class: "i-loading-spinner_text" }))),
                 this.$render("i-alert", { id: "mdAlert" })));
         }
     };
@@ -2999,13 +3302,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
     ], ScomWidgetReposAuditReport);
     exports.ScomWidgetReposAuditReport = ScomWidgetReposAuditReport;
 });
-define("@scom/scom-widget-repos/components/index.ts", ["require", "exports", "@scom/scom-widget-repos/components/github/index.tsx", "@scom/scom-widget-repos/components/audit_report/index.tsx"], function (require, exports, index_7, index_8) {
+define("@scom/scom-widget-repos/components/index.ts", ["require", "exports", "@scom/scom-widget-repos/components/github/index.tsx", "@scom/scom-widget-repos/components/audit_report/index.tsx"], function (require, exports, index_12, index_13) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposAuditReport = exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
-    Object.defineProperty(exports, "ScomWidgetReposGithub", { enumerable: true, get: function () { return index_7.ScomWidgetReposGithub; } });
-    Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return index_7.ScomWidgetReposCreateRepo; } });
-    Object.defineProperty(exports, "ScomWidgetReposAuditReport", { enumerable: true, get: function () { return index_8.ScomWidgetReposAuditReport; } });
+    Object.defineProperty(exports, "ScomWidgetReposGithub", { enumerable: true, get: function () { return index_12.ScomWidgetReposGithub; } });
+    Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return index_12.ScomWidgetReposCreateRepo; } });
+    Object.defineProperty(exports, "ScomWidgetReposAuditReport", { enumerable: true, get: function () { return index_13.ScomWidgetReposAuditReport; } });
 });
 define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_11) {
     "use strict";
@@ -3030,7 +3333,7 @@ define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/
         }
     });
 });
-define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/index.ts", "@scom/scom-widget-repos/index.css.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_12, index_9, index_css_6, index_10) {
+define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/index.ts", "@scom/scom-widget-repos/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_12, index_14, index_css_6, index_15, index_16) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetRepos = void 0;
@@ -3085,10 +3388,10 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
         async setData(value) {
             this._data = value;
-            (0, index_10.setContractInfoByChain)(this.contractInfo);
-            (0, index_10.setTransportEndpoint)(this._data.transportEndpoint);
+            (0, index_15.setContractInfoByChain)(this.contractInfo);
+            (0, index_15.setTransportEndpoint)(this._data.transportEndpoint);
             if (this._data.transportEndpoint) {
-                (0, index_10.setStorageConfig)({
+                (0, index_15.setStorageConfig)({
                     transportEndpoint: this._data.transportEndpoint,
                     signer: this._data.signer,
                     baseUrl: this._data.baseUrl
@@ -3113,7 +3416,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
         async onCreateRepoClick() {
             if (!this.createRepoElm) {
-                this.createRepoElm = new index_9.ScomWidgetReposCreateRepo(undefined, {
+                this.createRepoElm = new index_14.ScomWidgetReposCreateRepo(undefined, {
                     id: this.guid,
                     prefix: this.prefix
                 });
@@ -3145,6 +3448,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
             }
         }
         async init() {
+            this.i18n.init({ ...index_16.mainJson });
             super.init();
             const contractInfo = this.getAttribute('contractInfo', true);
             const prefix = this.getAttribute('prefix', true);
@@ -3163,8 +3467,8 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
                     this.$render("i-panel", { stack: { grow: '1' } },
                         this.$render("i-hstack", { position: "absolute", height: "100%", verticalAlignment: "center", padding: { left: '1rem' } },
                             this.$render("i-icon", { width: 14, height: 14, name: "search", fill: Theme.input.fontColor })),
-                        this.$render("i-input", { id: "edtSearchRepo", width: "100%", height: 40, border: { width: 1, style: 'solid', color: Theme.divider, radius: 8 }, placeholder: "Search repositories...", onChanged: this.onRepoSearch })),
-                    this.$render("i-button", { id: "btnCreateRepo", height: 40, caption: "Create Repository", padding: { top: '0.25rem', bottom: '0.25rem', left: '1rem', right: '1rem' }, border: { radius: 8 }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, icon: { name: 'plus' }, onClick: this.onCreateRepoClick })),
+                        this.$render("i-input", { id: "edtSearchRepo", width: "100%", height: 40, border: { width: 1, style: 'solid', color: Theme.divider, radius: 8 }, placeholder: "$search_repositories", onChanged: this.onRepoSearch })),
+                    this.$render("i-button", { id: "btnCreateRepo", height: 40, caption: "$create_repository", padding: { top: '0.25rem', bottom: '0.25rem', left: '1rem', right: '1rem' }, border: { radius: 8 }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, icon: { name: 'plus' }, onClick: this.onCreateRepoClick })),
                 this.$render("i-panel", { width: "100%" },
                     this.$render("i-vstack", { width: "100%", gap: "1.5rem", margin: { bottom: '1.5rem' } },
                         this.$render("i-scom-widget-repos--github", { id: "githubElm" })))));

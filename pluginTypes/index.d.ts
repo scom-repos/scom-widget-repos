@@ -233,13 +233,298 @@ declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/index.ts" />
 declare module "@scom/scom-widget-repos/utils/index.ts" {
+    import { I18n } from '@ijstech/components';
     export * from "@scom/scom-widget-repos/utils/API.ts";
     const formatDate: (date: string | number, customType?: string) => string;
-    const getTimeAgo: (timestamp: string) => string;
+    const getTimeAgo: (timestamp: string, i18n: I18n) => string;
     const getExplorerTxUrl: (txHash: string, chainId?: number) => string;
     const parseContractError: (message: string) => string;
     const compareVersions: (firstVer: string, secondVer: string) => boolean;
     export { formatDate, getTimeAgo, getExplorerTxUrl, parseContractError, compareVersions };
+}
+/// <amd-module name="@scom/scom-widget-repos/languages/main.json.ts" />
+declare module "@scom/scom-widget-repos/languages/main.json.ts" {
+    const _default: {
+        en: {
+            create_repository: string;
+            transaction_submitted: string;
+            failed_to_upload_data_to_ipfs: string;
+            opened_by: string;
+            pull_requests: string;
+            search_repositories: string;
+            year_ago: string;
+            years_ago: string;
+            month_ago: string;
+            months_ago: string;
+            day_ago: string;
+            days_ago: string;
+            hour_ago: string;
+            hours_ago: string;
+            minute_ago: string;
+            minutes_ago: string;
+            just_now: string;
+        };
+        "zh-hant": {};
+        vi: {
+            create_repository: string;
+            transaction_submitted: string;
+            failed_to_upload_data_to_ipfs: string;
+            opened_by: string;
+            pull_requests: string;
+            search_repositories: string;
+            year_ago: string;
+            years_ago: string;
+            month_ago: string;
+            months_ago: string;
+            day_ago: string;
+            days_ago: string;
+            hour_ago: string;
+            hours_ago: string;
+            minute_ago: string;
+            minutes_ago: string;
+            just_now: string;
+        };
+    };
+    export default _default;
+}
+/// <amd-module name="@scom/scom-widget-repos/languages/audit.json.ts" />
+declare module "@scom/scom-widget-repos/languages/audit.json.ts" {
+    const _default_1: {
+        en: {
+            auditing_checklist: string;
+            comments: string;
+            project_name: string;
+            fill_comment_if_fail: string;
+            invalid_commit_audit_report_not_found: string;
+            cannot_fetch_pull_request_info: string;
+            commit_id_sha: string;
+            all: string;
+            you_have_to_add_comment_to_the_failed_checklist_item: string;
+            audit_summary: string;
+            sign_and_submit: string;
+            next: string;
+            version: string;
+            owner: string;
+            title: string;
+            package_name: string;
+            package_owner: string;
+            pr_number: string;
+            merge_sha: string;
+            ipfs_code_source: string;
+            audit_date: string;
+            audit_by: string;
+            audit_result: string;
+            not_under_auditing: string;
+            uploading_audit_report_to_ipfs: string;
+            auditing: string;
+            audit_successfully: string;
+            failed_to_audit: string;
+            audit_procedure: string;
+            by_key: string;
+            view_code: string;
+            you_are_going_to_audit_the_dapp_checklist: string;
+            if_you_are_first_time_to_go_over_the_checklist_you_could_find_the_guideline: string;
+            here: string;
+            back: string;
+            audit_checklist: string;
+            auditor_comment: string;
+            checklist_item: string;
+            checklist: string;
+            loading: string;
+            submit: string;
+        };
+        "zh-hant": {};
+        vi: {
+            auditing_checklist: string;
+            comments: string;
+            project_name: string;
+            fill_comment_if_fail: string;
+            invalid_commit_audit_report_not_found: string;
+            cannot_fetch_pull_request_info: string;
+            commit_id_sha: string;
+            all: string;
+            you_have_to_add_comment_to_the_failed_checklist_item: string;
+            audit_summary: string;
+            sign_and_submit: string;
+            next: string;
+            version: string;
+            owner: string;
+            title: string;
+            package_name: string;
+            package_owner: string;
+            pr_number: string;
+            merge_sha: string;
+            ipfs_code_source: string;
+            audit_date: string;
+            audit_by: string;
+            audit_result: string;
+            not_under_auditing: string;
+            uploading_audit_report_to_ipfs: string;
+            auditing: string;
+            audit_successfully: string;
+            failed_to_audit: string;
+            transaction_submitted: string;
+            failed_to_upload_data_to_ipfs: string;
+            audit_procedure: string;
+            by_key: string;
+            view_code: string;
+            you_are_going_to_audit_the_dapp_checklist: string;
+            if_you_are_first_time_to_go_over_the_checklist_you_could_find_the_guideline: string;
+            here: string;
+            back: string;
+            audit_checklist: string;
+            auditor_comment: string;
+            checklist_item: string;
+            checklist: string;
+            loading: string;
+            submit: string;
+        };
+    };
+    export default _default_1;
+}
+/// <amd-module name="@scom/scom-widget-repos/languages/repo.json.ts" />
+declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
+    const _default_2: {
+        en: {
+            please_add_a_prefix_to_the_project_first: string;
+            please_login_to_create_your_repository: string;
+            repository_name_is_required: string;
+            failed_to_create_your_repository: string;
+            your_repository_has_been_created_successfully: string;
+            create_new_repository: string;
+            repository_name: string;
+            description: string;
+            confirm: string;
+            all: string;
+            repositories: string;
+            repository: string;
+            there_is_no_repository: string;
+            show_only_PRs: string;
+            updated: string;
+            prs: string;
+            view_record: string;
+            merge: string;
+            review: string;
+            submit_for_audit: string;
+            there_is_no_pull_request: string;
+            are_you_sure_you_want_to_merge: string;
+            this_pr_is_not_reviewed_by_the_auditor_yet: string;
+            this_pr_has_been_audited_with_failed_status: string;
+            pending_review: string;
+            pending_audit: string;
+            passed_review: string;
+            audit_passed: string;
+            failed_review: string;
+            audit_failed: string;
+            start_time_cannot_be_earlier_than_end_time: string;
+            end_time_cannot_be_earlier_than_start_time: string;
+            commits: string;
+            publish: string;
+            there_is_no_commit: string;
+            merge_pull_request: string;
+            merging: string;
+            "merging...": string;
+            failed_to_merge: string;
+            failed_to_get_message: string;
+            merged_successfully: string;
+            submitting: string;
+            failed_to_submit: string;
+            cannot_submit_an_old_version: string;
+            this_version_has_already_been_submitted: string;
+            failed_to_upload_data_to_ipfs: string;
+            submitted_successfully: string;
+            edit: string;
+            commit_id: string;
+            title: string;
+            start_date: string;
+            end_date: string;
+            search: string;
+            clear: string;
+            sync: string;
+            branch: string;
+            version: string;
+            audit_report: string;
+            commit_id_sha: string;
+            success: string;
+            merged: string;
+            error: string;
+            committed: string;
+        };
+        "zh-hant": {};
+        vi: {
+            please_add_a_prefix_to_the_project_first: string;
+            please_login_to_create_your_repository: string;
+            repository_name_is_required: string;
+            failed_to_create_your_repository: string;
+            your_repository_has_been_created_successfully: string;
+            create_new_repository: string;
+            repository_name: string;
+            description: string;
+            confirm: string;
+            all: string;
+            repositories: string;
+            repository: string;
+            there_is_no_repository: string;
+            show_only_PRs: string;
+            updated: string;
+            prs: string;
+            view_record: string;
+            merge: string;
+            review: string;
+            submit_for_audit: string;
+            there_is_no_pull_request: string;
+            are_you_sure_you_want_to_merge: string;
+            this_pr_is_not_reviewed_by_the_auditor_yet: string;
+            this_pr_has_been_audited_with_failed_status: string;
+            pending_review: string;
+            pending_audit: string;
+            passed_review: string;
+            audit_passed: string;
+            failed_review: string;
+            audit_failed: string;
+            start_time_cannot_be_earlier_than_end_time: string;
+            end_time_cannot_be_earlier_than_start_time: string;
+            commits: string;
+            publish: string;
+            there_is_no_commit: string;
+            merge_pull_request: string;
+            merging: string;
+            "merging...": string;
+            failed_to_merge: string;
+            failed_to_get_message: string;
+            merged_successfully: string;
+            submitting: string;
+            failed_to_submit: string;
+            cannot_submit_an_old_version: string;
+            this_version_has_already_been_submitted: string;
+            failed_to_upload_data_to_ipfs: string;
+            submitted_successfully: string;
+            edit: string;
+            commit_id: string;
+            title: string;
+            start_date: string;
+            end_date: string;
+            search: string;
+            clear: string;
+            sync: string;
+            branch: string;
+            version: string;
+            audit_report: string;
+            commit_id_sha: string;
+            success: string;
+            merged: string;
+            error: string;
+            committed: string;
+        };
+    };
+    export default _default_2;
+}
+/// <amd-module name="@scom/scom-widget-repos/languages/index.ts" />
+declare module "@scom/scom-widget-repos/languages/index.ts" {
+    import mainJson from "@scom/scom-widget-repos/languages/main.json.ts";
+    import auditJson from "@scom/scom-widget-repos/languages/audit.json.ts";
+    import repoJson from "@scom/scom-widget-repos/languages/repo.json.ts";
+    export { mainJson, auditJson, repoJson };
 }
 /// <amd-module name="@scom/scom-widget-repos/components/github/repo.tsx" />
 declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
@@ -478,11 +763,6 @@ declare module "@scom/scom-widget-repos/components/github/create.tsx" {
         render(): any;
     }
 }
-/// <amd-module name="@scom/scom-widget-repos/components/github/data.json.ts" />
-declare module "@scom/scom-widget-repos/components/github/data.json.ts" {
-    const _default: string[];
-    export default _default;
-}
 /// <amd-module name="@scom/scom-widget-repos/components/github/index.tsx" />
 declare module "@scom/scom-widget-repos/components/github/index.tsx" {
     import { Module, Container, ControlElement } from "@ijstech/components";
@@ -550,8 +830,8 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
 }
 /// <amd-module name="@scom/scom-widget-repos/components/audit_report/index.css.ts" />
 declare module "@scom/scom-widget-repos/components/audit_report/index.css.ts" {
-    const _default_1: string;
-    export default _default_1;
+    const _default_3: string;
+    export default _default_3;
 }
 /// <amd-module name="@scom/scom-widget-repos/components/audit_report/data.json.ts" />
 declare module "@scom/scom-widget-repos/components/audit_report/data.json.ts" {

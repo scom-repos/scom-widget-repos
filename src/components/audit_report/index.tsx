@@ -1,5 +1,4 @@
 import {
-  customModule,
   customElements,
   ControlElement,
   Module,
@@ -38,6 +37,7 @@ import {
   getExplorerTxUrl
 } from '../../utils/index';
 import { PackageStatus, IAuditReportResultInfo, IAuditReportInfo } from '../../interface';
+import { auditJson, mainJson } from '../../languages/index';
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -122,6 +122,11 @@ export class ScomWidgetReposAuditReport extends Module {
   }
 
   async init() {
+    const i18nData = {};
+    for (const key in auditJson) {
+      i18nData[key] = { ...(auditJson[key] || {}), ...(mainJson[key] || {}) };
+    }
+    this.i18n.init({...i18nData});
     this.classList.add(customStyles);
     this.isPopUp = this.getAttribute("isPopUp") || "";
     super.init();
@@ -137,7 +142,7 @@ export class ScomWidgetReposAuditReport extends Module {
     if (!isPR && !this.auditReportInfo.auditStatus) {
       this.setMessage({
         status: 'error',
-        content: 'Invalid commit, audit report not found',
+        content: '$invalid_commit_audit_report_not_found',
         onClose: () => {
           window.location.assign("#/audit-commit");
         }
@@ -176,7 +181,7 @@ export class ScomWidgetReposAuditReport extends Module {
     } else {
       this.setMessage({
         status: 'error',
-        content: 'Cannot fetch pull request info!',
+        content: '$cannot_fetch_pull_request_info',
         onClose: () => {
           window.location.assign("#/review-pr");
         }
@@ -213,13 +218,17 @@ export class ScomWidgetReposAuditReport extends Module {
       this.imgLogo.url = this.auditReportInfo.imgUrl;
       this.lblProjectName.caption = this.auditReportInfo.projectName;
       this.lblProjectName.link.href = this.auditReportInfo.projectId === undefined || this.auditReportInfo.projectId === null ? "" : `#/projects/${this.auditReportInfo.projectId}`;
-      this.lbPRTitle.caption = `Title: ${this.auditReportInfo.message}`;
-      this.lbPRSha.caption = `Commit ID (SHA): ${this.auditReportInfo.commitId}`;
+      this.lbPRTitle.caption = `${this.i18n.get('$title')}: ${this.auditReportInfo.message}`;
+      this.lbPRSha.caption = `${this.i18n.get('$commit_id_sha')}: ${this.auditReportInfo.commitId}`;
       this.lbPRNumber.caption = '';
     } else {
       this.lbPRTitle.caption = this.auditReportInfo.mergeTitle;
-      this.lbPRNumber.caption = `#${this.auditReportInfo.mergeNumber} opened ${getTimeAgo(this.mergeInfo.created_at)} by ${this.mergeInfo.user_login}`;
-      this.lbPRSha.caption = `Merge SHA: ${this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha}`;
+      this.lbPRNumber.caption = this.i18n.get('$opened_by', {
+        qty: `${this.auditReportInfo.mergeNumber ?? ''}`,
+        date: getTimeAgo(this.mergeInfo.created_at, this.i18n),
+        by: this.mergeInfo.user_login
+      })
+      this.lbPRSha.caption = `${this.i18n.get('$merge_sha')}: ${this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha}`;
     }
   }
 
@@ -246,18 +255,18 @@ export class ScomWidgetReposAuditReport extends Module {
 
     this.checklist.append(
       <i-hstack height='3.875rem' verticalAlignment='center' horizontalAlignment='center' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }} background={{ color: Theme.colors.primary.main }}>
-        <i-label caption='Auditing Checklist'></i-label>
+        <i-label caption='$auditing_checklist'></i-label>
       </i-hstack>
     )
 
     this.checklist.append(
       <i-hstack height='3.875rem' verticalAlignment='center' horizontalAlignment='center' background={{ color: Theme.colors.primary.main }}>
-        <i-label caption='Comments'></i-label>
+        <i-label caption='$comments'></i-label>
       </i-hstack>
     )
 
     checklistItems.forEach((item, i) => {
-      const placeholder = this.reportStatus === ReportStatus.EDIT ? "Fill comment if fail" : ""
+      const placeholder = this.reportStatus === ReportStatus.EDIT ? "$fill_comment_if_fail" : ""
       this.checklist.append(
         <i-hstack height='100%' verticalAlignment='center' horizontalAlignment='start' background={{ color: '#34343A' }}
           border={{ color: '#636363', width: '0 1px 1px 0', style: 'solid' }}>
@@ -306,7 +315,7 @@ export class ScomWidgetReposAuditReport extends Module {
       if (missingComment) {
         this.setMessage({
           status: 'warning',
-          content: 'You have to add comment to the failed checklist item'
+          content: '$you_have_to_add_comment_to_the_failed_checklist_item'
         })
         this.mdAlert.showModal();
         return;
@@ -334,7 +343,7 @@ export class ScomWidgetReposAuditReport extends Module {
 
   private pageChangeState() {
     if (this.reportStatus == ReportStatus.EDIT) {
-      this.btnSubmit.caption = 'Next';
+      this.btnSubmit.caption = '$next';
       this.btnSubmit.enabled = true;
       this.DAppPanel.visible = true;
       this.aduitComment.enabled = true;
@@ -342,7 +351,7 @@ export class ScomWidgetReposAuditReport extends Module {
       this.aduitComment.enabled = true;
       this.auditSummaryPanel.visible = false;
     } else if (this.reportStatus == ReportStatus.REVIEW) {
-      this.btnSubmit.caption = 'Sign & Submit';
+      this.btnSubmit.caption = '$sign_and_submit';
       this.btnSubmit.enabled = true;
       this.aduitComment.enabled = false;
       this.DAppPanel.visible = false;
@@ -370,7 +379,7 @@ export class ScomWidgetReposAuditReport extends Module {
       {!this.isAuditPR ? <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='Project Name' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$project_name' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={this.auditReportInfo.projectName ?? ""} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -379,7 +388,7 @@ export class ScomWidgetReposAuditReport extends Module {
       {!this.isAuditPR ? <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='Version' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$version' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={this.auditReportInfo.version ?? ""} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -397,7 +406,7 @@ export class ScomWidgetReposAuditReport extends Module {
       <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='Title' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$title' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={this.isAuditPR ? this.auditReportInfo.mergeTitle : this.auditReportInfo.message} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -406,7 +415,7 @@ export class ScomWidgetReposAuditReport extends Module {
       <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='Package Name' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$package_name' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={!this.isAuditPR ? this.auditReportInfo.packageName : this.prInfo.repo} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -415,7 +424,7 @@ export class ScomWidgetReposAuditReport extends Module {
       <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='Package Owner' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$package_owner' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={!this.isAuditPR ? this.auditReportInfo.packageOwner : this.prInfo.owner} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -424,7 +433,7 @@ export class ScomWidgetReposAuditReport extends Module {
       {this.isAuditPR ? <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='PR Number' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$pr_number' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={this.auditReportInfo.mergeNumber ?? this.mergeInfo.number} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -433,7 +442,7 @@ export class ScomWidgetReposAuditReport extends Module {
       <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption={this.isAuditPR ? 'Merge SHA' : 'Commit ID (SHA)'} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption={this.isAuditPR ? '$merge_sha' : '$commit_id_sha'} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={this.isAuditPR ? this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha : this.auditReportInfo.commitId} wordBreak='break-all' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -442,7 +451,7 @@ export class ScomWidgetReposAuditReport extends Module {
       {!this.isAuditPR ? <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='IPFS Code Source' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$ipfs_code_source' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label
@@ -458,7 +467,7 @@ export class ScomWidgetReposAuditReport extends Module {
       <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='Audit Date' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$audit_date' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={lastAuditDate} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -467,7 +476,7 @@ export class ScomWidgetReposAuditReport extends Module {
       <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='Audit By' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$audit_by' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start'>
           <i-label caption={auditor} padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
@@ -476,7 +485,7 @@ export class ScomWidgetReposAuditReport extends Module {
       <i-hstack width='100%' verticalAlignment='center' background={{ color: '#34343A' }}
         height='3.125rem' horizontalAlignment='center' border={{ bottom: { color: '#636363', width: '1px', style: 'solid' } }}>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' border={{ right: { color: '#636363', width: '1px', style: 'solid' } }}>
-          <i-label caption='Audit Result' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
+          <i-label caption='$audit_result' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}></i-label>
         </i-hstack>
         <i-hstack height='100%' width='50%' verticalAlignment='center' horizontalAlignment='start' padding={{ top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' }}>
           <i-label
@@ -508,7 +517,7 @@ export class ScomWidgetReposAuditReport extends Module {
       if (auditInfo.auditStatus !== PackageStatus.AUDITING) {
         this.setMessage({
           status: 'error',
-          content: 'Not under auditing'
+          content: '$not_under_auditing'
         })
         this.mdAlert.showModal();
         this.btnSubmit.rightIcon.visible = false;
@@ -517,7 +526,7 @@ export class ScomWidgetReposAuditReport extends Module {
     }
     this.setMessage({
       status: 'loading',
-      content: 'Uploading Audit Report to IPFS',
+      content: '$uploading_audit_report_to_ipfs',
     })
     this.mdAlert.showModal();
     const resultInfo: IAuditReportResultInfo = { ...this.auditReportInfo };
@@ -558,7 +567,7 @@ export class ScomWidgetReposAuditReport extends Module {
 
       this.setMessage({
         status: 'warning',
-        content: 'Auditing'
+        content: '$auditing'
       })
       this.mdAlert.showModal();
       let res: any;
@@ -567,7 +576,7 @@ export class ScomWidgetReposAuditReport extends Module {
         if (res?.success) {
           this.setMessage({
             status: 'success',
-            content: 'Audit successfully',
+            content: '$audit_successfully',
             onClose: () => {
               window.history.back();
             }
@@ -577,7 +586,7 @@ export class ScomWidgetReposAuditReport extends Module {
         } else {
           this.setMessage({
             status: 'error',
-            content: res?.error?.message || 'Failed to audit'
+            content: res?.error?.message || '$failed_to_audit'
           })
           this.mdAlert.showModal();
           this.btnSubmit.rightIcon.visible = false;
@@ -593,7 +602,7 @@ export class ScomWidgetReposAuditReport extends Module {
           } else if (receipt) {
             this.setMessage({
               status: 'success',
-              title: 'Transaction Submitted',
+              title: '$transaction_submitted',
               link: {
                 caption: receipt,
                 href: getExplorerTxUrl(receipt)
@@ -615,7 +624,7 @@ export class ScomWidgetReposAuditReport extends Module {
           if (res?.success) {
             this.setMessage({
               status: 'success',
-              content: 'Audit successfully',
+              content: '$audit_successfully',
               onClose: () => {
                 window.location.assign("#/audit-commit");
               }
@@ -625,7 +634,7 @@ export class ScomWidgetReposAuditReport extends Module {
           } else {
             this.setMessage({
               status: 'error',
-              content: res?.error?.message || 'Failed to audit'
+              content: res?.error?.message || '$failed_to_audit'
             })
             this.mdAlert.showModal();
             this.btnSubmit.rightIcon.visible = false;
@@ -636,7 +645,7 @@ export class ScomWidgetReposAuditReport extends Module {
     } else {
       this.setMessage({
         status: 'error',
-        content: 'Failed to upload data to IPFS.'
+        content: '$failed_to_upload_data_to_ipfs'
       })
       this.mdAlert.showModal();
       this.btnSubmit.rightIcon.visible = false;
@@ -668,7 +677,7 @@ export class ScomWidgetReposAuditReport extends Module {
                 }
               ]
             }>
-            <i-label grid={{ area: 'titleArea' }} caption='Audit Procedure' font={{ size: '1.25rem', bold: true }} margin={{ top: '0.625rem', bottom: '1.25rem' }}></i-label>
+            <i-label grid={{ area: 'titleArea' }} caption='$audit_procedure' font={{ size: '1.25rem', bold: true }} margin={{ top: '0.625rem', bottom: '1.25rem' }}></i-label>
             <i-image grid={{ area: 'logoArea' }} id='imgLogo' height='4.375rem' width='4.375rem' margin={{ right: '0.625rem' }}></i-image>
             <i-hstack grid={{ area: 'DAppNameAndVersionArea' }} verticalAlignment='center'>
               <i-label id='DAppName' font={{ size: '1.5625rem' }} margin={{ right: '1.875rem' }}></i-label>
@@ -676,7 +685,7 @@ export class ScomWidgetReposAuditReport extends Module {
             </i-hstack>
             <i-vstack gap="0.1rem" grid={{ area: 'ProjectNameArea' }}>
               <i-hstack id="hStackProjectName" verticalAlignment='center'>
-                <i-label caption='by' font={{ size: '0.8rem' }} margin={{ right: '0.3125rem' }}></i-label>
+                <i-label caption='$by' font={{ size: '0.8rem' }} margin={{ right: '0.3125rem' }}></i-label>
                 <i-label id='lblProjectName' font={{ size: '0.8rem', color: '#3994FF' }}></i-label>
               </i-hstack>
               <i-vstack id="vStackPRName" gap="0.1rem" verticalAlignment="center" width="fit-content">
@@ -694,10 +703,10 @@ export class ScomWidgetReposAuditReport extends Module {
             <i-hstack id='guidelineMsg' width='100%' background={{ color: '#34343A' }} padding={{ left: '1rem', right: '1rem', top: '0.625rem', bottom: '0.625rem' }}
               border={{ radius: '0.375rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} visible={!this.isPopUp}>
               <i-vstack stack={{ basis: '95%' }} verticalAlignment='center'>
-                <i-label caption='* You are going to audit the DApp checklist.' font={{ size: '1rem' }}></i-label>
+                <i-label caption='$you_are_going_to_audit_the_dapp_checklist' font={{ size: '1rem' }}></i-label>
                 <i-panel>
-                  <i-label caption='If you are first time to go over the checklist, you could find the guideline' display='inline' font={{ size: '1rem' }} margin={{ right: '0.3125rem' }}></i-label>
-                  <i-label class='pointer' display='inline' caption='here' font={{ size: '1rem', color: '#3994FF' }}></i-label>
+                  <i-label caption='$if_you_are_first_time_to_go_over_the_checklist_you_could_find_the_guideline' display='inline' font={{ size: '1rem' }} margin={{ right: '0.3125rem' }}></i-label>
+                  <i-label class='pointer' display='inline' caption='$here' font={{ size: '1rem', color: '#3994FF' }}></i-label>
                 </i-panel>
               </i-vstack>
               <i-vstack stack={{ basis: '5%' }} verticalAlignment='center'>
@@ -705,22 +714,22 @@ export class ScomWidgetReposAuditReport extends Module {
               </i-vstack>
             </i-hstack>
             <i-vstack id='auditSummaryPanel' width='100%'>
-              <i-label caption='Audit Summary' font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
+              <i-label caption='$audit_summary' font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
               <i-hstack width='100%' horizontalAlignment='center' margin={{ top: '0.625rem' }}>
                 <i-hstack id='auditSummary' minWidth='37.5rem' />
               </i-hstack>
             </i-vstack>
-            <i-label caption='Audit Checklist' font={{ size: '1rem' }} margin={{ top: '1.875rem', bottom: '0.625rem' }} ></i-label>
+            <i-label caption="$audit_checklist" font={{ size: '1rem' }} margin={{ top: '1.875rem', bottom: '0.625rem' }} ></i-label>
             <i-grid-layout id='checklist' margin={{ top: '0.625rem', bottom: '0.625rem' }} templateColumns={['60%', '40%']}></i-grid-layout>
-            <i-label caption='Auditor Comment' font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
+            <i-label caption='$auditor_comment' font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
             <i-input id='aduitComment' width='100%' height='auto' rows={12} inputType='textarea' margin={{ top: '0.625rem', bottom: '0.625rem' }} background={{ color: '#34343A' }} resize='auto-grow' opacity={1}></i-input>
             <i-hstack id='btnPanel' width='100%' margin={{ top: '0.625rem', bottom: '0.625rem' }} visible={false}>
               <i-hstack width='50%' horizontalAlignment='start'>
-                <i-button caption='Back' font={{ size: '0.875rem' }} width='12.5rem' height='2.5rem' border={{ radius: '0.5rem' }}
+                <i-button caption='$back' font={{ size: '0.875rem' }} width='12.5rem' height='2.5rem' border={{ radius: '0.5rem' }}
                   padding={{ left: '1.25rem', right: '1.25rem', top: '0.2125rem', bottom: '0.2125rem' }} background={{ color: '#34343A' }} onClick={this.backBtn}></i-button>
               </i-hstack>
               <i-hstack width='50%' horizontalAlignment='end'>
-                <i-button id='btnSubmit' caption={'Next'} font={{ size: '0.875rem' }} width='12.5rem' height='2.5rem' border={{ radius: '0.5rem' }} enabled={false}
+                <i-button id='btnSubmit' caption="$next" font={{ size: '0.875rem' }} width='12.5rem' height='2.5rem' border={{ radius: '0.5rem' }} enabled={false}
                   padding={{ left: '1.25rem', right: '1.25rem', top: '0.2125rem', bottom: '0.2125rem' }} background={{ color: Theme.colors.primary.main }} onClick={this.NextOrSubmitBtn}
                   rightIcon={{ spin: true, visible: false }}></i-button>
               </i-hstack>
@@ -735,7 +744,7 @@ export class ScomWidgetReposAuditReport extends Module {
             padding={{ top: '1rem', bottom: '1rem', left: '1rem', right: '1rem' }}
           >
             <i-icon name="spinner" spin={true} width="2.25rem" height="2.25rem" fill={Theme.text.primary}></i-icon>
-            <i-label caption="Loading..." font={{ size: '1.5em' }} class="i-loading-spinner_text"></i-label>
+            <i-label caption="$loading" font={{ size: '1.5em' }} class="i-loading-spinner_text"></i-label>
           </i-vstack>
         </i-modal>
         <i-alert id="mdAlert" />

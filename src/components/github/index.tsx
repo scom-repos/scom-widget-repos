@@ -3,7 +3,8 @@ import { checkGithubOwner, getAllRepos, getGithubUser, isActiveAuditor } from ".
 import { githubStyle, spinnerStyle, tabStyle } from "./index.css";
 import ScomWidgetReposGithubList from "./list";
 import { ScomWidgetReposCreateRepo } from './create';
-import dataJson from './data.json';
+import { repoJson } from "../../languages/index";
+
 const Theme = Styles.Theme.ThemeVars;
 
 interface GithubElement extends ControlElement {
@@ -151,7 +152,7 @@ export class ScomWidgetReposGithub extends Module {
       this.elmList.listRepos = this.listReposFiltered;
       this.elmPRs.listRepos = [...listPRsFiltered];
       this.countPRs = [...listPRsFiltered].reduce((accumulator, currentObject) => accumulator + currentObject.open_issues, 0);
-      this.prTab.caption = `Pull Requests <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
+      this.prTab.caption = `${this.i18n.get('$pull_requests')} <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
     } else {
       // this.elmPackages.listRepos = [...listPRsFiltered];
       this.elmPackages.listRepos = this.listReposFiltered;
@@ -160,7 +161,7 @@ export class ScomWidgetReposGithub extends Module {
 
   private updateCountPRs(oldNum: number, newNum: number) {
     this.countPRs = this.countPRs - oldNum + newNum;
-    this.prTab.caption = `Pull Requests <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
+    this.prTab.caption = `${this.i18n.get('$pull_requests')} <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
   }
 
   private updateUI() {
@@ -233,6 +234,7 @@ export class ScomWidgetReposGithub extends Module {
   }
 
   init() {
+    this.i18n.init({...repoJson});
     super.init();
     this.isProject = this.getAttribute('isProject', true);
     this.isProjectOwner = this.getAttribute('isProjectOwner', true);
@@ -274,10 +276,10 @@ export class ScomWidgetReposGithub extends Module {
           padding={{ top: "0.5rem", bottom: "0.5rem", left: "1rem", right: "1rem" }}
           mode="horizontal"
         >
-          <i-tab caption="All">
+          <i-tab caption="$all">
             <i-scom-widget-repos--github-list id="elmList" isProject={true} />
           </i-tab>
-          <i-tab id="prTab" caption="Pull Requests">
+          <i-tab id="prTab" caption="$pull_requests">
             <i-scom-widget-repos--github-list id="elmPRs" />
           </i-tab>
         </i-tabs>
