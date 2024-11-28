@@ -4,6 +4,7 @@ import { inputDateStyle, inputStyle, modalStyle, childTabStyle } from "./index.c
 import { ICommit, ISemanticVersion, PackageStatus } from "../../interface";
 import { Wallet } from "@ijstech/eth-wallet";
 import { ScomWidgetReposAuditReport } from '../../components/index';
+import { repoJson, mainJson } from "../../languages/index";
 const Theme = Styles.Theme.ThemeVars;
 
 interface GithubRepoElement extends ControlElement {
@@ -153,20 +154,20 @@ export class ScomWidgetReposGithubRepo extends Module {
     const { name, owner_login, open_issues, html_url, pushed_at, full_name, version } = this.data;
     this.packageInfo = await getPackageByNames(owner_login, name);
     this.lbName.caption = name;
-    this.lbPublish.caption = `Publish ${name} repository`;
+    this.lbPublish.caption = this.i18n.get('$publish', { name, repo: full_name });
     this.lbPath.caption = full_name;
     this.lbVersion.caption = version || '-';
     const hasPR = open_issues > 0;
     this.lbCount.caption = `${open_issues}`;
-    this.tabPRs.caption = `PRs <span style="color: var(--colors-primary-main)">(${open_issues})</span>`;
+    this.tabPRs.caption = `${this.i18n.get('$prs')} <span style="color: var(--colors-primary-main)">(${open_issues})</span>`;
     this.lbCount.background = { color: hasPR ? Theme.colors.primary.main : Theme.colors.info.main };
     this.hStackCount.cursor = hasPR ? 'pointer' : 'default';
     this.hStackCount.onClick = () => hasPR ? this.onShowDetail() : {};
     this.hStackLink.onClick = () => this.openLink(html_url);
-    this.lbPushedAt.caption = `Updated ${getTimeAgo(pushed_at)}`;
+    this.lbPushedAt.caption = this.i18n.get('$updated', { date: getTimeAgo(pushed_at, this.i18n) });
     if (this.timer) clearInterval(this.timer);
     this.timer = setInterval(() => {
-      this.lbPushedAt.caption = `Updated ${getTimeAgo(pushed_at)}`;
+      this.lbPushedAt.caption = this.i18n.get('$updated', { date: getTimeAgo(pushed_at, this.i18n) });
     }, 60000);
   }
 
@@ -188,12 +189,20 @@ export class ScomWidgetReposGithubRepo extends Module {
     for (const pr of this.listPR) {
       const { mergeId, html_url, number, title, created_at, user_login, base, status } = pr;
       const lbTimer = new Label(undefined, {
-        caption: `#${number} opened ${getTimeAgo(created_at)} by ${user_login}`,
+        caption: this.i18n.get('$opened_by', {
+          qty: `${number}`,
+          date: getTimeAgo(created_at, this.i18n),
+          by: user_login
+        }),
         font: { size: '0.75rem' },
         opacity: 0.8
       });
       const interval = setInterval(() => {
-        lbTimer.caption = `#${number} opened ${getTimeAgo(created_at)} by ${user_login}`;
+        lbTimer.caption = this.i18n.get('$opened_by', {
+          qty: `${number}`,
+          date: getTimeAgo(created_at, this.i18n),
+          by: user_login
+        });
       }, 60000);
       this.listTimer.push(interval);
       nodeItems.push(<i-hstack
@@ -224,20 +233,20 @@ export class ScomWidgetReposGithubRepo extends Module {
             class="text-center"
           />
           {status !== PackageStatus.AUDITING ? <i-button
-            caption="View Record"
+            caption="$view_record"
             background={{ color: '#212128' }}
             padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
             rightIcon={{ spin: true, visible: false }}
             onClick={() => this.onViewRecord(mergeId, base.base_login, base.base_name, number)}
           /> : []}
           {this.isAuditPR && status === PackageStatus.AUDITING ? <i-button
-            caption={'Review'}
+            caption={'$review'}
             padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
             rightIcon={{ spin: true, visible: false }}
             onClick={() => this.onAuditPR(base.base_login, base.base_name, number)}
           /> : []}
           {this.isGithubOwner || this.isProjectOwner ? <i-button
-            caption={'Merge'}
+            caption={'$merge'}
             padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
             rightIcon={{ spin: true, visible: false }}
             onClick={(btn: Button) => this.onMergePR(btn, base.base_login, base.base_name, number, status)}
@@ -256,7 +265,7 @@ export class ScomWidgetReposGithubRepo extends Module {
         verticalAlignment="center"
         horizontalAlignment="center"
       >
-        <i-label caption="There is no pull request" />
+        <i-label caption="$there_is_no_pull_request" />
       </i-hstack>)
     }
     this.vStackListPR.clearInnerHTML();
@@ -264,14 +273,14 @@ export class ScomWidgetReposGithubRepo extends Module {
   }
 
   private getStatusMessage(status: PackageStatus, prNumber: number, repo: string) {
-    let text = `Are you sure you want to merge #${prNumber} in ${repo}?`;
+    let text = this.i18n.get('$are_you_sure_you_want_to_merge', { prNumber: `${prNumber}`, repo });
     if (!this.guid) return text;
     switch (status) {
       case PackageStatus.AUDITING:
-        text = `<span style="color: ${Theme.colors.warning.main}">This PR is not reviewed by the auditor yet. ${text}</span>`;
+        text = `<span style="color: ${Theme.colors.warning.main}">${this.i18n.get('$this_pr_is_not_reviewed_by_the_auditor_yet')} ${text}</span>`;
         break;
       case PackageStatus.AUDIT_FAILED:
-        text = `<span style="color: ${Theme.colors.error.main}">This PR has been audited with failed status. ${text}</span>`;
+        text = `<span style="color: ${Theme.colors.error.main}">${this.i18n.get('$this_pr_has_been_audited_with_failed_status')} ${text}</span>`;
         break;
     }
     return text;
@@ -301,18 +310,18 @@ export class ScomWidgetReposGithubRepo extends Module {
     let text = '';
     switch (status) {
       case PackageStatus.AUDITING:
-        text = isPR ? "Pending Review" : "Pending Audit";
+        text = isPR ? "$pending_review" : "$pending_audit";
         break;
       case PackageStatus.AUDIT_PASSED:
-        if (isDefault) return "Submit for Audit";
-        text = isPR ? "Passed Review" : "Audit Passed";
+        if (isDefault) return "$submit_for_audit";
+        text = isPR ? "$passed_review" : "$audit_passed";
         break;
       case PackageStatus.AUDIT_FAILED:
-        if (isDefault) return "Submit for Audit";
-        text = isPR ? "Failed Review" : "Audit Failed";
+        if (isDefault) return "$submit_for_audit";
+        text = isPR ? "$failed_review" : "$audit_failed";
         break;
       default:
-        text = isPR ? "Pending Review" : "Submit for Audit";
+        text = isPR ? "$pending_review" : "$submit_for_audit";
     }
     return text;
   }
@@ -328,7 +337,7 @@ export class ScomWidgetReposGithubRepo extends Module {
         const val = date;
         inputEndDate.min = val.format('YYYY-MM-DD HH:mm');
         if (this.inputEndDate.value?.isBefore(val)) {
-          this.lbStartDateErr.caption = 'Start time cannot be earlier than end time';
+          this.lbStartDateErr.caption = '$start_time_cannot_be_earlier_than_end_time';
         }
       } else {
         inputEndDate.min = undefined;
@@ -347,7 +356,7 @@ export class ScomWidgetReposGithubRepo extends Module {
         const val = date;
         inputStartDate.max = val.format('YYYY-MM-DD HH:mm');
         if (this.inputStartDate.value?.isAfter(value)) {
-          this.lbEndDateErr.caption = 'End time cannot be earlier than start time';
+          this.lbEndDateErr.caption = '$end_time_cannot_be_earlier_than_start_time';
         }
       } else {
         inputStartDate.max = moment().format('YYYY-MM-DD HH:mm');
@@ -465,7 +474,7 @@ export class ScomWidgetReposGithubRepo extends Module {
   }
 
   private renderCommits() {
-    this.tabCommits.caption = `Commits <span style="color: var(--colors-primary-main)">(${this.totalCommits})</span>`;
+    this.tabCommits.caption = `${this.i18n.get('$commits')} <span style="color: var(--colors-primary-main)">(${this.totalCommits})</span>`;
     let nodeItems: HTMLElement[] = [];
     const { guid } = this.packageInfo;
     for (const commit of this.commits) {
@@ -485,8 +494,8 @@ export class ScomWidgetReposGithubRepo extends Module {
             <i-label caption={message} wordBreak="break-word" font={{ size: '0.875rem', bold: true }} />
             <i-icon name="external-link-alt" class="icon-hover" cursor="pointer" width="0.9rem" height="0.9rem" onClick={() => this.openLink(url)} />
           </i-hstack>
-          <i-label caption={`Version: ${version || '-'}`} font={{ size: '0.875rem' }} />
-          <i-label caption={`${committer} committed ${getTimeAgo(date)}`} font={{ size: '0.75rem' }} opacity={0.8} />
+          <i-label caption={`${this.i18n.get('$version')} ${version || '-'}`} font={{ size: '0.875rem' }} />
+          <i-label caption={`${committer} ${this.i18n.get('$committed')} ${getTimeAgo(date, this.i18n)}`} font={{ size: '0.75rem' }} opacity={0.8} />
         </i-vstack>
         <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap">
           {auditStatus ? <i-label
@@ -499,27 +508,27 @@ export class ScomWidgetReposGithubRepo extends Module {
             class="text-center"
           /> : []}
           {auditStatus && auditStatus !== PackageStatus.AUDITING ? <i-button
-            caption="View Record"
+            caption="$view_record"
             background={{ color: '#212128' }}
             padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
             rightIcon={{ spin: true, visible: false }}
             onClick={() => this.onViewCommitRecord(commit.guid)}
           /> : []}
           {this.isAuditPR && auditStatus === PackageStatus.AUDITING ? <i-button
-            caption={'Audit'}
+            caption={'$audit'}
             padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
             rightIcon={{ spin: true, visible: false }}
             onClick={() => this.onAuditCommit(commit.guid)}
           /> : []}
           {this.isProject && this.isProjectOwner && !auditStatus ? <i-button
             id={`btn-${sha}`}
-            caption={'Submit for Audit'}
+            caption={'$submit_for_audit'}
             padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
             rightIcon={{ spin: true, visible: false }}
             onClick={() => this.onShowRequestAudit(commit.guid, guid, sha, version)}
           /> : []}
           {this.isProject && this.isProjectOwner && auditStatus === PackageStatus.AUDIT_PASSED ? <i-button
-            caption={'Publish'}
+            caption={'$publish'}
             padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
             onClick={() => this.onPublish(commit.guid)}
           /> : []}
@@ -537,7 +546,7 @@ export class ScomWidgetReposGithubRepo extends Module {
         verticalAlignment="center"
         horizontalAlignment="center"
       >
-        <i-label caption="There is no commit" />
+        <i-label caption="$there_is_no_commit" />
       </i-hstack>)
     }
     this.vStackListCommit.clearInnerHTML();
@@ -574,7 +583,7 @@ export class ScomWidgetReposGithubRepo extends Module {
     } else {
       this.setMessage({
         status: 'confirm',
-        title: 'Merge pull request',
+        title: '$merge_pull_request',
         content: this.getStatusMessage(status, prNumber, repo),
         onConfirm: () => this.mergeOnePR(button, owner, repo, prNumber)
       })
@@ -585,21 +594,21 @@ export class ScomWidgetReposGithubRepo extends Module {
   private async mergeOnePR(button: Button, owner: string, repo: string, prNumber: number) {
     this.setMessage({
       status: 'warning',
-      title: 'Merge',
-      content: 'Merging...',
+      title: '$merge',
+      content: '$merging...',
     })
     this.mdAlert.showModal();
-    button.caption = 'Merging';
+    button.caption = '$merging';
     button.enabled = false;
     button.rightIcon.visible = true;
     const showError = (msg?: string) => {
       this.setMessage({
         status: 'error',
-        title: 'Error',
-        content: msg || 'Failed to merge'
+        title: '$error',
+        content: msg || '$failed_to_merge'
       })
       this.mdAlert.showModal();
-      button.caption = 'Merge';
+      button.caption = '$merge';
       button.enabled = true;
       button.rightIcon.visible = false;
     }
@@ -609,7 +618,7 @@ export class ScomWidgetReposGithubRepo extends Module {
       if (this.guid) {
         const { data } = await getMergeMsg(this.guid, owner, repo);
         if (!data) {
-          showError('Failed to get message');
+          showError('$failed_to_get_message');
           return;
         }
         message = btoa(data);
@@ -623,8 +632,8 @@ export class ScomWidgetReposGithubRepo extends Module {
       } else {
         this.setMessage({
           status: 'success',
-          title: 'Success',
-          content: 'Merged successfully'
+          title: '$success',
+          content: '$merged_successfully'
         })
         this.mdAlert.showModal();
         const oldPRs = Number(this.listPR.length);
@@ -632,7 +641,7 @@ export class ScomWidgetReposGithubRepo extends Module {
         if (this.listPR.length === 0 && this.guid) {
           await this.onRefresh();
         } else {
-          button.caption = 'Merged';
+          button.caption = '$merged';
           button.enabled = false;
           button.rightIcon.visible = false;
           this.refreshPR(true);
@@ -667,7 +676,7 @@ export class ScomWidgetReposGithubRepo extends Module {
   private resetPublishInfo() {
     this.lbCommitId.caption = '';
     this.lbCommitVersion.caption = '';
-    this.btnPublish.caption = 'Submit for Audit';
+    this.btnPublish.caption = '$submit_for_audit';
     this.btnPublish.enabled = true;
     this.btnPublish.rightIcon.visible = false;
     this.mdPublish.visible = false;
@@ -685,17 +694,17 @@ export class ScomWidgetReposGithubRepo extends Module {
         content: 'Submitting...',
       })
       this.mdAlert.showModal();
-      this.btnPublish.caption = 'Submitting';
+      this.btnPublish.caption = '$submitting';
       this.btnPublish.enabled = false;
       this.btnPublish.rightIcon.visible = true;
       const showError = (msg?: string) => {
       this.setMessage({
           status: 'error',
           title: 'Error',
-          content: msg || 'Failed to submit'
+          content: msg || '$failed_to_submit'
         })
         this.mdAlert.showModal();
-        this.btnPublish.caption = 'Submit for Audit';
+        this.btnPublish.caption = '$submit_for_audit';
         this.btnPublish.enabled = true;
         this.btnPublish.rightIcon.visible = false;
       }
@@ -724,7 +733,7 @@ export class ScomWidgetReposGithubRepo extends Module {
         const requestedAudit = this.commits.filter(f => f.auditStatus);
         let isOldVersion = requestedAudit.length ? requestedAudit.every((v: any) => !compareVersions(v.version, version)) : false;
         if (isOldVersion) {
-          showError('Cannot submit an old version');
+          showError('$cannot_submit_an_old_version');
           return;
         }
         else {
@@ -733,14 +742,14 @@ export class ScomWidgetReposGithubRepo extends Module {
             return ver[0] === finVersion.major && ver[1] === finVersion.minor && ver[2] === finVersion.patch && v.auditStatus !== PackageStatus.AUDIT_FAILED;
           });
           if (isCurrentVersion) {
-            showError('This version has already been submitted');
+            showError('$this_version_has_already_been_submitted');
             return;
           }
         }
 
         const ipfsCid = await uploadDataToIpfs('commitDetail', JSON.stringify(commitInfo, null, 2));
         if (!ipfsCid) {
-          showError('Failed to upload data to IPFS');
+          showError('$failed_to_upload_data_to_ipfs');
           return;
         }
         const callback = async (err: Error, receipt?: string) => {
@@ -750,7 +759,7 @@ export class ScomWidgetReposGithubRepo extends Module {
           } else if (receipt) {
             this.setMessage({
               status: 'success',
-              title: 'Transaction Submitted',
+              title: '$transaction_submitted',
               link: {
                 caption: receipt,
                 href: getExplorerTxUrl(receipt)
@@ -771,7 +780,7 @@ export class ScomWidgetReposGithubRepo extends Module {
             this.setMessage({
               status: 'success',
               title: 'Success',
-              content: 'Submitted successfully'
+              content: '$submitted_successfully'
             });
             this.mdAlert.showModal();
           } else {
@@ -823,6 +832,11 @@ export class ScomWidgetReposGithubRepo extends Module {
   }
 
   init() {
+    const i18nData = {};
+    for (const key in repoJson) {
+      i18nData[key] = { ...(repoJson[key] || {}), ...(mainJson[key] || {}) };
+    }
+    this.i18n.init({...i18nData});
     super.init();
     this.isInitialized = true;
     this.pagiCommitList.currentPage = 1;
@@ -873,7 +887,7 @@ export class ScomWidgetReposGithubRepo extends Module {
           </i-hstack>
           <i-button
             id="btnEdit"
-            caption="Edit"
+            caption="$edit"
             stack={{ shrink: '0' }}
             icon={{ name: 'pen', width: '0.675rem', height: '0.675rem' }}
             padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
@@ -893,7 +907,7 @@ export class ScomWidgetReposGithubRepo extends Module {
           position="relative"
           zIndex={0}
         >
-          <i-tab id="tabPRs" caption="PRs" width="50%">
+          <i-tab id="tabPRs" caption="$prs" width="50%">
             <i-vstack id="vStackListPR" verticalAlignment="center" />
           </i-tab>
           <i-tab id="tabCommits" caption="Commits" width="50%">
@@ -901,24 +915,24 @@ export class ScomWidgetReposGithubRepo extends Module {
               <i-vstack gap="1rem" width="100%">
                 <i-hstack gap="2rem" verticalAlignment="center" wrap="wrap" width="100%" mediaQueries={[{maxWidth: '767px', properties: {gap: '1rem'}}]}>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
-                    <i-label caption="Commit ID" minWidth={80}/>
+                    <i-label caption="$commit_id" minWidth={80}/>
                     <i-input id="inputCommitId" class={inputStyle} height={40} width="calc(100% - 75px)" />
                   </i-hstack>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
-                    <i-label caption="Title" minWidth={80} />
+                    <i-label caption="$title" minWidth={80} />
                     <i-input id="inputMessage" class={inputStyle} height={40} width="calc(100% - 75px)" />
                   </i-hstack>
                 </i-hstack>
                 <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap" width="100%" mediaQueries={[{maxWidth: '767px', properties: {gap: '1rem'}}]}>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
-                    <i-label caption="Start Date" minWidth={80} />
+                    <i-label caption="$start_date" minWidth={80} />
                     <i-vstack gap="0.25rem" width="calc(100% - 75px)">
                       <i-datepicker id="inputStartDate" type="dateTime" placeholder="dd/mm/yyyy hh:mm" class={inputDateStyle} height={40} width="100%" onChanged={this.onStartDateChanged} />
                       <i-label id="lbStartDateErr" font={{ color: Theme.colors.error.main }} />
                     </i-vstack>
                   </i-hstack>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
-                    <i-label caption="End Date" minWidth={80} />
+                    <i-label caption="$end_date" minWidth={80} />
                     <i-vstack gap="0.25rem" width="calc(100% - 75px)">
                       <i-datepicker id="inputEndDate" type="dateTime" placeholder="dd/mm/yyyy hh:mm" class={inputDateStyle} height={40} width="100%" onChanged={this.onEndDateChanged} />
                       <i-label id="lbEndDateErr" font={{ color: Theme.colors.error.main }} />
@@ -928,7 +942,7 @@ export class ScomWidgetReposGithubRepo extends Module {
                 <i-hstack gap="1rem" verticalAlignment="center" horizontalAlignment="end" wrap="wrap">
                   <i-button
                     id="btnSync"
-                    caption="Sync"
+                    caption="$sync"
                     width="10rem"
                     padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
                     background={{ color: '#17a2b8' }}
@@ -936,7 +950,7 @@ export class ScomWidgetReposGithubRepo extends Module {
                   />
                   <i-button
                     id="btnSearch"
-                    caption="Search"
+                    caption="$search"
                     width="10rem"
                     padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
                     background={{ color: '#17a2b8' }}
@@ -944,7 +958,7 @@ export class ScomWidgetReposGithubRepo extends Module {
                   />
                   <i-button
                     id="btnClear"
-                    caption="Clear"
+                    caption="$clear"
                     width="10rem"
                     padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
                     background={{ color: '#17a2b8' }}
@@ -971,21 +985,21 @@ export class ScomWidgetReposGithubRepo extends Module {
             </i-hstack>
             <i-vstack width="100%" gap="0.5rem" margin={{ top: '1rem' }}>
               <i-hstack gap="0.5rem" verticalAlignment="center" margin={{ bottom: '0.25rem' }}>
-                <i-label caption="Branch:" />
+                <i-label caption="$branch" />
                 <i-label caption="main" font={{ size: '1rem', color: Theme.colors.primary.main }} />
               </i-hstack>
               <i-hstack gap="0.5rem" verticalAlignment="center">
-                <i-label caption="Version:" />
+                <i-label caption="$version" />
                 <i-label id="lbCommitVersion" font={{ size: '1rem', color: Theme.colors.primary.main }} />
               </i-hstack>
               <i-hstack gap="0.5rem" verticalAlignment="center">
-                <i-label caption="Commit ID (SHA):" />
+                <i-label caption="$commit_id_sha" />
                 <i-label id="lbCommitId" font={{ size: '1rem', color: Theme.colors.primary.main }} />
               </i-hstack>
             </i-vstack>
             <i-button
               id="btnPublish"
-              caption="Submit for Audit"
+              caption="$submit_for_audit"
               width="12.5rem"
               margin={{ top: '1rem', left: 'auto', right: 'auto' }}
               padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
@@ -997,7 +1011,7 @@ export class ScomWidgetReposGithubRepo extends Module {
         <i-modal
           id='viewReportModal'
           maxWidth="55rem"
-          title="Audit Report"
+          title="$audit_report"
           closeIcon={{ name: 'times' }}
           popupPlacement="center"
         >

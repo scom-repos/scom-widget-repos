@@ -5,7 +5,6 @@
     "dependencies": [
         "@ijstech/components",
         "@ijstech/eth-wallet",
-        "@scom/scom-code-editor",
         "@scom/scom-designer",
         "@scom/scom-widget-builder"
     ]

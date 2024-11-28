@@ -1,4 +1,4 @@
-import { moment } from '@ijstech/components';
+import { I18n, moment } from '@ijstech/components';
 import { Wallet } from '@ijstech/eth-wallet';
 
 export * from './API';
@@ -8,26 +8,26 @@ const formatDate = (date: string | number, customType?: string) => {
   return moment(date).format(formatType);
 }
 
-const getTimeAgo = (timestamp: string) => {
+const getTimeAgo = (timestamp: string, i18n: I18n) => {
   const currentTime = moment();
   const pastTime = moment(timestamp);
   const duration = moment.duration(currentTime.diff(pastTime));
   if (duration.years() > 0) {
-    return `${duration.years()} year${duration.years() > 1 ? 's' : ''} ago`;
+    return i18n.get(duration.years() > 1 ? 'years_ago' : 'year_ago', { value: `${duration.years()}` });
   }
   if (duration.months() > 0) {
-    return `${duration.months()} month${duration.months() > 1 ? 's' : ''} ago`;
+    return i18n.get(duration.months() > 1 ? 'months_ago' : 'month_ago', { value: `${duration.months()}` });
   }
   if (duration.days() > 0) {
-    return `${duration.days()} day${duration.days() > 1 ? 's' : ''} ago`;
+    return i18n.get(duration.days() > 1 ? 'days_ago' : 'day_ago', { value: `${duration.days()}` });
   }
   if (duration.hours() > 0) {
-    return `${duration.hours()} hour${duration.hours() > 1 ? 's' : ''} ago`;
+    return i18n.get(duration.hours() > 1 ? 'hours_ago' : 'hour_ago', { value: `${duration.hours()}` });
   }
   if (duration.minutes() > 0) {
-    return `${duration.minutes()} minute${duration.minutes() > 1 ? 's' : ''} ago`;
+    return i18n.get(duration.minutes() > 1 ? 'minutes_ago' : 'minute_ago', { value: `${duration.minutes()}` });
   }
-  return 'just now';
+  return i18n.get('just_now');
 }
 
 const getExplorerTxUrl = (txHash: string, chainId?: number) => {

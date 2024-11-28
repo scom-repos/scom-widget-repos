@@ -10,9 +10,9 @@ import {
   ControlElement,
 } from '@ijstech/components';
 import { inputStyle, textareaStyle } from './index.css';
-import { createRepo, getProject } from '../../utils/index';
+import { createRepo } from '../../utils/index';
 import { isLoggedIn } from "../../store/index";
-import { IProject } from "../../interface";
+import { repoJson } from '../../languages/index';
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -54,6 +54,7 @@ export class ScomWidgetReposCreateRepo extends Module {
   }
 
   init() {
+    this.i18n.init({...repoJson});
     super.init();
     this.onClosed = this.getAttribute('onClosed', true) || this.onClosed;
     const id = this.getAttribute('id', true);
@@ -79,7 +80,7 @@ export class ScomWidgetReposCreateRepo extends Module {
     if (!this.projectPrefix) {
       this.setMessage({
         status: 'error',
-        content: 'Please add a prefix to the project first.',
+        content: '$please_add_a_prefix_to_the_project_first',
         onClose: () => {
           if (typeof this.onClosed === 'function') this.onClosed();
         }
@@ -116,7 +117,7 @@ export class ScomWidgetReposCreateRepo extends Module {
     if (!isLoggedIn()) {
       this.setMessage({
         status: 'error',
-        content: 'Please login to create your repository'
+        content: '$please_login_to_create_your_repository'
       });
       this.mdAlert.showModal();
       return;
@@ -125,7 +126,7 @@ export class ScomWidgetReposCreateRepo extends Module {
     if (!name) {
       this.setMessage({
         status: 'error',
-        content: 'Repository name is required.'
+        content: '$repository_name_is_required'
       });
       this.mdAlert.showModal();
       return;
@@ -141,13 +142,13 @@ export class ScomWidgetReposCreateRepo extends Module {
       if (!result || result.error) {
         this.setMessage({
           status: 'error',
-          content: result?.error || 'Failed to create your repository.'
+          content: result?.error || '$failed_to_create_your_repository'
         })
         this.mdAlert.showModal();
       } else {
         this.setMessage({
           status: 'success',
-          content: `Your repository has been created successfully.`,
+          content: '$your_repository_has_been_created_successfully',
           onClose: () => {
             if (typeof this.onClosed === 'function') this.onClosed();
           }
@@ -160,7 +161,7 @@ export class ScomWidgetReposCreateRepo extends Module {
     } catch (err) {
       this.setMessage({
         status: 'error',
-        content: 'Failed to create your repository.'
+        content: '$failed_to_create_your_repository'
       })
       this.mdAlert.showModal();
     }
@@ -186,11 +187,11 @@ export class ScomWidgetReposCreateRepo extends Module {
               <i-label caption="Back" font={{ size: '0.75rem' }} />
             </i-hstack> */}
             <i-hstack horizontalAlignment="space-between" gap="8px">
-              <i-label caption="Create new repository" font={{ size: '1.25rem', weight: 600 }} lineHeight={1.5} />
+              <i-label caption="$create_new_repository" font={{ size: '1.25rem', weight: 600 }} lineHeight={1.5} />
             </i-hstack>
             <i-vstack width="100%" gap="0.5rem">
               <i-panel>
-                <i-label display="inline" caption="Repository name" margin={{ right: "0.25rem" }} />
+                <i-label display="inline" caption="$repository_name" margin={{ right: "0.25rem" }} />
                 <i-label display="inline" caption="*" font={{ color: Theme.colors.error.main }} />
               </i-panel>
               <i-hstack gap="0.15rem" verticalAlignment="center" border={{ width: 1, style: 'solid', color: Theme.divider, radius: 5 }}>
@@ -206,7 +207,7 @@ export class ScomWidgetReposCreateRepo extends Module {
               </i-hstack>
             </i-vstack>
             <i-vstack width="100%" gap="0.5rem">
-              <i-label caption="Description" />
+              <i-label caption="$description" />
               <i-panel class="form-control">
                 <i-input
                   id="edtDescription"
@@ -218,17 +219,13 @@ export class ScomWidgetReposCreateRepo extends Module {
                 />
               </i-panel>
             </i-vstack>
-            {/* <i-hstack width="100%" gap="0.5rem">
-                            <i-checkbox id="ckbPrivate" />
-                            <i-label caption="Private" />
-                        </i-hstack> */}
             <i-hstack justifyContent={'end'} alignItems={'center'}>
               <i-button
                 id="btnConfirm"
                 height={40}
                 minWidth={120}
                 enabled={false}
-                caption={'Confirm'}
+                caption={'$confirm'}
                 rightIcon={{ spin: true, visible: false }}
                 padding={{ top: '0.25rem', bottom: '0.25rem', left: '1rem', right: '1rem' }}
                 font={{ color: Theme.colors.primary.contrastText }}

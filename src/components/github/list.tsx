@@ -3,6 +3,7 @@ import { ScomWidgetReposGithubRepo } from "./repo";
 import { customModalStyle, githubStyle, spinnerStyle } from "./index.css";
 import { ScomWidgetBuilder } from "@scom/scom-widget-builder";
 import { getStorageConfig } from "../../store/index";
+import { repoJson } from "../../languages/index";
 const Theme = Styles.Theme.ThemeVars;
 
 const pageSize = 10;
@@ -175,7 +176,8 @@ export default class ScomWidgetReposGithubList extends Module {
     this.totalPage = Math.ceil(this.filteredRepos.length / pageSize);
     this.paginationElm.visible = this.totalPage > 1;
     this.lbOrg.caption = this.userInfo?.data?.org || this.userInfo?.data?.login || '';
-    this.lbRepos.caption = `(${this.filteredRepos.length} ${this.filteredRepos.length !== 1 ? 'repositories' : 'repository'})`;
+    const repoNum = this.filteredRepos.length;
+    this.lbRepos.caption = `(${repoNum} ${repoNum !== 1 ? this.i18n.get('$repositories') : this.i18n.get('$repository')})`;
     const hasUser = !!this.userInfo?.data?.login;
     this.lbRepos.visible = hasUser;
     this.iconRefresh.visible = hasUser;
@@ -238,7 +240,7 @@ export default class ScomWidgetReposGithubList extends Module {
   renderEmpty() {
     this.vStackRepos.clearInnerHTML();
     this.vStackRepos.classList.remove('list-repos');
-    this.vStackRepos.appendChild(<i-label caption={this.error || 'There is no repository!'} font={{ size: '1.5rem' }} margin={{ top: '3rem', left: 'auto', right: 'auto' }} />);
+    this.vStackRepos.appendChild(<i-label caption={this.error || '$there_is_no_repository'} font={{ size: '1.5rem' }} margin={{ top: '3rem', left: 'auto', right: 'auto' }} />);
   }
 
   private async showBuilder(name: string) {
@@ -292,6 +294,7 @@ export default class ScomWidgetReposGithubList extends Module {
   }
 
   init() {
+    this.i18n.init({...repoJson});
     super.init();
     this.isProjectOwner = this.getAttribute('isProjectOwner', true, false);
     this.isProject = this.getAttribute('isProject', true, false);
@@ -338,7 +341,7 @@ export default class ScomWidgetReposGithubList extends Module {
               checked={false}
               uncheckedTrackColor={Theme.colors.secondary.main}
               checkedTrackColor={Theme.colors.primary.main}
-              tooltip={{content: 'Show only PRs', placement: 'bottom'}}
+              tooltip={{content: '$show_only_PRs', placement: 'bottom'}}
               onChanged={this.onSwitchFilter}
             />
           </i-hstack>
