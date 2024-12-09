@@ -184,7 +184,7 @@ export default {
     "sync": "Đồng bộ",
     "there_is_no_commit": "Không có commit nào",
     "there_is_no_pull_request": "Không có pull request nào",
-    "there_is_no_repository": "Chưa có kho lưu trữ nào!",
+    "there_is_no_repository": "Không có dữ liệu!",
     "this_pr_has_been_audited_with_failed_status": "PR này chưa thông qua kiểm tra.",
     "this_pr_is_not_reviewed_by_the_auditor_yet": "PR này chưa được đánh giá bởi người đánh giá.",
     "this_version_has_already_been_submitted": "Phiên bản này đã được gửi",

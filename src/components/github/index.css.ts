@@ -253,6 +253,24 @@ export const childTabStyle = Styles.style({
     }
 })
 
+export const stickyStyle = Styles.style({
+    margin: 0,
+    position: 'sticky',
+    height: 'fit-content',
+    background: Theme.background.main,
+    zIndex: 1,
+    top: 60,
+    paddingBottom: '0.5rem',
+})
+
+export const wrapperStyle = Styles.style({
+    $nest: {
+      'i-table table': {
+        background: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07));'
+      }
+    }
+})
+
 export const customModalStyle = Styles.style({
     $nest: {
         '.modal > div:last-child': {

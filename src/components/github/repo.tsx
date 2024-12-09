@@ -1,9 +1,9 @@
-import { Module, Container, Styles, VStack, Label, Icon, customElements, ControlElement, Button, HStack, Modal, Input, Tabs, Tab, Pagination, Datepicker, moment, Alert } from "@ijstech/components";
+import { Module, Container, Styles, VStack, Label, Icon, customElements, ControlElement, Button, HStack, Modal, Input, Pagination, Datepicker, moment, Alert } from "@ijstech/components";
 import { compareVersions, createNewPackage, createNewPackageVersion, getAllPulls, getAuditPRList, getCommits, getExplorerTxUrl, getMergeMsg, getPackageByNames, getTimeAgo, mergePR, parseContractError, requestAuditCommit, syncCommits, updatePackageVersionIpfsCid, updatePackageVersionToAuditing, uploadDataToIpfs } from "../../utils/index";
-import { inputDateStyle, inputStyle, modalStyle, childTabStyle } from "./index.css";
+import { inputDateStyle, inputStyle, modalStyle, stickyStyle, wrapperStyle } from "./index.css";
 import { ICommit, ISemanticVersion, PackageStatus } from "../../interface";
 import { Wallet } from "@ijstech/eth-wallet";
-import { ScomWidgetReposAuditReport } from '../../components/index';
+import { ScomWidgetReposAuditReport, ScomWidgetReposTabs } from '../../components/index';
 import { repoJson, mainJson } from "../../languages/index";
 const Theme = Styles.Theme.ThemeVars;
 
@@ -48,10 +48,10 @@ export class ScomWidgetReposGithubRepo extends Module {
   private iconRefresh: Icon;
   private hStackCount: HStack;
   private hStackLink: HStack;
-  private tabs: Tabs;
-  private tabPRs: Tab;
-  private tabCommits: Tab;
+  private tabs: HStack;
+  private customTabs: ScomWidgetReposTabs;
   private vStackListPR: VStack;
+  private vstackCommitTab: VStack;
   private vStackListCommit: VStack;
   private pageSize = 5;
   private pagiCommitList: Pagination;
@@ -77,6 +77,7 @@ export class ScomWidgetReposGithubRepo extends Module {
   public onRefresh: () => Promise<void>;
   public updateCountPRs: (oldNum: number, newNum: number) => void;
   public onEdit: (name: string) => void;
+  private activeTab: 'commits'|'prs' = 'prs';
 
   set guid(value: string) {
     this._guid = value;
@@ -159,7 +160,6 @@ export class ScomWidgetReposGithubRepo extends Module {
     this.lbVersion.caption = version || '-';
     const hasPR = open_issues > 0;
     this.lbCount.caption = `${open_issues}`;
-    this.tabPRs.caption = `${this.i18n.get('$prs')} <span style="color: var(--colors-primary-main)">(${open_issues})</span>`;
     this.lbCount.background = { color: hasPR ? Theme.colors.primary.main : Theme.colors.info.main };
     this.hStackCount.cursor = hasPR ? 'pointer' : 'default';
     this.hStackCount.onClick = () => hasPR ? this.onShowDetail() : {};
@@ -169,6 +169,12 @@ export class ScomWidgetReposGithubRepo extends Module {
     this.timer = setInterval(() => {
       this.lbPushedAt.caption = this.i18n.get('$updated', { date: getTimeAgo(pushed_at, this.i18n) });
     }, 60000);
+    this.customTabs.setData({
+      items:  [
+        { caption: this.i18n.get('$prs'), tag: 'prs', count: open_issues, hasCount: true },
+        { caption: this.i18n.get('$commits'), tag: 'commits', count: 0, hasCount: false }
+      ]
+    });
   }
 
   private clearListTimer() {
@@ -446,7 +452,7 @@ export class ScomWidgetReposGithubRepo extends Module {
     this.iconDetail.name = this.isDetailShown ? 'angle-up' : 'angle-down';
     this.tabs.visible = this.isDetailShown;
     if (!this.isDetailShown) return;
-    this.tabs.activeTabIndex = 0;
+
     if (!this.totalCommits) {
       await this.getCommits()
     }
@@ -474,7 +480,7 @@ export class ScomWidgetReposGithubRepo extends Module {
   }
 
   private renderCommits() {
-    this.tabCommits.caption = `${this.i18n.get('$commits')} <span style="color: var(--colors-primary-main)">(${this.totalCommits})</span>`;
+    this.customTabs.updateCount('commits', this.totalCommits);
     let nodeItems: HTMLElement[] = [];
     const { guid } = this.packageInfo;
     for (const commit of this.commits) {
@@ -831,6 +837,11 @@ export class ScomWidgetReposGithubRepo extends Module {
     }
   }
 
+  private onTabClick(target: HStack) {
+    this.vStackListPR.visible = target.tag === 'prs';
+    this.vstackCommitTab.visible = target.tag === 'commits';
+  }
+
   init() {
     const i18nData = {};
     for (const key in repoJson) {
@@ -897,42 +908,48 @@ export class ScomWidgetReposGithubRepo extends Module {
           />
           <i-icon id="iconDetail" name="angle-down" class="icon-expansion" cursor="pointer" width="1.75rem" height="1.75rem" onClick={this.onShowDetail} />
         </i-hstack>
-        <i-tabs
-          id="tabs"
-          visible={false}
-          class={childTabStyle}
-          width="100%"
-          height="100%"
-          mode="horizontal"
-          position="relative"
-          zIndex={0}
+
+        <i-vstack
+          id="tabs" visible={false}
+          width="100%" maxHeight={'33rem'}
+          position="relative" zIndex={0}
         >
-          <i-tab id="tabPRs" caption="$prs" width="50%">
+          <i-scom-widget-repos--tabs
+            id="customTabs"
+            width="100%" display="flex"
+            onChanged={this.onTabClick}
+            class={stickyStyle}
+          />
+          <i-panel
+            minHeight={60}
+            maxHeight={'30rem'}
+            overflow={'auto'}
+            padding={{bottom: '1rem'}}
+            class={wrapperStyle}
+          >
             <i-vstack id="vStackListPR" verticalAlignment="center" />
-          </i-tab>
-          <i-tab id="tabCommits" caption="Commits" width="50%">
-            <i-vstack gap="1rem" verticalAlignment="center">
+            <i-vstack id="vstackCommitTab" gap="1rem" verticalAlignment="center" visible={false}>
               <i-vstack gap="1rem" width="100%">
-                <i-hstack gap="2rem" verticalAlignment="center" wrap="wrap" width="100%" mediaQueries={[{maxWidth: '767px', properties: {gap: '1rem'}}]}>
+                <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap" width="100%" mediaQueries={[{maxWidth: '767px', properties: {gap: '1rem'}}]}>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
-                    <i-label caption="$commit_id" minWidth={80}/>
+                    <i-label caption="$commit_id" width={80}/>
                     <i-input id="inputCommitId" class={inputStyle} height={40} width="calc(100% - 75px)" />
                   </i-hstack>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
-                    <i-label caption="$title" minWidth={80} />
+                    <i-label caption="$title" width={80} />
                     <i-input id="inputMessage" class={inputStyle} height={40} width="calc(100% - 75px)" />
                   </i-hstack>
                 </i-hstack>
                 <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap" width="100%" mediaQueries={[{maxWidth: '767px', properties: {gap: '1rem'}}]}>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
-                    <i-label caption="$start_date" minWidth={80} />
+                    <i-label caption="$start_date" width={80} />
                     <i-vstack gap="0.25rem" width="calc(100% - 75px)">
                       <i-datepicker id="inputStartDate" type="dateTime" placeholder="dd/mm/yyyy hh:mm" class={inputDateStyle} height={40} width="100%" onChanged={this.onStartDateChanged} />
                       <i-label id="lbStartDateErr" font={{ color: Theme.colors.error.main }} />
                     </i-vstack>
                   </i-hstack>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
-                    <i-label caption="$end_date" minWidth={80} />
+                    <i-label caption="$end_date" width={80} />
                     <i-vstack gap="0.25rem" width="calc(100% - 75px)">
                       <i-datepicker id="inputEndDate" type="dateTime" placeholder="dd/mm/yyyy hh:mm" class={inputDateStyle} height={40} width="100%" onChanged={this.onEndDateChanged} />
                       <i-label id="lbEndDateErr" font={{ color: Theme.colors.error.main }} />
@@ -971,8 +988,9 @@ export class ScomWidgetReposGithubRepo extends Module {
                 <i-pagination id="pagiCommitList" width="auto" margin={{ top: '1rem' }} pageSize={this.pageSize} />
               </i-vstack>
             </i-vstack>
-          </i-tab>
-        </i-tabs>
+          </i-panel>
+        </i-vstack>
+
         <i-modal id="mdPublish" class={modalStyle} maxWidth="600px">
           <i-vstack
             width="100%"
