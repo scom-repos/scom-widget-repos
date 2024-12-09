@@ -229,6 +229,8 @@ declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
     export const inputDateStyle: string;
     export const tabStyle: string;
     export const childTabStyle: string;
+    export const stickyStyle: string;
+    export const wrapperStyle: string;
     export const customModalStyle: string;
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/index.ts" />
@@ -691,9 +693,9 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         private hStackCount;
         private hStackLink;
         private tabs;
-        private tabPRs;
-        private tabCommits;
+        private customTabs;
         private vStackListPR;
+        private vstackCommitTab;
         private vStackListCommit;
         private pageSize;
         private pagiCommitList;
@@ -718,6 +720,7 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         onRefresh: () => Promise<void>;
         updateCountPRs: (oldNum: number, newNum: number) => void;
         onEdit: (name: string) => void;
+        private activeTab;
         set guid(value: string);
         get guid(): string;
         set projectId(value: number);
@@ -766,6 +769,7 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         private openLink;
         onHide(): void;
         private onOpenBuilder;
+        private onTabClick;
         init(): void;
         render(): any;
     }
@@ -887,6 +891,43 @@ declare module "@scom/scom-widget-repos/components/github/create.tsx" {
         render(): any;
     }
 }
+/// <amd-module name="@scom/scom-widget-repos/components/tabs/index.tsx" />
+declare module "@scom/scom-widget-repos/components/tabs/index.tsx" {
+    import { Module, ControlElement, HStack, Container } from "@ijstech/components";
+    interface ITabs {
+        items: any[];
+        activeTab?: string;
+    }
+    interface ScomTabsElement extends ControlElement {
+        items?: any[];
+        activeTab?: string;
+        onChanged?: (target: HStack) => void;
+    }
+    global {
+        namespace JSX {
+            interface IntrinsicElements {
+                ['i-scom-widget-repos--tabs']: ScomTabsElement;
+            }
+        }
+    }
+    export class ScomWidgetReposTabs extends Module {
+        private _data;
+        private elmsMapper;
+        private pnlList;
+        onChanged: (target: HStack) => void;
+        constructor(parent?: Container, options?: ScomTabsElement);
+        set items(value: any[]);
+        get items(): any[];
+        get activeTab(): string;
+        set activeTab(value: string);
+        setData(data: ITabs): void;
+        updateCount(tag: string, count: number): void;
+        private renderItems;
+        private onTabClick;
+        init(): void;
+        render(): void;
+    }
+}
 /// <amd-module name="@scom/scom-widget-repos/components/github/index.tsx" />
 declare module "@scom/scom-widget-repos/components/github/index.tsx" {
     import { Module, Container, ControlElement } from "@ijstech/components";
@@ -915,10 +956,10 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
         private elmPackages;
         private elmList;
         private elmPRs;
-        private prTab;
         private countPRs;
         private pnlPackages;
         private tabs;
+        private customTabs;
         private userInfo;
         private _projectId;
         private _searchName;
@@ -944,6 +985,7 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
         private updateCountPRs;
         private updateUI;
         private renderUI;
+        private onTabClick;
         setData(data: IGithub): void;
         onShow(options?: any): void;
         onHide(): void;
@@ -1045,6 +1087,7 @@ declare module "@scom/scom-widget-repos/components/audit_report/index.tsx" {
 declare module "@scom/scom-widget-repos/components/index.ts" {
     export { ScomWidgetReposGithub, ScomWidgetReposCreateRepo } from "@scom/scom-widget-repos/components/github/index.tsx";
     export { ScomWidgetReposAuditReport } from "@scom/scom-widget-repos/components/audit_report/index.tsx";
+    export { ScomWidgetReposTabs } from "@scom/scom-widget-repos/components/tabs/index.tsx";
 }
 /// <amd-module name="@scom/scom-widget-repos/index.css.ts" />
 declare module "@scom/scom-widget-repos/index.css.ts" {

@@ -1,9 +1,10 @@
-import { Module, Container, VStack, customElements, ControlElement, Tab, moment, Panel, Tabs, Styles } from "@ijstech/components";
+import { Module, Container, VStack, customElements, ControlElement, moment, Panel, Styles, HStack } from "@ijstech/components";
 import { checkGithubOwner, getAllRepos, getGithubUser, isActiveAuditor } from "../../utils/API";
-import { githubStyle, spinnerStyle, tabStyle } from "./index.css";
+import { githubStyle, spinnerStyle, stickyStyle, wrapperStyle } from "./index.css";
 import ScomWidgetReposGithubList from "./list";
 import { ScomWidgetReposCreateRepo } from './create';
 import { repoJson } from "../../languages/index";
+import { ScomWidgetReposTabs } from "../tabs/index";
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -35,10 +36,10 @@ export class ScomWidgetReposGithub extends Module {
   private elmPackages: ScomWidgetReposGithubList;
   private elmList: ScomWidgetReposGithubList;
   private elmPRs: ScomWidgetReposGithubList;
-  private prTab: Tab;
   private countPRs: number = 0;
   private pnlPackages: Panel;
-  private tabs: Tabs;
+  private tabs: Panel;
+  private customTabs: ScomWidgetReposTabs;
 
   private userInfo: any = {};
   private _projectId: number;
@@ -152,7 +153,8 @@ export class ScomWidgetReposGithub extends Module {
       this.elmList.listRepos = this.listReposFiltered;
       this.elmPRs.listRepos = [...listPRsFiltered];
       this.countPRs = [...listPRsFiltered].reduce((accumulator, currentObject) => accumulator + currentObject.open_issues, 0);
-      this.prTab.caption = `${this.i18n.get('$pull_requests')} <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
+      this.customTabs.updateCount('prs', this.countPRs);
+      // this.prTab.caption = `${this.i18n.get('$pull_requests')} <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
     } else {
       // this.elmPackages.listRepos = [...listPRsFiltered];
       this.elmPackages.listRepos = this.listReposFiltered;
@@ -161,7 +163,8 @@ export class ScomWidgetReposGithub extends Module {
 
   private updateCountPRs(oldNum: number, newNum: number) {
     this.countPRs = this.countPRs - oldNum + newNum;
-    this.prTab.caption = `${this.i18n.get('$pull_requests')} <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
+    this.customTabs.updateCount('prs', this.countPRs);
+    // this.prTab.caption = `${this.i18n.get('$pull_requests')} <span style="color: var(--colors-${this.countPRs > 0 ? 'primary' : 'info'}-main)">(${this.countPRs})</span>`;
   }
 
   private updateUI() {
@@ -211,6 +214,17 @@ export class ScomWidgetReposGithub extends Module {
     this.tabs.visible = this.isProject;
     this.pnlPackages.visible = !this.isProject;
     this.pnlLoader.visible = false;
+    this.customTabs.setData({
+      items: [
+        {tag: 'all', caption: this.i18n.get('$all')},
+        {tag: 'prs', caption: this.i18n.get('$pull_requests')}
+      ]
+    })
+  }
+
+  private onTabClick(target: HStack) {
+    this.elmList.visible = target.tag === 'all';
+    this.elmPRs.visible = target.tag === 'prs';
   }
 
   setData(data: IGithub) {
@@ -267,22 +281,28 @@ export class ScomWidgetReposGithub extends Module {
         <i-panel id="pnlPackages" visible={false} width="100%" height="100%">
           <i-scom-widget-repos--github-list id="elmPackages" />
         </i-panel>
-        <i-tabs
-          id="tabs"
-          visible={false}
-          class={tabStyle}
-          width="100%"
-          height="100%"
-          padding={{ top: "0.5rem", bottom: "0.5rem", left: "1rem", right: "1rem" }}
-          mode="horizontal"
+        <i-vstack
+          id="tabs" visible={false}
+          width="100%" maxHeight={'33rem'}
+          position="relative" zIndex={0}
         >
-          <i-tab caption="$all">
+          <i-scom-widget-repos--tabs
+            id="customTabs"
+            width="100%" display="flex"
+            onChanged={this.onTabClick}
+            class={stickyStyle}
+          />
+          <i-panel
+            minHeight={60}
+            maxHeight={'30rem'}
+            overflow={'auto'}
+            padding={{bottom: '1rem'}}
+            class={wrapperStyle}
+          >
             <i-scom-widget-repos--github-list id="elmList" isProject={true} />
-          </i-tab>
-          <i-tab id="prTab" caption="$pull_requests">
-            <i-scom-widget-repos--github-list id="elmPRs" />
-          </i-tab>
-        </i-tabs>
+            <i-scom-widget-repos--github-list id="elmPRs" visible={false} />
+          </i-panel>
+        </i-vstack>
       </i-panel>
     )
   }
