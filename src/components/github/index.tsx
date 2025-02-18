@@ -5,6 +5,7 @@ import ScomWidgetReposGithubList from "./list";
 import { ScomWidgetReposCreateRepo } from './create';
 import { repoJson } from "../../languages/index";
 import { ScomWidgetReposTabs } from "../tabs/index";
+// import dataJson from './data.json';
 
 const Theme = Styles.Theme.ThemeVars;
 

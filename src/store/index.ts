@@ -30,7 +30,7 @@ export const getContractInfo = async (chainId: number): Promise<IContractInfo> =
   if (!contractInfoByChain) {
     contractInfoByChain = getContractInfoByChain();
   }
-  return contractInfoByChain[chainId];
+  return contractInfoByChain?.[chainId];
 }
 
 export const setTransportEndpoint = (transportEndpoint: string) => {

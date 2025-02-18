@@ -75,7 +75,7 @@ define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstec
         if (!contractInfoByChain) {
             contractInfoByChain = (0, exports.getContractInfoByChain)();
         }
-        return contractInfoByChain[chainId];
+        return contractInfoByChain?.[chainId];
     };
     exports.getContractInfo = getContractInfo;
     const setTransportEndpoint = (transportEndpoint) => {
@@ -1580,7 +1580,8 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             if (!this.isInitialized || !this.data)
                 return;
             const { name, owner_login, open_issues, html_url, pushed_at, full_name, version } = this.data;
-            this.packageInfo = await (0, index_2.getPackageByNames)(owner_login, name);
+            // TODO: get package info
+            // this.packageInfo = await getPackageByNames(owner_login, name);
             this.lbName.caption = name;
             this.lbPublish.caption = this.i18n.get('$publish', { name, repo: full_name });
             this.lbPath.caption = full_name;
@@ -2736,6 +2737,7 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
     Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return create_1.ScomWidgetReposCreateRepo; } });
+    // import dataJson from './data.json';
     const Theme = components_9.Styles.Theme.ThemeVars;
     let ScomWidgetReposGithub = class ScomWidgetReposGithub extends components_9.Module {
         constructor(parent, options) {

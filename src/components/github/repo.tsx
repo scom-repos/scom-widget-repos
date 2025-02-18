@@ -153,7 +153,8 @@ export class ScomWidgetReposGithubRepo extends Module {
   private async renderUI() {
     if (!this.isInitialized || !this.data) return;
     const { name, owner_login, open_issues, html_url, pushed_at, full_name, version } = this.data;
-    this.packageInfo = await getPackageByNames(owner_login, name);
+    // TODO: get package info
+    // this.packageInfo = await getPackageByNames(owner_login, name);
     this.lbName.caption = name;
     this.lbPublish.caption = this.i18n.get('$publish', { name, repo: full_name });
     this.lbPath.caption = full_name;
