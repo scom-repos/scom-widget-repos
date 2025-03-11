@@ -1,6 +1,6 @@
 {
     "name": "@scom/scom-widget-repos",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "main": "dist/index.js",
     "plugin": "dist",
     "pluginTypes": "pluginTypes/index.d.ts",
@@ -9,7 +9,11 @@
         "node": ">=18.0.0"
     },
     "dependencies": {
-        "@ijstech/components": "^0.1.52"
+        "@ijstech/components": "^0.1.52",
+        "@scom/scom-buffer": "^0.1.0",
+        "@scom/scom-code-editor": "^0.1.6",
+        "@scom/scom-designer": "^0.1.22",
+        "@scom/scom-widget-builder": "^0.1.13"
     },
     "devDependencies": {
         "@ijstech/cli": "^0.1.28",
