@@ -47,12 +47,13 @@ define("@scom/scom-widget-repos/interface.ts", ["require", "exports"], function 
 define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet"], function (require, exports, components_1, eth_wallet_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getStorageConfig = exports.setStorageConfig = exports.isLoggedIn = exports.getTransportEndpoint = exports.setTransportEndpoint = exports.getContractInfo = exports.getContractAddress = exports.setContractInfoByChain = exports.getContractInfoByChain = void 0;
+    exports.getScomCid = exports.setScomCid = exports.getStorageConfig = exports.setStorageConfig = exports.isLoggedIn = exports.getTransportEndpoint = exports.setTransportEndpoint = exports.getContractInfo = exports.getContractAddress = exports.setContractInfoByChain = exports.getContractInfoByChain = void 0;
     const state = {
         contractInfo: {},
         transportEndpoint: '',
         mode: 'development',
-        storageConfig: {}
+        storageConfig: {},
+        scomCid: ''
     };
     const getContractInfoByChain = () => {
         return state.contractInfo;
@@ -80,6 +81,7 @@ define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstec
     exports.getContractInfo = getContractInfo;
     const setTransportEndpoint = (transportEndpoint) => {
         state.transportEndpoint = transportEndpoint;
+        console.log('setTransportEndpoint', transportEndpoint);
     };
     exports.setTransportEndpoint = setTransportEndpoint;
     const getTransportEndpoint = () => {
@@ -100,11 +102,19 @@ define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstec
         return state.storageConfig;
     };
     exports.getStorageConfig = getStorageConfig;
+    const setScomCid = (scomCid) => {
+        state.scomCid = scomCid;
+    };
+    exports.setScomCid = setScomCid;
+    const getScomCid = () => {
+        return state.scomCid;
+    };
+    exports.getScomCid = getScomCid;
 });
 define("@scom/scom-widget-repos/utils/API.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-widget-repos/interface.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_2, eth_wallet_2, interface_1, index_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.cloneRepo = exports.getProject = exports.createRepo = exports.updatePackageVersionToAuditing = exports.updatePackageVersionIpfsCid = exports.syncCommits = exports.requestAuditCommit = exports.getPackageByNames = exports.mergePR = exports.getMergeMsg = exports.getCommits = exports.createNewPackageVersion = exports.createNewPackage = exports.auditPackageVersion = exports.auditPR = exports.getAllPulls = exports.getPull = exports.getAllFiles = exports.uploadDataToIpfs = exports.auditCommit = exports.getAuditPRReportInfo = exports.getAuditPRList = exports.getAuditReportInfo = exports.getAuditReportResult = exports.getAuditInfo = exports.isActiveAuditor = exports.getGithubUser = exports.getAllRepos = exports.checkGithubOwner = exports.registerSendTxEvents = void 0;
+    exports.getProject = exports.createRepo = exports.updatePackageVersionToAuditing = exports.updatePackageVersionIpfsCid = exports.syncCommits = exports.requestAuditCommit = exports.getPackageByNames = exports.mergePR = exports.getMergeMsg = exports.getCommits = exports.createNewPackageVersion = exports.createNewPackage = exports.auditPackageVersion = exports.auditPR = exports.getAllPulls = exports.getPull = exports.getAllFiles = exports.uploadDataToIpfs = exports.auditCommit = exports.getAuditPRReportInfo = exports.getAuditPRList = exports.getAuditReportInfo = exports.getAuditReportResult = exports.getAuditInfo = exports.isActiveAuditor = exports.getGithubUser = exports.getAllRepos = exports.checkGithubOwner = exports.registerSendTxEvents = void 0;
     const API_URL = 'https://dev.decom.app';
     const API_EMBED_URL = `${API_URL}/api/embed/v0`;
     const getIPFSBaseUrl = () => {
@@ -693,25 +703,6 @@ define("@scom/scom-widget-repos/utils/API.ts", ["require", "exports", "@ijstech/
         }
     };
     exports.getProject = getProject;
-    const cloneRepo = async (name) => {
-        let result;
-        const query = new URLSearchParams();
-        query.append('owner', 'scom-repos');
-        query.append('repo', 'scom-product-contract');
-        query.append('commitId', 'main');
-        try {
-            let response = await fetch(`${API_URL}/github/all-files?${query.toString()}`);
-            result = await response.json();
-            console.log("[getRepo] result", result);
-        }
-        catch (err) {
-            console.log("[getRepo] error", err);
-        }
-        const data = result?.data || [];
-        const file = data.find(item => item.path === 'dist/index.js');
-        return file?.content;
-    };
-    exports.cloneRepo = cloneRepo;
 });
 define("@scom/scom-widget-repos/components/github/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_3) {
     "use strict";
@@ -994,11 +985,67 @@ define("@scom/scom-widget-repos/components/github/index.css.ts", ["require", "ex
         }
     });
 });
-define("@scom/scom-widget-repos/utils/index.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/API.ts"], function (require, exports, components_4, eth_wallet_3, API_1) {
+define("@scom/scom-widget-repos/utils/storage.ts", ["require", "exports", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, index_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.getPackage = exports.getPackages = void 0;
+    const store = {
+        packages: []
+    };
+    const getPackages = async () => {
+        try {
+            const response = await fetch(`${(0, index_2.getTransportEndpoint)()}/stat/${(0, index_2.getScomCid)()}`);
+            const data = await response.json();
+            store.packages = data?.links || [];
+        }
+        catch (error) {
+            console.error(error);
+            store.packages = [];
+        }
+    };
+    exports.getPackages = getPackages;
+    const getPackageCid = (name) => {
+        const finded = store.packages.find(item => item.name === name);
+        return finded?.cid;
+    };
+    const getPackage = async (name) => {
+        try {
+            const cid = getPackageCid(name);
+            if (!cid)
+                return;
+            const packageJson = await getFileContent(`${cid}/package.json`);
+            const packageJsonObj = packageJson ? JSON.parse(packageJson) : {};
+            let mainDir = packageJsonObj.plugin || packageJsonObj.browser || packageJsonObj.main;
+            if (mainDir.startsWith('./'))
+                mainDir = mainDir.slice(2);
+            if (mainDir.startsWith('/'))
+                mainDir = mainDir.slice(1);
+            const mainContent = await getFileContent(`${cid}/${mainDir}`);
+            return mainContent;
+        }
+        catch { }
+        return '';
+    };
+    exports.getPackage = getPackage;
+    const getFileContent = async (path) => {
+        try {
+            if (path.startsWith('/'))
+                path = path.slice(1);
+            const uri = `${(0, index_2.getTransportEndpoint)()}/ipfs/${path}`;
+            const response = await fetch(uri);
+            if (response.ok)
+                return await response.text();
+        }
+        catch (error) { }
+        return '';
+    };
+});
+define("@scom/scom-widget-repos/utils/index.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/utils/storage.ts"], function (require, exports, components_4, eth_wallet_3, API_1, storage_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.compareVersions = exports.parseContractError = exports.getExplorerTxUrl = exports.getTimeAgo = exports.formatDate = void 0;
     __exportStar(API_1, exports);
+    __exportStar(storage_1, exports);
     const formatDate = (date, customType) => {
         const formatType = customType || 'DD/MM/YYYY';
         return (0, components_4.moment)(date).format(formatType);
@@ -1485,7 +1532,7 @@ define("@scom/scom-widget-repos/languages/index.ts", ["require", "exports", "@sc
     exports.auditJson = audit_json_1.default;
     exports.repoJson = repo_json_1.default;
 });
-define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/interface.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_5, index_2, index_css_1, interface_2, eth_wallet_4, index_3) {
+define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/interface.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_5, index_3, index_css_1, interface_2, eth_wallet_4, index_4) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposGithubRepo = void 0;
@@ -1614,11 +1661,11 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             this.hStackCount.cursor = hasPR ? 'pointer' : 'default';
             this.hStackCount.onClick = () => hasPR ? this.onShowDetail() : {};
             this.hStackLink.onClick = () => this.openLink(html_url);
-            this.lbPushedAt.caption = this.i18n.get('$updated', { date: (0, index_2.getTimeAgo)(pushed_at, this.i18n) });
+            this.lbPushedAt.caption = this.i18n.get('$updated', { date: (0, index_3.getTimeAgo)(pushed_at, this.i18n) });
             if (this.timer)
                 clearInterval(this.timer);
             this.timer = setInterval(() => {
-                this.lbPushedAt.caption = this.i18n.get('$updated', { date: (0, index_2.getTimeAgo)(pushed_at, this.i18n) });
+                this.lbPushedAt.caption = this.i18n.get('$updated', { date: (0, index_3.getTimeAgo)(pushed_at, this.i18n) });
             }, 60000);
             this.customTabs.setData({
                 items: [
@@ -1646,7 +1693,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                 const lbTimer = new components_5.Label(undefined, {
                     caption: this.i18n.get('$opened_by', {
                         qty: `${number}`,
-                        date: (0, index_2.getTimeAgo)(created_at, this.i18n),
+                        date: (0, index_3.getTimeAgo)(created_at, this.i18n),
                         by: user_login
                     }),
                     font: { size: '0.75rem' },
@@ -1655,7 +1702,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                 const interval = setInterval(() => {
                     lbTimer.caption = this.i18n.get('$opened_by', {
                         qty: `${number}`,
-                        date: (0, index_2.getTimeAgo)(created_at, this.i18n),
+                        date: (0, index_3.getTimeAgo)(created_at, this.i18n),
                         by: user_login
                     });
                 }, 60000);
@@ -1754,7 +1801,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             await this.onRefreshData(true);
             if (!this.packageInfo) {
                 const { name, owner_login } = this.data;
-                this.packageInfo = await (0, index_2.getPackageByNames)(owner_login, name);
+                this.packageInfo = await (0, index_3.getPackageByNames)(owner_login, name);
             }
             await this.onSearchCommits();
         }
@@ -1780,7 +1827,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                 endDate: this.inputEndDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || ''
             };
             const currentPage = this.pagiCommitList.currentPage;
-            const { list, total } = await (0, index_2.getCommits)(currentPage, this.pageSize, filter);
+            const { list, total } = await (0, index_3.getCommits)(currentPage, this.pageSize, filter);
             this.commits = list;
             this.totalCommits = total;
             this.pagiCommitList.visible = total > 0;
@@ -1789,9 +1836,9 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
         }
         async getAllPRs() {
             const { name, owner_login } = this.data;
-            const result = await (0, index_2.getAllPulls)(owner_login, name);
+            const result = await (0, index_3.getAllPulls)(owner_login, name);
             if (result?.data) {
-                const resultPRList = await (0, index_2.getAuditPRList)(name);
+                const resultPRList = await (0, index_3.getAuditPRList)(name);
                 if (resultPRList?.data) {
                     this.listAuditPr = resultPRList.data;
                 }
@@ -1824,7 +1871,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             this.iconRefresh.enabled = false;
             this.iconDetail.enabled = false;
             const { name, owner_login } = this.data;
-            await (0, index_2.syncCommits)(owner_login, name);
+            await (0, index_3.syncCommits)(owner_login, name);
             if (!commit)
                 await this.refreshPR();
             this.iconRefresh.enabled = true;
@@ -1852,7 +1899,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                             this.$render("i-label", { caption: message, wordBreak: "break-word", font: { size: '0.875rem', bold: true } }),
                             this.$render("i-icon", { name: "external-link-alt", class: "icon-hover", cursor: "pointer", width: "0.9rem", height: "0.9rem", onClick: () => this.openLink(url) })),
                         this.$render("i-label", { caption: `${this.i18n.get('$version')} ${version || '-'}`, font: { size: '0.875rem' } }),
-                        this.$render("i-label", { caption: `${committer} ${this.i18n.get('$committed')} ${(0, index_2.getTimeAgo)(date, this.i18n)}`, font: { size: '0.75rem' }, opacity: 0.8 })),
+                        this.$render("i-label", { caption: `${committer} ${this.i18n.get('$committed')} ${(0, index_3.getTimeAgo)(date, this.i18n)}`, font: { size: '0.75rem' }, opacity: 0.8 })),
                     this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center", wrap: "wrap" },
                         auditStatus ? this.$render("i-label", { caption: this.getStatusText(auditStatus), font: { size: '0.875rem' }, background: { color: this.getStatusColor(auditStatus) }, border: { radius: '1rem' }, padding: { left: '0.625rem', right: '0.625rem', top: '0.3125rem', bottom: '0.3125rem' }, minWidth: '5.5rem', class: "text-center" }) : [],
                         auditStatus && auditStatus !== interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: "$view_record", background: { color: '#212128' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onViewCommitRecord(commit.guid) }) : [],
@@ -1926,7 +1973,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                 const wallet = eth_wallet_4.Wallet.getClientInstance();
                 let message = '';
                 if (this.guid) {
-                    const { data } = await (0, index_2.getMergeMsg)(this.guid, owner, repo);
+                    const { data } = await (0, index_3.getMergeMsg)(this.guid, owner, repo);
                     if (!data) {
                         showError('$failed_to_get_message');
                         return;
@@ -1937,7 +1984,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                     message = btoa(`owner:${owner}-repo:${repo}`);
                 }
                 const signature = await wallet.signMessage(message);
-                const result = await (0, index_2.mergePR)(this.guid ? wallet.address : undefined, signature, owner, repo, prNumber);
+                const result = await (0, index_3.mergePR)(this.guid ? wallet.address : undefined, signature, owner, repo, prNumber);
                 if (!result || result.error) {
                     showError(result.error);
                 }
@@ -2038,7 +2085,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                     };
                     let packageVersionId, packageId;
                     const requestedAudit = this.commits.filter(f => f.auditStatus);
-                    let isOldVersion = requestedAudit.length ? requestedAudit.every((v) => !(0, index_2.compareVersions)(v.version, version)) : false;
+                    let isOldVersion = requestedAudit.length ? requestedAudit.every((v) => !(0, index_3.compareVersions)(v.version, version)) : false;
                     if (isOldVersion) {
                         showError('$cannot_submit_an_old_version');
                         return;
@@ -2053,14 +2100,14 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                             return;
                         }
                     }
-                    const ipfsCid = await (0, index_2.uploadDataToIpfs)('commitDetail', JSON.stringify(commitInfo, null, 2));
+                    const ipfsCid = await (0, index_3.uploadDataToIpfs)('commitDetail', JSON.stringify(commitInfo, null, 2));
                     if (!ipfsCid) {
                         showError('$failed_to_upload_data_to_ipfs');
                         return;
                     }
                     const callback = async (err, receipt) => {
                         if (err) {
-                            showError((0, index_2.parseContractError)(err.message));
+                            showError((0, index_3.parseContractError)(err.message));
                             this.getCommits();
                         }
                         else if (receipt) {
@@ -2069,7 +2116,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                                 title: '$transaction_submitted',
                                 link: {
                                     caption: receipt,
-                                    href: (0, index_2.getExplorerTxUrl)(receipt)
+                                    href: (0, index_3.getExplorerTxUrl)(receipt)
                                 }
                             });
                             this.mdAlert.showModal();
@@ -2077,7 +2124,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                     };
                     const confirmationCallback = async (receipt) => { };
                     const confirmationForPublishing = async (receipt, hideStatus) => {
-                        const result = await (0, index_2.requestAuditCommit)(commitGuid, this.guid, this.projectId, packageId, packageVersionId, version, sha, !!receipt);
+                        const result = await (0, index_3.requestAuditCommit)(commitGuid, this.guid, this.projectId, packageId, packageVersionId, version, sha, !!receipt);
                         if (result?.success) {
                             if (hideStatus)
                                 return;
@@ -2097,26 +2144,26 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                     if (this.packageInfo.packageId && this.packageInfo.packageVersionId) {
                         packageVersionId = this.packageInfo.packageVersionId;
                         packageId = this.packageInfo.packageId;
-                        await (0, index_2.updatePackageVersionIpfsCid)(packageVersionId, packageId, ipfsCid, callback, confirmationCallback);
+                        await (0, index_3.updatePackageVersionIpfsCid)(packageVersionId, packageId, ipfsCid, callback, confirmationCallback);
                         await confirmationForPublishing();
                     }
                     else if (this.packageInfo.packageId) {
                         packageId = this.packageInfo.packageId;
-                        const verData = await (0, index_2.createNewPackageVersion)(this.projectId, packageId, finVersion, ipfsCid, callback, confirmationCallback);
+                        const verData = await (0, index_3.createNewPackageVersion)(this.projectId, packageId, finVersion, ipfsCid, callback, confirmationCallback);
                         this.packageInfo.packageVersionId = verData.packageVersionId;
                         packageVersionId = verData.packageVersionId;
                         await confirmationForPublishing(undefined, true); // Store packageVersionId
-                        await (0, index_2.updatePackageVersionToAuditing)(packageVersionId, callback, confirmationForPublishing);
+                        await (0, index_3.updatePackageVersionToAuditing)(packageVersionId, callback, confirmationForPublishing);
                     }
                     else {
-                        const data = await (0, index_2.createNewPackage)(this.projectId, name, ipfsCid, 'PackageType', callback, confirmationCallback);
+                        const data = await (0, index_3.createNewPackage)(this.projectId, name, ipfsCid, 'PackageType', callback, confirmationCallback);
                         packageId = data.packageId;
                         this.packageInfo.packageId = data.packageId;
                         await confirmationForPublishing(undefined, true); // Store packageId
-                        const verData = await (0, index_2.createNewPackageVersion)(this.projectId, packageId, finVersion, ipfsCid, callback, confirmationCallback);
+                        const verData = await (0, index_3.createNewPackageVersion)(this.projectId, packageId, finVersion, ipfsCid, callback, confirmationCallback);
                         packageVersionId = verData.packageVersionId;
                         await confirmationForPublishing(undefined, true); // Store packageVersionId
-                        await (0, index_2.updatePackageVersionToAuditing)(packageVersionId, callback, confirmationForPublishing);
+                        await (0, index_3.updatePackageVersionToAuditing)(packageVersionId, callback, confirmationForPublishing);
                     }
                 }
                 catch (error) {
@@ -2149,8 +2196,8 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
         }
         init() {
             const i18nData = {};
-            for (const key in index_3.repoJson) {
-                i18nData[key] = { ...(index_3.repoJson[key] || {}), ...(index_3.mainJson[key] || {}) };
+            for (const key in index_4.repoJson) {
+                i18nData[key] = { ...(index_4.repoJson[key] || {}), ...(index_4.mainJson[key] || {}) };
             }
             this.i18n.init({ ...i18nData });
             super.init();
@@ -2266,9 +2313,9 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             await this.handleInit();
         }
         async handleInit() {
-            console.log('call init');
             if (this.pnlLoader)
                 this.pnlLoader.visible = true;
+            this.pnlDeploy.clearInnerHTML();
             const path = components_6.application.currentModulePath;
             const scconfigPath = `${path}/libs/@scom/contract-deployer/scconfig.json`;
             const scconfig = await fetch(scconfigPath).then(res => res.json());
@@ -2279,15 +2326,16 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             }
             try {
                 const content = await this.getContent(contract);
+                if (!content)
+                    throw new Error('Contract not found');
                 await components_6.application.loadScript(contract, content, true);
                 const module = await components_6.application.newModule(scconfig.main, scconfig);
                 if (module) {
-                    this.pnlDeploy.clearInnerHTML();
                     this.pnlDeploy.append(module);
                 }
             }
             catch (err) {
-                console.log(err);
+                console.error('deploy error', err);
             }
             if (this.pnlLoader)
                 this.pnlLoader.visible = false;
@@ -2295,7 +2343,9 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         async getContent(contract) {
             if (this.cachedContract[contract])
                 return this.cachedContract[contract];
-            const content = await (0, utils_1.cloneRepo)(this.contract);
+            const splitted = contract.split('/');
+            const name = splitted[splitted.length - 1];
+            const content = await (0, utils_1.getPackage)(name);
             this.cachedContract[contract] = content;
             return content;
         }
@@ -2320,7 +2370,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
     ], ScomWidgetReposDeployer);
     exports.ScomWidgetReposDeployer = ScomWidgetReposDeployer;
 });
-define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/repo.tsx", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts", "@scom/scom-widget-repos/components/deployer.tsx"], function (require, exports, components_7, repo_1, index_css_3, index_4, index_5, deployer_1) {
+define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/repo.tsx", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts", "@scom/scom-widget-repos/components/deployer.tsx"], function (require, exports, components_7, repo_1, index_css_3, index_5, index_6, deployer_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const Theme = components_7.Styles.Theme.ThemeVars;
@@ -2475,7 +2525,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.pnlLoader.visible = true;
             this.resetPaging();
             this.pnlLoader.visible = false;
-            const config = (0, index_4.getStorageConfig)();
+            const config = (0, index_5.getStorageConfig)();
             const baseUrl = config?.baseUrl || '';
             let result = this.extractUrl(baseUrl);
             result = result.split('?')[0];
@@ -2502,7 +2552,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
         async showBuilder(name) {
             this.mdWidgetBuilder.visible = true;
             this.pnlBuilderLoader.visible = true;
-            const config = (0, index_4.getStorageConfig)();
+            const config = (0, index_5.getStorageConfig)();
             if (!this.initedConfig && config.transportEndpoint) {
                 this.initedConfig = true;
                 this.widgetBuilder.setConfig(config);
@@ -2566,7 +2616,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             }
         }
         init() {
-            this.i18n.init({ ...index_5.repoJson });
+            this.i18n.init({ ...index_6.repoJson });
             super.init();
             this.isProjectOwner = this.getAttribute('isProjectOwner', true, false);
             this.isProject = this.getAttribute('isProject', true, false);
@@ -2600,7 +2650,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
     ], ScomWidgetReposGithubList);
     exports.default = ScomWidgetReposGithubList;
 });
-define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_8, index_css_4, index_6, index_7, index_8) {
+define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_8, index_css_4, index_7, index_8, index_9) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = void 0;
@@ -2615,7 +2665,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
             return self;
         }
         init() {
-            this.i18n.init({ ...index_8.repoJson });
+            this.i18n.init({ ...index_9.repoJson });
             super.init();
             this.onClosed = this.getAttribute('onClosed', true) || this.onClosed;
             const id = this.getAttribute('id', true);
@@ -2684,7 +2734,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                 this.mdAlert.onConfirm = onConfirm;
         }
         async handleConfirmClick() {
-            if (!(0, index_7.isLoggedIn)()) {
+            if (!(0, index_8.isLoggedIn)()) {
                 this.setMessage({
                     status: 'error',
                     content: '$please_login_to_create_your_repository'
@@ -2708,7 +2758,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                     name: `${this.projectPrefix}-${name}`,
                     description: this.edtDescription.value
                 };
-                const result = await (0, index_6.createRepo)(repoInfo);
+                const result = await (0, index_7.createRepo)(repoInfo);
                 if (!result || result.error) {
                     this.setMessage({
                         status: 'error',
@@ -2863,7 +2913,7 @@ define("@scom/scom-widget-repos/components/tabs/index.tsx", ["require", "exports
     ], ScomWidgetReposTabs);
     exports.ScomWidgetReposTabs = ScomWidgetReposTabs;
 });
-define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_10, API_2, index_css_5, create_1, index_9) {
+define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_10, API_2, index_css_5, create_1, index_10) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
@@ -3062,7 +3112,7 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
                 this.elmPackages.onHide();
         }
         init() {
-            this.i18n.init({ ...index_9.repoJson });
+            this.i18n.init({ ...index_10.repoJson });
             super.init();
             this.isProject = this.getAttribute('isProject', true);
             this.isProjectOwner = this.getAttribute('isProjectOwner', true);
@@ -3136,7 +3186,7 @@ define("@scom/scom-widget-repos/components/audit_report/data.json.ts", ["require
         'Does the DApp register an excessive amount of whitelisted smart contracts (i.e. registered in SC-Registry but not interact in codebase)?'
     ];
 });
-define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_12, index_css_6, data_json_1, eth_wallet_5, index_10, interface_3, index_11) {
+define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_12, index_css_6, data_json_1, eth_wallet_5, index_11, interface_3, index_12) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposAuditReport = void 0;
@@ -3154,7 +3204,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             this.mergeInfo = {};
             this.auditReportInfo = {};
             this.getPackageFiles = async () => {
-                const res = await (0, index_10.getAllFiles)(this.commitGuid);
+                const res = await (0, index_11.getAllFiles)(this.commitGuid);
                 if (res?.files) {
                     const files = res.files;
                     return files;
@@ -3164,7 +3214,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             this.submitAuditReport = async () => {
                 this.btnSubmit.rightIcon.visible = true;
                 if (!this.isAuditPR) {
-                    let auditInfo = await (0, index_10.getAuditInfo)(this.commitGuid);
+                    let auditInfo = await (0, index_11.getAuditInfo)(this.commitGuid);
                     if (auditInfo.auditStatus !== interface_3.PackageStatus.AUDITING) {
                         this.setMessage({
                             status: 'error',
@@ -3184,7 +3234,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 const { packageOwner, packageName } = resultInfo;
                 const { number, commit_sha, created_at } = this.mergeInfo;
                 const reportFileName = this.isAuditPR ? `Audit-Report-PR-${packageOwner}-${packageName}-${number}-${commit_sha}.md` : `Audit-Report-${this.commitGuid}.md`;
-                const ipfsReportCid = await (0, index_10.uploadDataToIpfs)(JSON.stringify(resultInfo), reportFileName);
+                const ipfsReportCid = await (0, index_11.uploadDataToIpfs)(JSON.stringify(resultInfo), reportFileName);
                 if (ipfsReportCid) {
                     // Upload all files to ipfs
                     let ipfsCid = '';
@@ -3222,7 +3272,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                     this.mdAlert.showModal();
                     let res;
                     if (this.isAuditPR) {
-                        res = await (0, index_10.auditPR)(packageOwner, packageName, number, commit_sha, ipfsReportCid, ipfsCid, this.auditReportInfo.result);
+                        res = await (0, index_11.auditPR)(packageOwner, packageName, number, commit_sha, ipfsReportCid, ipfsCid, this.auditReportInfo.result);
                         if (res?.success) {
                             this.setMessage({
                                 status: 'success',
@@ -3248,7 +3298,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                             if (err) {
                                 this.setMessage({
                                     status: 'error',
-                                    content: (0, index_10.parseContractError)(err.message)
+                                    content: (0, index_11.parseContractError)(err.message)
                                 });
                                 this.mdAlert.showModal();
                             }
@@ -3258,7 +3308,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                     title: '$transaction_submitted',
                                     link: {
                                         caption: receipt,
-                                        href: (0, index_10.getExplorerTxUrl)(receipt)
+                                        href: (0, index_11.getExplorerTxUrl)(receipt)
                                     }
                                 });
                                 this.mdAlert.showModal();
@@ -3273,7 +3323,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                 ipfsCid,
                                 auditStatus: result
                             };
-                            res = await (0, index_10.auditCommit)(data);
+                            res = await (0, index_11.auditCommit)(data);
                             if (res?.success) {
                                 this.setMessage({
                                     status: 'success',
@@ -3294,7 +3344,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                 this.btnSubmit.rightIcon.visible = false;
                             }
                         };
-                        await (0, index_10.auditPackageVersion)(this.auditReportInfo.packageVersionId, this.auditReportInfo.result === interface_3.PackageStatus.AUDIT_PASSED, ipfsReportCid, callback, confirmationCallback);
+                        await (0, index_11.auditPackageVersion)(this.auditReportInfo.packageVersionId, this.auditReportInfo.result === interface_3.PackageStatus.AUDIT_PASSED, ipfsReportCid, callback, confirmationCallback);
                     }
                 }
                 else {
@@ -3337,8 +3387,8 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         }
         async init() {
             const i18nData = {};
-            for (const key in index_11.auditJson) {
-                i18nData[key] = { ...(index_11.auditJson[key] || {}), ...(index_11.mainJson[key] || {}) };
+            for (const key in index_12.auditJson) {
+                i18nData[key] = { ...(index_12.auditJson[key] || {}), ...(index_12.mainJson[key] || {}) };
             }
             this.i18n.init({ ...i18nData });
             this.classList.add(index_css_6.default);
@@ -3375,13 +3425,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         async fetchAuditPR() {
             const { owner, repo, prNumber, mergeId } = this.prInfo;
             if (mergeId) {
-                const result = await (0, index_10.getAuditPRReportInfo)(mergeId);
+                const result = await (0, index_11.getAuditPRReportInfo)(mergeId);
                 if (result) {
                     this.auditReportInfo = result;
                     return;
                 }
             }
-            const result = await (0, index_10.getPull)(owner, repo, prNumber);
+            const result = await (0, index_11.getPull)(owner, repo, prNumber);
             if (result?.data) {
                 this.mergeInfo = result.data;
                 const { number, title, base, commit_sha } = result.data;
@@ -3408,7 +3458,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             }
         }
         async fetchAuditPackage() {
-            this.auditReportInfo = await (0, index_10.getAuditReportInfo)(this.commitGuid);
+            this.auditReportInfo = await (0, index_11.getAuditReportInfo)(this.commitGuid);
             if (!this.auditReportInfo.checklist || !this.auditReportInfo.checklist.length) {
                 this.auditReportInfo.checklist = new Array(data_json_1.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
             }
@@ -3437,7 +3487,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 this.lbPRTitle.caption = this.auditReportInfo.mergeTitle;
                 this.lbPRNumber.caption = this.i18n.get('$opened_by', {
                     qty: `${this.auditReportInfo.mergeNumber ?? ''}`,
-                    date: (0, index_10.getTimeAgo)(this.mergeInfo.created_at, this.i18n),
+                    date: (0, index_11.getTimeAgo)(this.mergeInfo.created_at, this.i18n),
                     by: this.mergeInfo.user_login
                 });
                 this.lbPRSha.caption = `${this.i18n.get('$merge_sha')}: ${this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha}`;
@@ -3560,7 +3610,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         }
         renderAuditSummary() {
             this.auditSummary.innerHTML = '';
-            const lastAuditDate = this.auditReportInfo.auditDate ? (0, index_10.formatDate)(this.auditReportInfo.auditDate * 1000, "DD MMM YYYY") : '-';
+            const lastAuditDate = this.auditReportInfo.auditDate ? (0, index_11.formatDate)(this.auditReportInfo.auditDate * 1000, "DD MMM YYYY") : '-';
             const auditor = this.auditReportInfo.auditedBy ? components_12.FormatUtils.truncateWalletAddress(this.auditReportInfo.auditedBy) : '-';
             this.auditSummary.append(this.$render("i-vstack", { width: '100%', verticalAlignment: 'center' },
                 !this.isAuditPR ? this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
@@ -3691,14 +3741,14 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
     ], ScomWidgetReposAuditReport);
     exports.ScomWidgetReposAuditReport = ScomWidgetReposAuditReport;
 });
-define("@scom/scom-widget-repos/components/index.ts", ["require", "exports", "@scom/scom-widget-repos/components/github/index.tsx", "@scom/scom-widget-repos/components/audit_report/index.tsx", "@scom/scom-widget-repos/components/tabs/index.tsx", "@scom/scom-widget-repos/components/deployer.tsx"], function (require, exports, index_12, index_13, index_14, deployer_2) {
+define("@scom/scom-widget-repos/components/index.ts", ["require", "exports", "@scom/scom-widget-repos/components/github/index.tsx", "@scom/scom-widget-repos/components/audit_report/index.tsx", "@scom/scom-widget-repos/components/tabs/index.tsx", "@scom/scom-widget-repos/components/deployer.tsx"], function (require, exports, index_13, index_14, index_15, deployer_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposDeployer = exports.ScomWidgetReposTabs = exports.ScomWidgetReposAuditReport = exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
-    Object.defineProperty(exports, "ScomWidgetReposGithub", { enumerable: true, get: function () { return index_12.ScomWidgetReposGithub; } });
-    Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return index_12.ScomWidgetReposCreateRepo; } });
-    Object.defineProperty(exports, "ScomWidgetReposAuditReport", { enumerable: true, get: function () { return index_13.ScomWidgetReposAuditReport; } });
-    Object.defineProperty(exports, "ScomWidgetReposTabs", { enumerable: true, get: function () { return index_14.ScomWidgetReposTabs; } });
+    Object.defineProperty(exports, "ScomWidgetReposGithub", { enumerable: true, get: function () { return index_13.ScomWidgetReposGithub; } });
+    Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return index_13.ScomWidgetReposCreateRepo; } });
+    Object.defineProperty(exports, "ScomWidgetReposAuditReport", { enumerable: true, get: function () { return index_14.ScomWidgetReposAuditReport; } });
+    Object.defineProperty(exports, "ScomWidgetReposTabs", { enumerable: true, get: function () { return index_15.ScomWidgetReposTabs; } });
     Object.defineProperty(exports, "ScomWidgetReposDeployer", { enumerable: true, get: function () { return deployer_2.ScomWidgetReposDeployer; } });
 });
 define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_13) {
@@ -3724,7 +3774,7 @@ define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/
         }
     });
 });
-define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/index.ts", "@scom/scom-widget-repos/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_14, index_15, index_css_7, index_16, index_17) {
+define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/index.ts", "@scom/scom-widget-repos/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts", "@scom/scom-widget-repos/utils/index.ts"], function (require, exports, components_14, index_16, index_css_7, index_17, index_18, utils_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetRepos = void 0;
@@ -3779,15 +3829,17 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
         async setData(value) {
             this._data = value;
-            (0, index_16.setContractInfoByChain)(this.contractInfo);
-            (0, index_16.setTransportEndpoint)(this._data.transportEndpoint);
+            (0, index_17.setContractInfoByChain)(this.contractInfo);
+            (0, index_17.setTransportEndpoint)(this._data.transportEndpoint);
+            (0, index_17.setScomCid)(this._data.scomCid);
             if (this._data.transportEndpoint) {
-                (0, index_16.setStorageConfig)({
+                (0, index_17.setStorageConfig)({
                     transportEndpoint: this._data.transportEndpoint,
                     signer: this._data.signer,
                     baseUrl: this._data.baseUrl
                 });
             }
+            (0, utils_2.getPackages)();
             this.renderUI();
         }
         renderUI() {
@@ -3807,7 +3859,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
         async onCreateRepoClick() {
             if (!this.createRepoElm) {
-                this.createRepoElm = new index_15.ScomWidgetReposCreateRepo(undefined, {
+                this.createRepoElm = new index_16.ScomWidgetReposCreateRepo(undefined, {
                     id: this.guid,
                     prefix: this.prefix
                 });
@@ -3839,7 +3891,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
             }
         }
         async init() {
-            this.i18n.init({ ...index_17.mainJson });
+            this.i18n.init({ ...index_18.mainJson });
             super.init();
             const contractInfo = this.getAttribute('contractInfo', true);
             const prefix = this.getAttribute('prefix', true);
@@ -3851,7 +3903,6 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
             const signer = this.getAttribute('signer', true);
             const baseUrl = this.getAttribute('baseUrl', true);
             // this.setData({ guid, prefix, isProject, projectId, isProjectOwner, contractInfo, transportEndpoint, signer, baseUrl });
-            // this.onShow();
         }
         render() {
             return (this.$render("i-panel", { width: "100%", height: "100%", background: { color: Theme.background.main } },

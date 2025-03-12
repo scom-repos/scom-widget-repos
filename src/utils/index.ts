@@ -3,6 +3,8 @@ import { Wallet } from '@ijstech/eth-wallet';
 
 export * from './API';
 
+export * from './storage';
+
 const formatDate = (date: string | number, customType?: string) => {
   const formatType = customType || 'DD/MM/YYYY';
   return moment(date).format(formatType);

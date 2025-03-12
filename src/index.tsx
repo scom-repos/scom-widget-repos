@@ -10,8 +10,9 @@ import {
 import { ScomWidgetReposGithub, ScomWidgetReposCreateRepo } from './components/index';
 import { searchPanelStyle } from "./index.css";
 import { IContractInfo } from "./interface";
-import { setContractInfoByChain, setStorageConfig, setTransportEndpoint } from "./store/index";
+import { setContractInfoByChain, setScomCid, setStorageConfig, setTransportEndpoint } from "./store/index";
 import { mainJson } from "./languages/index";
+import { getPackages } from "./utils";
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -27,6 +28,7 @@ interface ScomWidgetReposElement extends ControlElement {
   prefix?: string;
   isProject?: boolean;
   isProjectOwner?: boolean;
+  scomCid?: string;
 }
 
 interface IWidgetRepos {
@@ -39,6 +41,7 @@ interface IWidgetRepos {
   baseUrl?: string;
   transportEndpoint?: string;
   signer?: IPFS.ISigner;
+  scomCid?: string;
 }
 
 declare global {
@@ -119,6 +122,7 @@ export class ScomWidgetRepos extends Module {
     this._data = value;
     setContractInfoByChain(this.contractInfo);
     setTransportEndpoint(this._data.transportEndpoint);
+    setScomCid(this._data.scomCid);
     if (this._data.transportEndpoint) {
       setStorageConfig({
         transportEndpoint: this._data.transportEndpoint,
@@ -126,6 +130,7 @@ export class ScomWidgetRepos extends Module {
         baseUrl: this._data.baseUrl
       })
     }
+    getPackages();
     this.renderUI();
   }
 
@@ -193,7 +198,6 @@ export class ScomWidgetRepos extends Module {
     const signer = this.getAttribute('signer', true);
     const baseUrl = this.getAttribute('baseUrl', true);
     // this.setData({ guid, prefix, isProject, projectId, isProjectOwner, contractInfo, transportEndpoint, signer, baseUrl });
-    // this.onShow();
   }
 
   render() {

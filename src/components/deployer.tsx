@@ -8,7 +8,7 @@ import {
   Styles,
   VStack
 } from '@ijstech/components';
-import { cloneRepo } from '../utils';
+import { getPackage } from '../utils';
 import { spinnerStyle } from './github/index.css';
 
 const Theme = Styles.Theme.ThemeVars;
@@ -56,8 +56,8 @@ export class ScomWidgetReposDeployer extends Module {
   }
 
   private async handleInit() {
-    console.log('call init')
     if (this.pnlLoader) this.pnlLoader.visible = true;
+    this.pnlDeploy.clearInnerHTML();
     const path = application.currentModulePath;
     const scconfigPath = `${path}/libs/@scom/contract-deployer/scconfig.json`;
 
@@ -71,14 +71,14 @@ export class ScomWidgetReposDeployer extends Module {
 
     try {
       const content = await this.getContent(contract);
+      if (!content) throw new Error('Contract not found');
       await application.loadScript(contract, content, true);
       const module = await application.newModule(scconfig.main, scconfig);
       if (module) {
-        this.pnlDeploy.clearInnerHTML();
         this.pnlDeploy.append(module);
       }
     } catch (err) {
-      console.log(err);
+      console.error('deploy error', err);
     }
 
     if (this.pnlLoader) this.pnlLoader.visible = false;
@@ -86,7 +86,9 @@ export class ScomWidgetReposDeployer extends Module {
 
   private async getContent(contract: string) {
     if (this.cachedContract[contract]) return this.cachedContract[contract];
-    const content = await cloneRepo(this.contract);
+    const splitted = contract.split('/');
+    const name = splitted[splitted.length - 1];
+    const content = await getPackage(name);
     this.cachedContract[contract] = content;
     return content;
   }
