@@ -168,6 +168,8 @@ declare module "@scom/scom-widget-repos/store/index.ts" {
     export const isLoggedIn: () => any;
     export const setStorageConfig: (config: any) => void;
     export const getStorageConfig: () => {};
+    export const setScomCid: (scomCid: string) => void;
+    export const getScomCid: () => string;
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/API.ts" />
 declare module "@scom/scom-widget-repos/utils/API.ts" {
@@ -217,8 +219,7 @@ declare module "@scom/scom-widget-repos/utils/API.ts" {
         private?: boolean;
     }) => Promise<any>;
     const getProject: (guid: string) => Promise<IProject | undefined>;
-    const cloneRepo: (name: string) => Promise<any>;
-    export { checkGithubOwner, getAllRepos, getGithubUser, isActiveAuditor, getAuditInfo, getAuditReportResult, getAuditReportInfo, getAuditPRList, getAuditPRReportInfo, auditCommit, uploadDataToIpfs, getAllFiles, getPull, getAllPulls, auditPR, auditPackageVersion, createNewPackage, createNewPackageVersion, getCommits, getMergeMsg, mergePR, getPackageByNames, requestAuditCommit, syncCommits, updatePackageVersionIpfsCid, updatePackageVersionToAuditing, createRepo, getProject, cloneRepo };
+    export { checkGithubOwner, getAllRepos, getGithubUser, isActiveAuditor, getAuditInfo, getAuditReportResult, getAuditReportInfo, getAuditPRList, getAuditPRReportInfo, auditCommit, uploadDataToIpfs, getAllFiles, getPull, getAllPulls, auditPR, auditPackageVersion, createNewPackage, createNewPackageVersion, getCommits, getMergeMsg, mergePR, getPackageByNames, requestAuditCommit, syncCommits, updatePackageVersionIpfsCid, updatePackageVersionToAuditing, createRepo, getProject };
 }
 /// <amd-module name="@scom/scom-widget-repos/components/github/index.css.ts" />
 declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
@@ -234,10 +235,17 @@ declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
     export const wrapperStyle: string;
     export const customModalStyle: string;
 }
+/// <amd-module name="@scom/scom-widget-repos/utils/storage.ts" />
+declare module "@scom/scom-widget-repos/utils/storage.ts" {
+    const getPackages: () => Promise<void>;
+    const getPackage: (name: string) => Promise<string>;
+    export { getPackages, getPackage };
+}
 /// <amd-module name="@scom/scom-widget-repos/utils/index.ts" />
 declare module "@scom/scom-widget-repos/utils/index.ts" {
     import { I18n } from '@ijstech/components';
     export * from "@scom/scom-widget-repos/utils/API.ts";
+    export * from "@scom/scom-widget-repos/utils/storage.ts";
     const formatDate: (date: string | number, customType?: string) => string;
     const getTimeAgo: (timestamp: string, i18n: I18n) => string;
     const getExplorerTxUrl: (txHash: string, chainId?: number) => string;
@@ -1146,6 +1154,7 @@ declare module "@scom/scom-widget-repos" {
         prefix?: string;
         isProject?: boolean;
         isProjectOwner?: boolean;
+        scomCid?: string;
     }
     interface IWidgetRepos {
         contractInfo?: Record<string, IContractInfo>;
@@ -1157,6 +1166,7 @@ declare module "@scom/scom-widget-repos" {
         baseUrl?: string;
         transportEndpoint?: string;
         signer?: IPFS.ISigner;
+        scomCid?: string;
     }
     global {
         namespace JSX {

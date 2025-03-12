@@ -564,25 +564,6 @@ const getProject = async (guid: string): Promise<IProject | undefined> => {
   }
 }
 
-const cloneRepo = async (name: string) => {
-  let result: any;
-  const query = new URLSearchParams();
-  query.append('owner', 'scom-repos');
-  query.append('repo', 'scom-product-contract');
-  query.append('commitId', 'main');
-
-  try {
-    let response = await fetch(`${API_URL}/github/all-files?${query.toString()}`);
-    result = await response.json();
-    console.log("[getRepo] result", result);
-  } catch (err) {
-    console.log("[getRepo] error", err);
-  }
-  const data = result?.data || [];
-  const file = data.find(item => item.path === 'dist/index.js');
-  return file?.content;
-}
-
 export {
   checkGithubOwner,
   getAllRepos,
@@ -611,6 +592,5 @@ export {
   updatePackageVersionIpfsCid,
   updatePackageVersionToAuditing,
   createRepo,
-  getProject,
-  cloneRepo
+  getProject
 }

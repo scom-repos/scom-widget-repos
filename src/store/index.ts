@@ -6,7 +6,8 @@ const state = {
   contractInfo: {},
   transportEndpoint: '',
   mode: 'development',
-  storageConfig: {}
+  storageConfig: {},
+  scomCid: ''
 }
 
 export const getContractInfoByChain = () => {
@@ -35,6 +36,7 @@ export const getContractInfo = async (chainId: number): Promise<IContractInfo> =
 
 export const setTransportEndpoint = (transportEndpoint: string) => {
   state.transportEndpoint = transportEndpoint;
+  console.log('setTransportEndpoint', transportEndpoint);
 }
 
 export const getTransportEndpoint = () => {
@@ -53,4 +55,12 @@ export const setStorageConfig = (config: any) => {
 
 export const getStorageConfig = () => {
   return state.storageConfig;
+}
+
+export const setScomCid = (scomCid: string) => {
+  state.scomCid = scomCid;
+}
+
+export const getScomCid = () => {
+  return state.scomCid;
 }
