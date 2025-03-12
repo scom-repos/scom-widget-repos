@@ -217,7 +217,8 @@ declare module "@scom/scom-widget-repos/utils/API.ts" {
         private?: boolean;
     }) => Promise<any>;
     const getProject: (guid: string) => Promise<IProject | undefined>;
-    export { checkGithubOwner, getAllRepos, getGithubUser, isActiveAuditor, getAuditInfo, getAuditReportResult, getAuditReportInfo, getAuditPRList, getAuditPRReportInfo, auditCommit, uploadDataToIpfs, getAllFiles, getPull, getAllPulls, auditPR, auditPackageVersion, createNewPackage, createNewPackageVersion, getCommits, getMergeMsg, mergePR, getPackageByNames, requestAuditCommit, syncCommits, updatePackageVersionIpfsCid, updatePackageVersionToAuditing, createRepo, getProject };
+    const cloneRepo: (name: string) => Promise<any>;
+    export { checkGithubOwner, getAllRepos, getGithubUser, isActiveAuditor, getAuditInfo, getAuditReportResult, getAuditReportInfo, getAuditPRList, getAuditPRReportInfo, auditCommit, uploadDataToIpfs, getAllFiles, getPull, getAllPulls, auditPR, auditPackageVersion, createNewPackage, createNewPackageVersion, getCommits, getMergeMsg, mergePR, getPackageByNames, requestAuditCommit, syncCommits, updatePackageVersionIpfsCid, updatePackageVersionToAuditing, createRepo, getProject, cloneRepo };
 }
 /// <amd-module name="@scom/scom-widget-repos/components/github/index.css.ts" />
 declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
@@ -511,6 +512,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             version: string;
             view_record: string;
             your_repository_has_been_created_successfully: string;
+            deploy: string;
         };
         "zh-hant": {
             all: string;
@@ -576,6 +578,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             version: string;
             view_record: string;
             your_repository_has_been_created_successfully: string;
+            deploy: string;
         };
         vi: {
             all: string;
@@ -641,6 +644,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             version: string;
             view_record: string;
             your_repository_has_been_created_successfully: string;
+            deploy: string;
         };
     };
     export default _default_2;
@@ -720,6 +724,7 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         onRefresh: () => Promise<void>;
         updateCountPRs: (oldNum: number, newNum: number) => void;
         onEdit: (name: string) => void;
+        onDeploy: (name: string) => void;
         private activeTab;
         set guid(value: string);
         get guid(): string;
@@ -769,7 +774,38 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         private openLink;
         onHide(): void;
         private onOpenBuilder;
+        private onOpenDeploy;
         private onTabClick;
+        init(): void;
+        render(): any;
+    }
+}
+/// <amd-module name="@scom/scom-widget-repos/components/deployer.tsx" />
+declare module "@scom/scom-widget-repos/components/deployer.tsx" {
+    import { Module, ControlElement, Container } from '@ijstech/components';
+    interface ScomWidgetReposDeployerElement extends ControlElement {
+        contract?: string;
+    }
+    global {
+        namespace JSX {
+            interface IntrinsicElements {
+                ["i-scom-widget-repos--deployer"]: ScomWidgetReposDeployerElement;
+            }
+        }
+    }
+    export class ScomWidgetReposDeployer extends Module {
+        private pnlDeploy;
+        private pnlLoader;
+        private _contract;
+        private cachedContract;
+        get contract(): string;
+        set contract(value: string);
+        constructor(parent?: Container, options?: any);
+        static create(options?: any, parent?: Container): Promise<ScomWidgetReposDeployer>;
+        setData(name: string): Promise<void>;
+        private handleInit;
+        private getContent;
+        clear(): void;
         init(): void;
         render(): any;
     }
@@ -805,6 +841,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private paginationElm;
         private mdWidgetBuilder;
         private widgetBuilder;
+        private deployer;
         private _isGithubOwner;
         private _userInfo;
         private _guid;
@@ -851,6 +888,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private onBuilderOpen;
         private onBuilderClose;
         private onSwitchFilter;
+        private openDeploy;
         onHide(): void;
         init(): void;
         render(): any;
@@ -1088,6 +1126,7 @@ declare module "@scom/scom-widget-repos/components/index.ts" {
     export { ScomWidgetReposGithub, ScomWidgetReposCreateRepo } from "@scom/scom-widget-repos/components/github/index.tsx";
     export { ScomWidgetReposAuditReport } from "@scom/scom-widget-repos/components/audit_report/index.tsx";
     export { ScomWidgetReposTabs } from "@scom/scom-widget-repos/components/tabs/index.tsx";
+    export { ScomWidgetReposDeployer } from "@scom/scom-widget-repos/components/deployer.tsx";
 }
 /// <amd-module name="@scom/scom-widget-repos/index.css.ts" />
 declare module "@scom/scom-widget-repos/index.css.ts" {

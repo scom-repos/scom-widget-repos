@@ -13,5 +13,8 @@
     "@scom/scom-dev-contract": "*",
     "@scom/scom-widget-builder": "*",
     "@scom/scom-widget-repos": "*"
-  }
+  },
+  "packages": [
+    "@scom/contract-deployer"
+  ]
 }

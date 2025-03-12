@@ -77,6 +77,7 @@ export class ScomWidgetReposGithubRepo extends Module {
   public onRefresh: () => Promise<void>;
   public updateCountPRs: (oldNum: number, newNum: number) => void;
   public onEdit: (name: string) => void;
+  public onDeploy: (name: string) => void;
   private activeTab: 'commits'|'prs' = 'prs';
 
   set guid(value: string) {
@@ -838,6 +839,13 @@ export class ScomWidgetReposGithubRepo extends Module {
     }
   }
 
+  private onOpenDeploy() {
+    const repoName = this.data?.full_name;
+    if (typeof this.onDeploy === 'function') {
+      this.onDeploy(repoName);
+    }
+  }
+
   private onTabClick(target: HStack) {
     this.vStackListPR.visible = target.tag === 'prs';
     this.vstackCommitTab.visible = target.tag === 'commits';
@@ -906,6 +914,16 @@ export class ScomWidgetReposGithubRepo extends Module {
             font={{ color: Theme.colors.primary.contrastText }}
             background={{ color: '#17a2b8' }}
             onClick={this.onOpenBuilder}
+          />
+          <i-button
+            id="btnDeployer"
+            caption="$deploy"
+            stack={{ shrink: '0' }}
+            icon={{ name: 'file-upload', width: '0.675rem', height: '0.675rem' }}
+            padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
+            font={{ color: Theme.colors.primary.contrastText }}
+            background={{ color: '#17a2b8' }}
+            onClick={this.onOpenDeploy}
           />
           <i-icon id="iconDetail" name="angle-down" class="icon-expansion" cursor="pointer" width="1.75rem" height="1.75rem" onClick={this.onShowDetail} />
         </i-hstack>
