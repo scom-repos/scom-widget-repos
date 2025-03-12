@@ -3851,7 +3851,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
             const signer = this.getAttribute('signer', true);
             const baseUrl = this.getAttribute('baseUrl', true);
             // this.setData({ guid, prefix, isProject, projectId, isProjectOwner, contractInfo, transportEndpoint, signer, baseUrl });
-            this.onShow();
+            // this.onShow();
         }
         render() {
             return (this.$render("i-panel", { width: "100%", height: "100%", background: { color: Theme.background.main } },
