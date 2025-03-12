@@ -1,9 +1,10 @@
-import { customModule, Module, Container, Panel, VStack, Label, observable, Pagination, Icon, customElements, ControlElement, Styles, Modal, Switch, moment } from "@ijstech/components";
+import { customModule, Module, Container, Panel, VStack, Label, observable, Pagination, Icon, customElements, ControlElement, Styles, Modal, Switch, moment, application } from "@ijstech/components";
 import { ScomWidgetReposGithubRepo } from "./repo";
 import { customModalStyle, githubStyle, spinnerStyle } from "./index.css";
 import { ScomWidgetBuilder } from "@scom/scom-widget-builder";
 import { getStorageConfig } from "../../store/index";
 import { repoJson } from "../../languages/index";
+import { ScomWidgetReposDeployer } from "../deployer";
 const Theme = Styles.Theme.ThemeVars;
 
 const pageSize = 10;
@@ -41,6 +42,7 @@ export default class ScomWidgetReposGithubList extends Module {
   private paginationElm: Pagination;
   private mdWidgetBuilder: Modal;
   private widgetBuilder: ScomWidgetBuilder;
+  private deployer: ScomWidgetReposDeployer;
 
   private _isGithubOwner: boolean;
   private _userInfo: any = {};
@@ -162,6 +164,7 @@ export default class ScomWidgetReposGithubList extends Module {
         item.isAuditPR = this.isAuditPR;
         item.data = repo;
         item.onEdit = (name: string) => this.showBuilder(name);
+        item.onDeploy = (name: string) => this.openDeploy(name);
         item.onRefresh = () => this.onRefresh();
         item.updateCountPRs = (oldNum, newNum) => this.updateCountPRs(oldNum, newNum);
         nodeItems.push(item);
@@ -281,6 +284,28 @@ export default class ScomWidgetReposGithubList extends Module {
 
   private onSwitchFilter(target: Switch) {
     this.renderRepos();
+  }
+
+  private async openDeploy(name: string) {
+    if (!this.deployer) {
+      this.deployer = new ScomWidgetReposDeployer(undefined, {
+        contract: name
+      });
+    } else if (this.deployer.contract !== name) {
+      this.deployer.setData(name);
+    }
+
+    const modal = this.deployer.openModal({
+      width: 800,
+      maxWidth: '100%',
+      height: '100dvh',
+      overflow: {y: 'auto'},
+      closeOnBackdropClick: false,
+      padding: {top: '0.5rem', right: '0.5rem', bottom: 0, left: '0.5rem'},
+      onClose: () => {
+        this.deployer.clear();
+      }
+    })
   }
 
   onHide(): void {

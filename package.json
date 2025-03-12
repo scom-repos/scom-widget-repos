@@ -19,10 +19,12 @@
         "@ijstech/cli": "^0.1.28",
         "@ijstech/eth-contract": "^0.1.8",
         "@ijstech/eth-wallet": "^0.1.29",
-        "@ijstech/compiler": "^0.1.41"
+        "@ijstech/compiler": "^0.1.41",
+        "@scom/contract-deployer": "^0.1.5"
     },
     "scripts": {
         "build": "rm -rf dist && npx @ijstech/compiler",
-        "test": "npm run build && cd test && npm run test"
+        "test": "npm run build && cd test && npm run test",
+        "build:deployer": "rm -rf deployer && npx @ijstech/cli bundle deployer"
     }
 }

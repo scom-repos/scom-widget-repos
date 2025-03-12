@@ -14,7 +14,8 @@
     "@ijstech/eth-wallet": "^0.1.29",
     "@scom/scom-dev-contract": "^0.1.8",
     "@scom/scom-widget-builder": "file:./repos/scom-widget-builder",
-    "@scom/scom-widget-repos": "file:./ref"
+    "@scom/scom-widget-repos": "file:./ref",
+    "@scom/contract-deployer": "^0.1.5"
   },
   "scripts": {
     "cp:ide": "rm -rf ref && mkdir ref && cp ../package.json ref/package.json && cp -r ../dist ref/dist && cp -r ../pluginTypes ref/pluginTypes",
