@@ -521,6 +521,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             view_record: string;
             your_repository_has_been_created_successfully: string;
             deploy: string;
+            view: string;
         };
         "zh-hant": {
             all: string;
@@ -587,6 +588,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             view_record: string;
             your_repository_has_been_created_successfully: string;
             deploy: string;
+            view: string;
         };
         vi: {
             all: string;
@@ -653,6 +655,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             view_record: string;
             your_repository_has_been_created_successfully: string;
             deploy: string;
+            view: string;
         };
     };
     export default _default_2;
@@ -686,7 +689,6 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         private _isAuditPR;
         private _isGithubOwner;
         private isInitialized;
-        private lastCommitId;
         private listPR;
         private isDetailShown;
         private listAuditPr;
@@ -707,23 +709,11 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         private tabs;
         private customTabs;
         private vStackListPR;
-        private vstackCommitTab;
-        private vStackListCommit;
-        private pageSize;
-        private pagiCommitList;
-        private inputCommitId;
-        private inputMessage;
-        private inputStartDate;
-        private inputEndDate;
-        private lbStartDateErr;
-        private lbEndDateErr;
-        private btnSync;
-        private btnSearch;
-        private btnClear;
         private mdAlert;
         private viewReportModal;
         private auditReport;
         private btnDeployer;
+        private lblType;
         private selectedCommit;
         private mdPublish;
         private lbCommitId;
@@ -757,28 +747,17 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         private getStatusMessage;
         private getStatusColor;
         private getStatusText;
-        private onStartDateChanged;
-        private onEndDateChanged;
-        private initInputDate;
-        private onClearSearch;
-        private onSyncCommits;
-        private onSearchCommits;
         private getCommits;
         private getAllPRs;
         private onShowDetail;
         private onRefreshData;
         private refreshPR;
-        private renderCommits;
-        private onViewCommitRecord;
         private onViewRecord;
-        private onAuditCommit;
         private onAuditPR;
         private onMergePR;
         private mergeOnePR;
-        private onShowRequestAudit;
         private onClosePublish;
         private resetPublishInfo;
-        private onPublish;
         private onRequestAudit;
         private openLink;
         onHide(): void;
@@ -851,6 +830,9 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private mdWidgetBuilder;
         private widgetBuilder;
         private deployer;
+        private mdFilter;
+        private pnlFilter;
+        private btnFilter;
         private _isGithubOwner;
         private _userInfo;
         private _guid;
@@ -862,6 +844,8 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private error;
         private initedConfig;
         private _redirectUri;
+        private _selectedType;
+        private timer;
         getAllRepos: () => Promise<void>;
         updateCountPRs: (oldNum: number, newNum: number) => void;
         constructor(parent?: Container, options?: GithubListElement);
@@ -898,6 +882,10 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private onBuilderClose;
         private onSwitchFilter;
         private openDeploy;
+        private onShowFilter;
+        private onHideFilter;
+        private renderFilter;
+        private onFilterChanged;
         onHide(): void;
         init(): void;
         render(): any;

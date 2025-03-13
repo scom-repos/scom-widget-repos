@@ -29,7 +29,7 @@ export class ScomWidgetReposGithubRepo extends Module {
   private _isAuditPR: boolean;
   private _isGithubOwner: boolean;
   private isInitialized: boolean;
-  private lastCommitId: string;
+  // private lastCommitId: string;
   private listPR: any[] = [];
   private isDetailShown = false;
   private listAuditPr: any[] = [];
@@ -51,23 +51,24 @@ export class ScomWidgetReposGithubRepo extends Module {
   private tabs: HStack;
   private customTabs: ScomWidgetReposTabs;
   private vStackListPR: VStack;
-  private vstackCommitTab: VStack;
-  private vStackListCommit: VStack;
-  private pageSize = 5;
-  private pagiCommitList: Pagination;
-  private inputCommitId: Input;
-  private inputMessage: Input;
-  private inputStartDate: Datepicker;
-  private inputEndDate: Datepicker;
-  private lbStartDateErr: Label;
-  private lbEndDateErr: Label;
-  private btnSync: Button;
-  private btnSearch: Button;
-  private btnClear: Button;
+  // private vstackCommitTab: VStack;
+  // private vStackListCommit: VStack;
+  // private pageSize = 5;
+  // private pagiCommitList: Pagination;
+  // private inputCommitId: Input;
+  // private inputMessage: Input;
+  // private inputStartDate: Datepicker;
+  // private inputEndDate: Datepicker;
+  // private lbStartDateErr: Label;
+  // private lbEndDateErr: Label;
+  // private btnSync: Button;
+  // private btnSearch: Button;
+  // private btnClear: Button;
   private mdAlert: Alert;
   private viewReportModal: Modal;
   private auditReport: ScomWidgetReposAuditReport;
   private btnDeployer: Button;
+  private lblType: Label;
 
   private selectedCommit: { commitGuid: string, packageGuid: string, version: string, sha: string };
   private mdPublish: Modal;
@@ -154,9 +155,10 @@ export class ScomWidgetReposGithubRepo extends Module {
 
   private async renderUI() {
     if (!this.isInitialized || !this.data) return;
-    const { name, owner_login, open_issues, html_url, pushed_at, full_name, version } = this.data;
+    const { name, owner_login, open_issues, html_url, pushed_at, full_name, version, type } = this.data;
     // TODO: get package info
     // this.packageInfo = await getPackageByNames(owner_login, name);
+    this.lblType.caption = type;
     this.lbName.caption = name;
     this.lbPublish.caption = this.i18n.get('$publish', { name, repo: full_name });
     this.lbPath.caption = full_name;
@@ -175,11 +177,11 @@ export class ScomWidgetReposGithubRepo extends Module {
     this.customTabs.setData({
       items:  [
         { caption: this.i18n.get('$prs'), tag: 'prs', count: open_issues, hasCount: true },
-        { caption: this.i18n.get('$commits'), tag: 'commits', count: 0, hasCount: false }
+        // { caption: this.i18n.get('$commits'), tag: 'commits', count: 0, hasCount: false }
       ]
     });
 
-    this.btnDeployer.visible = true;
+    this.btnDeployer.enabled = type && ['contract', 'agent'].includes(type);
   }
 
   private clearListTimer() {
@@ -337,97 +339,97 @@ export class ScomWidgetReposGithubRepo extends Module {
     return text;
   }
 
-  private onStartDateChanged = (elm: Datepicker) => {
-    const value = elm?.value;
-    const inputEndDate = this.inputEndDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
-    this.lbStartDateErr.caption = '';
-    this.lbEndDateErr.caption = '';
-    if (inputEndDate) {
-      if (value) {
-        const date = moment(value, 'DD/MM/YYYY HH:mm');
-        const val = date;
-        inputEndDate.min = val.format('YYYY-MM-DD HH:mm');
-        if (this.inputEndDate.value?.isBefore(val)) {
-          this.lbStartDateErr.caption = '$start_time_cannot_be_earlier_than_end_time';
-        }
-      } else {
-        inputEndDate.min = undefined;
-      }
-    }
-  }
+  // private onStartDateChanged = (elm: Datepicker) => {
+  //   const value = elm?.value;
+  //   const inputEndDate = this.inputEndDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+  //   this.lbStartDateErr.caption = '';
+  //   this.lbEndDateErr.caption = '';
+  //   if (inputEndDate) {
+  //     if (value) {
+  //       const date = moment(value, 'DD/MM/YYYY HH:mm');
+  //       const val = date;
+  //       inputEndDate.min = val.format('YYYY-MM-DD HH:mm');
+  //       if (this.inputEndDate.value?.isBefore(val)) {
+  //         this.lbStartDateErr.caption = '$start_time_cannot_be_earlier_than_end_time';
+  //       }
+  //     } else {
+  //       inputEndDate.min = undefined;
+  //     }
+  //   }
+  // }
 
-  private onEndDateChanged = (elm: Datepicker) => {
-    const value = elm?.value;
-    const inputStartDate = this.inputStartDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
-    this.lbStartDateErr.caption = '';
-    this.lbEndDateErr.caption = '';
-    if (inputStartDate) {
-      if (value) {
-        const date = moment(value, 'DD/MM/YYYY HH:mm');
-        const val = date;
-        inputStartDate.max = val.format('YYYY-MM-DD HH:mm');
-        if (this.inputStartDate.value?.isAfter(value)) {
-          this.lbEndDateErr.caption = '$end_time_cannot_be_earlier_than_start_time';
-        }
-      } else {
-        inputStartDate.max = moment().format('YYYY-MM-DD HH:mm');
-      }
-    }
-  }
+  // private onEndDateChanged = (elm: Datepicker) => {
+  //   const value = elm?.value;
+  //   const inputStartDate = this.inputStartDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+  //   this.lbStartDateErr.caption = '';
+  //   this.lbEndDateErr.caption = '';
+  //   if (inputStartDate) {
+  //     if (value) {
+  //       const date = moment(value, 'DD/MM/YYYY HH:mm');
+  //       const val = date;
+  //       inputStartDate.max = val.format('YYYY-MM-DD HH:mm');
+  //       if (this.inputStartDate.value?.isAfter(value)) {
+  //         this.lbEndDateErr.caption = '$end_time_cannot_be_earlier_than_start_time';
+  //       }
+  //     } else {
+  //       inputStartDate.max = moment().format('YYYY-MM-DD HH:mm');
+  //     }
+  //   }
+  // }
 
-  private initInputDate() {
-    const inputStartDate = this.inputStartDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
-    const inputEndDate = this.inputEndDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
-    if (inputStartDate) inputStartDate.max = moment().format('YYYY-MM-DD HH:mm');
-    if (inputEndDate) inputEndDate.max = moment().format('YYYY-MM-DD HH:mm');
-  }
+  // private initInputDate() {
+  //   const inputStartDate = this.inputStartDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+  //   const inputEndDate = this.inputEndDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+  //   if (inputStartDate) inputStartDate.max = moment().format('YYYY-MM-DD HH:mm');
+  //   if (inputEndDate) inputEndDate.max = moment().format('YYYY-MM-DD HH:mm');
+  // }
 
-  private onClearSearch() {
-    this.inputCommitId.value = '';
-    this.inputMessage.value = '';
-    this.inputStartDate.value = undefined;
-    this.inputEndDate.value = undefined;
-    this.onStartDateChanged(undefined);
-    this.onEndDateChanged(undefined);
-  }
+  // private onClearSearch() {
+  //   this.inputCommitId.value = '';
+  //   this.inputMessage.value = '';
+  //   this.inputStartDate.value = undefined;
+  //   this.inputEndDate.value = undefined;
+  //   this.onStartDateChanged(undefined);
+  //   this.onEndDateChanged(undefined);
+  // }
 
-  private async onSyncCommits() {
-    await this.onRefreshData(true);
-    if (!this.packageInfo) {
-      const { name, owner_login } = this.data;
-      this.packageInfo = await getPackageByNames(owner_login, name);
-    }
-    await this.onSearchCommits();
-  }
+  // private async onSyncCommits() {
+  //   await this.onRefreshData(true);
+  //   if (!this.packageInfo) {
+  //     const { name, owner_login } = this.data;
+  //     this.packageInfo = await getPackageByNames(owner_login, name);
+  //   }
+  //   await this.onSearchCommits();
+  // }
 
-  private async onSearchCommits() {
-    this.btnSync.enabled = false;
-    this.btnSearch.enabled = false;
-    this.btnClear.enabled = false;
-    this.pagiCommitList.currentPage = 1;
-    await this.getCommits();
-    this.btnSync.enabled = true;
-    this.btnSearch.enabled = true;
-    this.btnClear.enabled = true;
-  }
+  // private async onSearchCommits() {
+  //   this.btnSync.enabled = false;
+  //   this.btnSearch.enabled = false;
+  //   this.btnClear.enabled = false;
+  //   this.pagiCommitList.currentPage = 1;
+  //   await this.getCommits();
+  //   this.btnSync.enabled = true;
+  //   this.btnSearch.enabled = true;
+  //   this.btnClear.enabled = true;
+  // }
 
   private async getCommits() {
-    if (!this.packageInfo) return;
-    const packageGuid = this.packageInfo.guid;
-    const filter = {
-      packageGuid,
-      commitId: this.inputCommitId.value,
-      message: this.inputMessage.value,
-      startDate: this.inputStartDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || '',
-      endDate: this.inputEndDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || ''
-    }
-    const currentPage = this.pagiCommitList.currentPage;
-    const { list, total } = await getCommits(currentPage, this.pageSize, filter);
-    this.commits = list;
-    this.totalCommits = total;
-    this.pagiCommitList.visible = total > 0;
-    this.pagiCommitList.totalPages = Math.ceil(total / this.pageSize) || 1;
-    this.renderCommits();
+    // if (!this.packageInfo) return;
+    // const packageGuid = this.packageInfo.guid;
+    // const filter = {
+    //   packageGuid,
+    //   commitId: this.inputCommitId.value,
+    //   message: this.inputMessage.value,
+    //   startDate: this.inputStartDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || '',
+    //   endDate: this.inputEndDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || ''
+    // }
+    // const currentPage = this.pagiCommitList.currentPage;
+    // const { list, total } = await getCommits(currentPage, this.pageSize, filter);
+    // this.commits = list;
+    // this.totalCommits = total;
+    // this.pagiCommitList.visible = total > 0;
+    // this.pagiCommitList.totalPages = Math.ceil(total / this.pageSize) || 1;
+    // this.renderCommits();
   }
 
   private async getAllPRs() {
@@ -475,7 +477,7 @@ export class ScomWidgetReposGithubRepo extends Module {
   }
 
   private async refreshPR(hasData?: boolean) {
-    this.lastCommitId = '';
+    // this.lastCommitId = '';
     this.iconRefresh.enabled = false;
     this.iconDetail.enabled = false;
     if (!hasData) await this.getAllPRs();
@@ -484,92 +486,92 @@ export class ScomWidgetReposGithubRepo extends Module {
     this.iconDetail.enabled = true;
   }
 
-  private renderCommits() {
-    this.customTabs.updateCount('commits', this.totalCommits);
-    let nodeItems: HTMLElement[] = [];
-    const { guid } = this.packageInfo;
-    for (const commit of this.commits) {
-      const { committer, message, sha, url, version, date, auditStatus } = commit;
-      nodeItems.push(<i-hstack
-        gap="0.625rem"
-        margin={{ bottom: '1rem' }}
-        padding={{ top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }}
-        background={{ color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }}
-        boxShadow="0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)"
-        border={{ radius: '0.375rem' }}
-        verticalAlignment="center"
-        horizontalAlignment="space-between"
-      >
-        <i-vstack gap="0.5rem" verticalAlignment="center" maxWidth="calc(100% - 200px)">
-          <i-hstack gap="0.5rem">
-            <i-label caption={message} wordBreak="break-word" font={{ size: '0.875rem', bold: true }} />
-            <i-icon name="external-link-alt" class="icon-hover" cursor="pointer" width="0.9rem" height="0.9rem" onClick={() => this.openLink(url)} />
-          </i-hstack>
-          <i-label caption={`${this.i18n.get('$version')} ${version || '-'}`} font={{ size: '0.875rem' }} />
-          <i-label caption={`${committer} ${this.i18n.get('$committed')} ${getTimeAgo(date, this.i18n)}`} font={{ size: '0.75rem' }} opacity={0.8} />
-        </i-vstack>
-        <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap">
-          {auditStatus ? <i-label
-            caption={this.getStatusText(auditStatus)}
-            font={{ size: '0.875rem' }}
-            background={{ color: this.getStatusColor(auditStatus) }}
-            border={{ radius: '1rem' }}
-            padding={{ left: '0.625rem', right: '0.625rem', top: '0.3125rem', bottom: '0.3125rem' }}
-            minWidth={'5.5rem'}
-            class="text-center"
-          /> : []}
-          {auditStatus && auditStatus !== PackageStatus.AUDITING ? <i-button
-            caption="$view_record"
-            background={{ color: '#212128' }}
-            padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
-            rightIcon={{ spin: true, visible: false }}
-            onClick={() => this.onViewCommitRecord(commit.guid)}
-          /> : []}
-          {this.isAuditPR && auditStatus === PackageStatus.AUDITING ? <i-button
-            caption={'$audit'}
-            padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
-            rightIcon={{ spin: true, visible: false }}
-            onClick={() => this.onAuditCommit(commit.guid)}
-          /> : []}
-          {this.isProject && this.isProjectOwner && !auditStatus ? <i-button
-            id={`btn-${sha}`}
-            caption={'$submit_for_audit'}
-            padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
-            rightIcon={{ spin: true, visible: false }}
-            onClick={() => this.onShowRequestAudit(commit.guid, guid, sha, version)}
-          /> : []}
-          {this.isProject && this.isProjectOwner && auditStatus === PackageStatus.AUDIT_PASSED ? <i-button
-            caption={'$publish'}
-            padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
-            onClick={() => this.onPublish(commit.guid)}
-          /> : []}
-        </i-hstack>
-      </i-hstack>);
-    }
-    if (!nodeItems.length) {
-      nodeItems.push(<i-hstack
-        gap="0.625rem"
-        margin={{ bottom: '1rem' }}
-        padding={{ top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }}
-        background={{ color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }}
-        boxShadow="0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)"
-        border={{ radius: '0.375rem' }}
-        verticalAlignment="center"
-        horizontalAlignment="center"
-      >
-        <i-label caption="$there_is_no_commit" />
-      </i-hstack>)
-    }
-    this.vStackListCommit.clearInnerHTML();
-    this.vStackListCommit.append(...nodeItems);
-  }
+  // private renderCommits() {
+  //   this.customTabs.updateCount('commits', this.totalCommits);
+  //   let nodeItems: HTMLElement[] = [];
+  //   const { guid } = this.packageInfo;
+  //   for (const commit of this.commits) {
+  //     const { committer, message, sha, url, version, date, auditStatus } = commit;
+  //     nodeItems.push(<i-hstack
+  //       gap="0.625rem"
+  //       margin={{ bottom: '1rem' }}
+  //       padding={{ top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }}
+  //       background={{ color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }}
+  //       boxShadow="0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)"
+  //       border={{ radius: '0.375rem' }}
+  //       verticalAlignment="center"
+  //       horizontalAlignment="space-between"
+  //     >
+  //       <i-vstack gap="0.5rem" verticalAlignment="center" maxWidth="calc(100% - 200px)">
+  //         <i-hstack gap="0.5rem">
+  //           <i-label caption={message} wordBreak="break-word" font={{ size: '0.875rem', bold: true }} />
+  //           <i-icon name="external-link-alt" class="icon-hover" cursor="pointer" width="0.9rem" height="0.9rem" onClick={() => this.openLink(url)} />
+  //         </i-hstack>
+  //         <i-label caption={`${this.i18n.get('$version')} ${version || '-'}`} font={{ size: '0.875rem' }} />
+  //         <i-label caption={`${committer} ${this.i18n.get('$committed')} ${getTimeAgo(date, this.i18n)}`} font={{ size: '0.75rem' }} opacity={0.8} />
+  //       </i-vstack>
+  //       <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap">
+  //         {auditStatus ? <i-label
+  //           caption={this.getStatusText(auditStatus)}
+  //           font={{ size: '0.875rem' }}
+  //           background={{ color: this.getStatusColor(auditStatus) }}
+  //           border={{ radius: '1rem' }}
+  //           padding={{ left: '0.625rem', right: '0.625rem', top: '0.3125rem', bottom: '0.3125rem' }}
+  //           minWidth={'5.5rem'}
+  //           class="text-center"
+  //         /> : []}
+  //         {auditStatus && auditStatus !== PackageStatus.AUDITING ? <i-button
+  //           caption="$view_record"
+  //           background={{ color: '#212128' }}
+  //           padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+  //           rightIcon={{ spin: true, visible: false }}
+  //           onClick={() => this.onViewCommitRecord(commit.guid)}
+  //         /> : []}
+  //         {this.isAuditPR && auditStatus === PackageStatus.AUDITING ? <i-button
+  //           caption={'$audit'}
+  //           padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+  //           rightIcon={{ spin: true, visible: false }}
+  //           onClick={() => this.onAuditCommit(commit.guid)}
+  //         /> : []}
+  //         {this.isProject && this.isProjectOwner && !auditStatus ? <i-button
+  //           id={`btn-${sha}`}
+  //           caption={'$submit_for_audit'}
+  //           padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+  //           rightIcon={{ spin: true, visible: false }}
+  //           onClick={() => this.onShowRequestAudit(commit.guid, guid, sha, version)}
+  //         /> : []}
+  //         {this.isProject && this.isProjectOwner && auditStatus === PackageStatus.AUDIT_PASSED ? <i-button
+  //           caption={'$publish'}
+  //           padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+  //           onClick={() => this.onPublish(commit.guid)}
+  //         /> : []}
+  //       </i-hstack>
+  //     </i-hstack>);
+  //   }
+  //   if (!nodeItems.length) {
+  //     nodeItems.push(<i-hstack
+  //       gap="0.625rem"
+  //       margin={{ bottom: '1rem' }}
+  //       padding={{ top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }}
+  //       background={{ color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }}
+  //       boxShadow="0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)"
+  //       border={{ radius: '0.375rem' }}
+  //       verticalAlignment="center"
+  //       horizontalAlignment="center"
+  //     >
+  //       <i-label caption="$there_is_no_commit" />
+  //     </i-hstack>)
+  //   }
+  //   this.vStackListCommit.clearInnerHTML();
+  //   this.vStackListCommit.append(...nodeItems);
+  // }
 
-  private onViewCommitRecord(guid: string) {
-    this.viewReportModal.visible = true;
-    this.auditReport.prInfo = undefined;
-    this.auditReport.commitGuid = guid;
-    this.auditReport.scrollTop = 0;
-  }
+  // private onViewCommitRecord(guid: string) {
+  //   this.viewReportModal.visible = true;
+  //   this.auditReport.prInfo = undefined;
+  //   this.auditReport.commitGuid = guid;
+  //   this.auditReport.scrollTop = 0;
+  // }
 
   private onViewRecord(mergeId: string, owner: string, repo: string, prNumber: string) {
     this.viewReportModal.visible = true;
@@ -578,10 +580,10 @@ export class ScomWidgetReposGithubRepo extends Module {
     this.auditReport.scrollTop = 0;
   }
 
-  private async onAuditCommit(guid: string) {
-    let queries = new URLSearchParams({ guid }).toString();
-    window.location.href = `#/audit-commit-form?${queries}`;
-  }
+  // private async onAuditCommit(guid: string) {
+  //   let queries = new URLSearchParams({ guid }).toString();
+  //   window.location.href = `#/audit-commit-form?${queries}`;
+  // }
 
   private async onAuditPR(owner: string, repo: string, prNumber: string) {
     let queries = new URLSearchParams({ owner, repo, prNumber }).toString();
@@ -666,19 +668,19 @@ export class ScomWidgetReposGithubRepo extends Module {
     }
   }
 
-  private async onShowRequestAudit(commitGuid: string, packageGuid: string, sha: string, version: string) {
-    if (this.isProject && this.isProjectOwner) {
-      this.selectedCommit = {
-        commitGuid,
-        packageGuid,
-        sha,
-        version
-      }
-      this.lbCommitId.caption = sha;
-      this.lbCommitVersion.caption = version;
-      this.mdPublish.visible = true;
-    }
-  }
+  // private async onShowRequestAudit(commitGuid: string, packageGuid: string, sha: string, version: string) {
+  //   if (this.isProject && this.isProjectOwner) {
+  //     this.selectedCommit = {
+  //       commitGuid,
+  //       packageGuid,
+  //       sha,
+  //       version
+  //     }
+  //     this.lbCommitId.caption = sha;
+  //     this.lbCommitVersion.caption = version;
+  //     this.mdPublish.visible = true;
+  //   }
+  // }
 
   private onClosePublish() {
     this.mdPublish.visible = false;
@@ -693,9 +695,9 @@ export class ScomWidgetReposGithubRepo extends Module {
     this.mdPublish.visible = false;
   }
 
-  private async onPublish(guid: string) {
-    window.location.assign(`/#/publish-commit/${guid}`);
-  }
+  // private async onPublish(guid: string) {
+  //   window.location.assign(`/#/publish-commit/${guid}`);
+  // }
 
   private async onRequestAudit() {
     if (this.isProject && this.isProjectOwner) {
@@ -843,15 +845,17 @@ export class ScomWidgetReposGithubRepo extends Module {
   }
 
   private onOpenDeploy() {
-    const repoName = this.data?.full_name;
-    if (typeof this.onDeploy === 'function') {
-      this.onDeploy(repoName);
+    if (this.data.type && ['contract', 'agent'].includes(this.data.type)) {
+      const repoName = this.data?.full_name;
+      if (typeof this.onDeploy === 'function') {
+        this.onDeploy(repoName);
+      }
     }
   }
 
   private onTabClick(target: HStack) {
     this.vStackListPR.visible = target.tag === 'prs';
-    this.vstackCommitTab.visible = target.tag === 'commits';
+    // this.vstackCommitTab.visible = target.tag === 'commits';
   }
 
   init() {
@@ -862,9 +866,9 @@ export class ScomWidgetReposGithubRepo extends Module {
     this.i18n.init({...i18nData});
     super.init();
     this.isInitialized = true;
-    this.pagiCommitList.currentPage = 1;
-    this.pagiCommitList.onPageChanged = () => this.getCommits();
-    this.initInputDate();
+    // this.pagiCommitList.currentPage = 1;
+    // this.pagiCommitList.onPageChanged = () => this.getCommits();
+    // this.initInputDate();
     this.renderUI();
   }
 
@@ -877,8 +881,33 @@ export class ScomWidgetReposGithubRepo extends Module {
         padding={{ left: '1rem', right: '1rem' }}
       >
         <i-hstack gap="0.625rem" verticalAlignment="center" horizontalAlignment="space-between">
-          <i-hstack gap="0.3rem" width="calc(100% - 15rem)" minWidth="15rem" padding={{ top: '1rem', bottom: '1rem' }} verticalAlignment="center" wrap="wrap">
-            <i-vstack gap="0.5rem" width="48%">
+          <i-stack
+            gap="0.3rem" width="calc(100% - 15rem)"
+            minWidth="15rem"
+            padding={{ top: '1rem', bottom: '1rem' }}
+            wrap="wrap"
+            alignItems="center"
+            mediaQueries={[
+              {
+                maxWidth: '767px',
+                properties: {
+                  direction: 'vertical',
+                  alignItems: 'start',
+                }
+              }
+            ]}
+          >
+            <i-vstack
+              gap="0.5rem" width="45%"
+              mediaQueries={[
+                {
+                  maxWidth: '767px',
+                  properties: {
+                    width: '100%'
+                  }
+                }
+              ]}
+            >
               <i-hstack gap="0.5rem">
                 <i-label id="lbName" font={{ size: '1.125rem', bold: true }} />
               </i-hstack>
@@ -887,10 +916,24 @@ export class ScomWidgetReposGithubRepo extends Module {
                 <i-icon name="external-link-alt" width="0.85rem" height="0.85em" minWidth="0.85rem" />
               </i-hstack>
             </i-vstack>
+            <i-hstack verticalAlignment="center" minWidth={'5%'}>
+              <i-label id="lblType" caption=""></i-label>
+            </i-hstack>
             <i-hstack width="3rem" horizontalAlignment="center">
               <i-label id="lbVersion" font={{ size: '0.875rem' }} />
             </i-hstack>
-            <i-hstack width="5rem" minWidth="5rem" horizontalAlignment="center">
+            <i-hstack
+              width="5rem"
+              horizontalAlignment="center"
+              mediaQueries={[
+                {
+                  maxWidth: '767px',
+                  properties: {
+                    justifyContent: 'start'
+                  }
+                }
+              ]}
+            >
               <i-hstack id="hStackCount" gap="0.5rem" width="fit-content" verticalAlignment="center" tooltip={{ trigger: 'hover', content: 'Pull requests' }}>
                 <i-icon name="retweet" width="1.25rem" height="1.25rem" opacity={0.8} />
                 <i-label
@@ -907,13 +950,24 @@ export class ScomWidgetReposGithubRepo extends Module {
               <i-label id="lbPushedAt" font={{ size: '0.875rem' }} opacity={0.8} />
               <i-icon id="iconRefresh" name="sync-alt" class="icon-hover" cursor="pointer" width="0.9rem" height="0.9rem" minWidth="0.9rem" onClick={() => this.onRefreshData()} />
             </i-hstack>
-          </i-hstack>
-          <i-hstack gap="0.5rem" verticalAlignment="center">
+          </i-stack>
+          <i-stack
+            gap="0.5rem"
+            alignItems="center"
+            mediaQueries={[
+              {
+                maxWidth: '767px',
+                properties: {
+                  direction: 'vertical'
+                }
+              }
+            ]}
+          >
             <i-button
               id="btnEdit"
-              caption="$edit"
+              caption="$view"
               stack={{ shrink: '0' }}
-              icon={{ name: 'pen', width: '0.675rem', height: '0.675rem' }}
+              icon={{ name: 'eye', width: '0.675rem', height: '0.675rem' }}
               padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
               font={{ color: Theme.colors.primary.contrastText }}
               background={{ color: '#17a2b8' }}
@@ -927,10 +981,10 @@ export class ScomWidgetReposGithubRepo extends Module {
               padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
               font={{ color: Theme.colors.primary.contrastText }}
               background={{ color: '#17a2b8' }}
-              visible={false}
+              enabled={false}
               onClick={this.onOpenDeploy}
             />
-          </i-hstack>
+          </i-stack>
           <i-icon
             id="iconDetail"
             name="angle-down" class="icon-expansion"
@@ -959,7 +1013,7 @@ export class ScomWidgetReposGithubRepo extends Module {
             class={wrapperStyle}
           >
             <i-vstack id="vStackListPR" verticalAlignment="center" />
-            <i-vstack id="vstackCommitTab" gap="1rem" verticalAlignment="center" visible={false}>
+            {/* <i-vstack id="vstackCommitTab" gap="1rem" verticalAlignment="center" visible={false}>
               <i-vstack gap="1rem" width="100%">
                 <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap" width="100%" mediaQueries={[{maxWidth: '767px', properties: {gap: '1rem'}}]}>
                   <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="space-between" minWidth="calc(50% - 1rem)" stack={{grow: '1'}}>
@@ -1018,7 +1072,7 @@ export class ScomWidgetReposGithubRepo extends Module {
               <i-vstack horizontalAlignment='center'>
                 <i-pagination id="pagiCommitList" width="auto" margin={{ top: '1rem' }} pageSize={this.pageSize} />
               </i-vstack>
-            </i-vstack>
+            </i-vstack> */}
           </i-panel>
         </i-vstack>
 

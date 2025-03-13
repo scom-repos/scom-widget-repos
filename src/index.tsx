@@ -232,6 +232,7 @@ export class ScomWidgetRepos extends Module {
             font={{ color: Theme.colors.primary.contrastText }}
             background={{ color: '#17a2b8' }}
             icon={{ name: 'plus' }}
+            visible={false}
             onClick={this.onCreateRepoClick}
           />
         </i-hstack>

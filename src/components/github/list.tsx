@@ -1,4 +1,4 @@
-import { customModule, Module, Container, Panel, VStack, Label, observable, Pagination, Icon, customElements, ControlElement, Styles, Modal, Switch, moment, application } from "@ijstech/components";
+import { customModule, Module, Container, Panel, VStack, Label, observable, Pagination, Icon, customElements, ControlElement, Styles, Modal, Switch, moment, application, Button, Checkbox } from "@ijstech/components";
 import { ScomWidgetReposGithubRepo } from "./repo";
 import { customModalStyle, githubStyle, spinnerStyle } from "./index.css";
 import { ScomWidgetBuilder } from "@scom/scom-widget-builder";
@@ -43,6 +43,9 @@ export default class ScomWidgetReposGithubList extends Module {
   private mdWidgetBuilder: Modal;
   private widgetBuilder: ScomWidgetBuilder;
   private deployer: ScomWidgetReposDeployer;
+  private mdFilter: Modal;
+  private pnlFilter: Panel;
+  private btnFilter: Button;
 
   private _isGithubOwner: boolean;
   private _userInfo: any = {};
@@ -55,6 +58,8 @@ export default class ScomWidgetReposGithubList extends Module {
   private error: string;
   private initedConfig: boolean = false;
   private _redirectUri: string = '';
+  private _selectedType: string[] = [];
+  private timer: any;
   public getAllRepos: () => Promise<void>;
   public updateCountPRs: (oldNum: number, newNum: number) => void;
 
@@ -129,6 +134,11 @@ export default class ScomWidgetReposGithubList extends Module {
     if (onlyPRs) {
       list = list.filter(v => v.open_issues > 0).sort((a, b) => moment(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
     }
+
+    if (this._selectedType?.length) {
+      list = list.filter(v => this._selectedType.includes(v.type));
+    }
+
     return [...list];
   }
 
@@ -308,6 +318,54 @@ export default class ScomWidgetReposGithubList extends Module {
     })
   }
 
+  private onShowFilter() {
+    this.mdFilter.parent = this.btnFilter;
+    this.mdFilter.showBackdrop = false;
+    this.mdFilter.visible = true;
+  }
+
+  private onHideFilter() {
+    this.mdFilter.visible = false;
+  }
+
+  private renderFilter() {
+    this.pnlFilter.clearInnerHTML();
+    const items = [
+      {caption: '$widget', value: 'widget'},
+      {caption: '$contract', value: 'contract'},
+      {caption: '$dapp', value: 'dapp'},
+      {caption: '$worker', value: 'worker'},
+      {caption: '$sdk', value: 'sdk'},
+      {caption: '$component', value: 'component'},
+      {caption: '$agent', value: 'agent'},
+    ]
+
+    for (const item of items) {
+      this.pnlFilter.appendChild(
+        <i-checkbox
+          caption={item.caption}
+          tag={item.value}
+          checked={false}
+          onChanged={(target: Checkbox) => this.onFilterChanged(target)}
+        />
+      )
+    }
+  }
+
+  private onFilterChanged(target: Checkbox) {
+    const checked = target.checked;
+    const value = target.tag;
+    if (checked) {
+      this._selectedType.push(value);
+    } else {
+      this._selectedType = this._selectedType.filter(v => v !== value);
+    }
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      this.renderRepos();
+    }, 500);
+  }
+
   onHide(): void {
     super.onHide();
     const children = this.vStackRepos?.children || [];
@@ -323,6 +381,7 @@ export default class ScomWidgetReposGithubList extends Module {
     super.init();
     this.isProjectOwner = this.getAttribute('isProjectOwner', true, false);
     this.isProject = this.getAttribute('isProject', true, false);
+    this.renderFilter();
   }
 
   render() {
@@ -369,6 +428,16 @@ export default class ScomWidgetReposGithubList extends Module {
               tooltip={{content: '$show_only_PRs', placement: 'bottom'}}
               onChanged={this.onSwitchFilter}
             />
+            <i-hstack verticalAlignment="center" horizontalAlignment="end" position="relative" margin={{left: 'auto'}}>
+              <i-button
+                id="btnFilter"
+                caption="Filter"
+                icon={{name: 'sliders-h', width: '1rem', height: '1rem'}}
+                stack={{ shrink: '0', grow: '0' }}
+                padding={{top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem'}}
+                onClick={this.onShowFilter}
+              ></i-button>
+            </i-hstack>
           </i-hstack>
           <i-vstack id="vStackRepos" width="100%" />
           <i-hstack horizontalAlignment="center" margin={{ top: '2rem' }}>
@@ -415,6 +484,39 @@ export default class ScomWidgetReposGithubList extends Module {
               onClosed={() => this.closeBuilder()}
             ></i-scom-widget-builder>
           </i-panel>
+        </i-modal>
+        <i-modal
+          id="mdFilter"
+          popupPlacement="bottomRight"
+          showBackdrop={false}
+          closeOnBackdropClick={false}
+          width={'300px'}
+          maxWidth={'100%'}
+          border={{ radius: '0.25rem' }}
+          boxShadow={Theme.shadows[0]}
+          padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' }}
+        >
+          <i-vstack width="100%" gap="1rem">
+            <i-hstack
+              verticalAlignment="center"
+              gap="0.5rem"
+              horizontalAlignment="space-between"
+              padding={{ top: '0.5rem', bottom: '0.5rem' }}
+              border={{ bottom: { color: Theme.divider, width: '1px', style: 'solid' } }}
+            >
+              <i-label caption="Select Type"></i-label>
+              <i-icon
+                name="times"
+                fill={Theme.text.primary}
+                width={'1rem'}
+                height={'1rem'}
+                cursor="pointer"
+                stack={{ shrink: '0', grow: '0' }}
+                onClick={this.onHideFilter}
+              ></i-icon>
+            </i-hstack>
+            <i-vstack id="pnlFilter" width="100%"></i-vstack>
+          </i-vstack>
         </i-modal>
       </i-panel>
     )

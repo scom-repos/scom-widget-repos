@@ -63,7 +63,8 @@ export default {
     "version": "Version:",
     "view_record": "View Record",
     "your_repository_has_been_created_successfully": "Your repository has been created successfully.",
-    "deploy": "Deploy"
+    "deploy": "Deploy",
+    "view": "View"
   },
   "zh-hant": {
     "all": "全部",
@@ -129,7 +130,8 @@ export default {
     "version": "版本：",
     "view_record": "查看記錄",
     "your_repository_has_been_created_successfully": "您的存儲庫已成功創建。",
-    "deploy": "部署"
+    "deploy": "部署",
+    "view": "查看"
   },
   "vi": {
     "all": "Tất cả",
@@ -195,6 +197,7 @@ export default {
     "version": "Phiên bản:",
     "view_record": "Xem bản ghi",
     "your_repository_has_been_created_successfully": "Kho lưu trữ của bạn đã được tạo thành công.",
-    "deploy": "Phát hành"
+    "deploy": "Phát hành",
+    "view": "Xem"
   }
 }

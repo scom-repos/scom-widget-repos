@@ -1,6 +1,5 @@
 import { application } from "@ijstech/components";
 import { Wallet, ISendTxEventsOptions } from "@ijstech/eth-wallet";
-// import { Contracts } from "@scom/scom-dev-contract";
 import { AuditResult, IAuditInfo, IAuditReportInfo, IAuditReportResultInfo, ICommit, IProject, IRouterResult, ISemanticVersion, PackageStatus } from "../interface";
 import { getContractAddress, getTransportEndpoint } from '../store/index';
 
