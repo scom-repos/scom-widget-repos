@@ -36,7 +36,6 @@ export const getContractInfo = async (chainId: number): Promise<IContractInfo> =
 
 export const setTransportEndpoint = (transportEndpoint: string) => {
   state.transportEndpoint = transportEndpoint;
-  console.log('setTransportEndpoint', transportEndpoint);
 }
 
 export const getTransportEndpoint = () => {

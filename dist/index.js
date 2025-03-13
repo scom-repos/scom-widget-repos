@@ -81,7 +81,6 @@ define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstec
     exports.getContractInfo = getContractInfo;
     const setTransportEndpoint = (transportEndpoint) => {
         state.transportEndpoint = transportEndpoint;
-        console.log('setTransportEndpoint', transportEndpoint);
     };
     exports.setTransportEndpoint = setTransportEndpoint;
     const getTransportEndpoint = () => {
@@ -1388,7 +1387,8 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "version": "Version:",
             "view_record": "View Record",
             "your_repository_has_been_created_successfully": "Your repository has been created successfully.",
-            "deploy": "Deploy"
+            "deploy": "Deploy",
+            "view": "View"
         },
         "zh-hant": {
             "all": "全部",
@@ -1454,7 +1454,8 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "version": "版本：",
             "view_record": "查看記錄",
             "your_repository_has_been_created_successfully": "您的存儲庫已成功創建。",
-            "deploy": "部署"
+            "deploy": "部署",
+            "view": "查看"
         },
         "vi": {
             "all": "Tất cả",
@@ -1520,7 +1521,8 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "version": "Phiên bản:",
             "view_record": "Xem bản ghi",
             "your_repository_has_been_created_successfully": "Kho lưu trữ của bạn đã được tạo thành công.",
-            "deploy": "Phát hành"
+            "deploy": "Phát hành",
+            "view": "Xem"
         }
     };
 });
@@ -1583,52 +1585,14 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
         }
         constructor(parent, options) {
             super(parent, options);
+            // private lastCommitId: string;
             this.listPR = [];
             this.isDetailShown = false;
             this.listAuditPr = [];
             this.listTimer = [];
             this.commits = [];
             this.totalCommits = 0;
-            this.pageSize = 5;
             this.activeTab = 'prs';
-            this.onStartDateChanged = (elm) => {
-                const value = elm?.value;
-                const inputEndDate = this.inputEndDate.querySelector('input[type="datetime-local"]');
-                this.lbStartDateErr.caption = '';
-                this.lbEndDateErr.caption = '';
-                if (inputEndDate) {
-                    if (value) {
-                        const date = (0, components_5.moment)(value, 'DD/MM/YYYY HH:mm');
-                        const val = date;
-                        inputEndDate.min = val.format('YYYY-MM-DD HH:mm');
-                        if (this.inputEndDate.value?.isBefore(val)) {
-                            this.lbStartDateErr.caption = '$start_time_cannot_be_earlier_than_end_time';
-                        }
-                    }
-                    else {
-                        inputEndDate.min = undefined;
-                    }
-                }
-            };
-            this.onEndDateChanged = (elm) => {
-                const value = elm?.value;
-                const inputStartDate = this.inputStartDate.querySelector('input[type="datetime-local"]');
-                this.lbStartDateErr.caption = '';
-                this.lbEndDateErr.caption = '';
-                if (inputStartDate) {
-                    if (value) {
-                        const date = (0, components_5.moment)(value, 'DD/MM/YYYY HH:mm');
-                        const val = date;
-                        inputStartDate.max = val.format('YYYY-MM-DD HH:mm');
-                        if (this.inputStartDate.value?.isAfter(value)) {
-                            this.lbEndDateErr.caption = '$end_time_cannot_be_earlier_than_start_time';
-                        }
-                    }
-                    else {
-                        inputStartDate.max = (0, components_5.moment)().format('YYYY-MM-DD HH:mm');
-                    }
-                }
-            };
         }
         setMessage(message) {
             const { status, content, title, link, onClose, onConfirm } = message;
@@ -1648,9 +1612,10 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
         async renderUI() {
             if (!this.isInitialized || !this.data)
                 return;
-            const { name, owner_login, open_issues, html_url, pushed_at, full_name, version } = this.data;
+            const { name, owner_login, open_issues, html_url, pushed_at, full_name, version, type } = this.data;
             // TODO: get package info
             // this.packageInfo = await getPackageByNames(owner_login, name);
+            this.lblType.caption = type;
             this.lbName.caption = name;
             this.lbPublish.caption = this.i18n.get('$publish', { name, repo: full_name });
             this.lbPath.caption = full_name;
@@ -1670,10 +1635,10 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             this.customTabs.setData({
                 items: [
                     { caption: this.i18n.get('$prs'), tag: 'prs', count: open_issues, hasCount: true },
-                    { caption: this.i18n.get('$commits'), tag: 'commits', count: 0, hasCount: false }
+                    // { caption: this.i18n.get('$commits'), tag: 'commits', count: 0, hasCount: false }
                 ]
             });
-            this.btnDeployer.visible = true;
+            this.btnDeployer.enabled = type && ['contract', 'agent'].includes(type);
         }
         clearListTimer() {
             for (const item of this.listTimer) {
@@ -1782,58 +1747,91 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             }
             return text;
         }
-        initInputDate() {
-            const inputStartDate = this.inputStartDate.querySelector('input[type="datetime-local"]');
-            const inputEndDate = this.inputEndDate.querySelector('input[type="datetime-local"]');
-            if (inputStartDate)
-                inputStartDate.max = (0, components_5.moment)().format('YYYY-MM-DD HH:mm');
-            if (inputEndDate)
-                inputEndDate.max = (0, components_5.moment)().format('YYYY-MM-DD HH:mm');
-        }
-        onClearSearch() {
-            this.inputCommitId.value = '';
-            this.inputMessage.value = '';
-            this.inputStartDate.value = undefined;
-            this.inputEndDate.value = undefined;
-            this.onStartDateChanged(undefined);
-            this.onEndDateChanged(undefined);
-        }
-        async onSyncCommits() {
-            await this.onRefreshData(true);
-            if (!this.packageInfo) {
-                const { name, owner_login } = this.data;
-                this.packageInfo = await (0, index_3.getPackageByNames)(owner_login, name);
-            }
-            await this.onSearchCommits();
-        }
-        async onSearchCommits() {
-            this.btnSync.enabled = false;
-            this.btnSearch.enabled = false;
-            this.btnClear.enabled = false;
-            this.pagiCommitList.currentPage = 1;
-            await this.getCommits();
-            this.btnSync.enabled = true;
-            this.btnSearch.enabled = true;
-            this.btnClear.enabled = true;
-        }
+        // private onStartDateChanged = (elm: Datepicker) => {
+        //   const value = elm?.value;
+        //   const inputEndDate = this.inputEndDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+        //   this.lbStartDateErr.caption = '';
+        //   this.lbEndDateErr.caption = '';
+        //   if (inputEndDate) {
+        //     if (value) {
+        //       const date = moment(value, 'DD/MM/YYYY HH:mm');
+        //       const val = date;
+        //       inputEndDate.min = val.format('YYYY-MM-DD HH:mm');
+        //       if (this.inputEndDate.value?.isBefore(val)) {
+        //         this.lbStartDateErr.caption = '$start_time_cannot_be_earlier_than_end_time';
+        //       }
+        //     } else {
+        //       inputEndDate.min = undefined;
+        //     }
+        //   }
+        // }
+        // private onEndDateChanged = (elm: Datepicker) => {
+        //   const value = elm?.value;
+        //   const inputStartDate = this.inputStartDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+        //   this.lbStartDateErr.caption = '';
+        //   this.lbEndDateErr.caption = '';
+        //   if (inputStartDate) {
+        //     if (value) {
+        //       const date = moment(value, 'DD/MM/YYYY HH:mm');
+        //       const val = date;
+        //       inputStartDate.max = val.format('YYYY-MM-DD HH:mm');
+        //       if (this.inputStartDate.value?.isAfter(value)) {
+        //         this.lbEndDateErr.caption = '$end_time_cannot_be_earlier_than_start_time';
+        //       }
+        //     } else {
+        //       inputStartDate.max = moment().format('YYYY-MM-DD HH:mm');
+        //     }
+        //   }
+        // }
+        // private initInputDate() {
+        //   const inputStartDate = this.inputStartDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+        //   const inputEndDate = this.inputEndDate.querySelector('input[type="datetime-local"]') as HTMLInputElement;
+        //   if (inputStartDate) inputStartDate.max = moment().format('YYYY-MM-DD HH:mm');
+        //   if (inputEndDate) inputEndDate.max = moment().format('YYYY-MM-DD HH:mm');
+        // }
+        // private onClearSearch() {
+        //   this.inputCommitId.value = '';
+        //   this.inputMessage.value = '';
+        //   this.inputStartDate.value = undefined;
+        //   this.inputEndDate.value = undefined;
+        //   this.onStartDateChanged(undefined);
+        //   this.onEndDateChanged(undefined);
+        // }
+        // private async onSyncCommits() {
+        //   await this.onRefreshData(true);
+        //   if (!this.packageInfo) {
+        //     const { name, owner_login } = this.data;
+        //     this.packageInfo = await getPackageByNames(owner_login, name);
+        //   }
+        //   await this.onSearchCommits();
+        // }
+        // private async onSearchCommits() {
+        //   this.btnSync.enabled = false;
+        //   this.btnSearch.enabled = false;
+        //   this.btnClear.enabled = false;
+        //   this.pagiCommitList.currentPage = 1;
+        //   await this.getCommits();
+        //   this.btnSync.enabled = true;
+        //   this.btnSearch.enabled = true;
+        //   this.btnClear.enabled = true;
+        // }
         async getCommits() {
-            if (!this.packageInfo)
-                return;
-            const packageGuid = this.packageInfo.guid;
-            const filter = {
-                packageGuid,
-                commitId: this.inputCommitId.value,
-                message: this.inputMessage.value,
-                startDate: this.inputStartDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || '',
-                endDate: this.inputEndDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || ''
-            };
-            const currentPage = this.pagiCommitList.currentPage;
-            const { list, total } = await (0, index_3.getCommits)(currentPage, this.pageSize, filter);
-            this.commits = list;
-            this.totalCommits = total;
-            this.pagiCommitList.visible = total > 0;
-            this.pagiCommitList.totalPages = Math.ceil(total / this.pageSize) || 1;
-            this.renderCommits();
+            // if (!this.packageInfo) return;
+            // const packageGuid = this.packageInfo.guid;
+            // const filter = {
+            //   packageGuid,
+            //   commitId: this.inputCommitId.value,
+            //   message: this.inputMessage.value,
+            //   startDate: this.inputStartDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || '',
+            //   endDate: this.inputEndDate.value?.format('YYYY-MM-DDTHH:mm:ss\\Z') || ''
+            // }
+            // const currentPage = this.pagiCommitList.currentPage;
+            // const { list, total } = await getCommits(currentPage, this.pageSize, filter);
+            // this.commits = list;
+            // this.totalCommits = total;
+            // this.pagiCommitList.visible = total > 0;
+            // this.pagiCommitList.totalPages = Math.ceil(total / this.pageSize) || 1;
+            // this.renderCommits();
         }
         async getAllPRs() {
             const { name, owner_login } = this.data;
@@ -1879,7 +1877,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             this.iconDetail.enabled = true;
         }
         async refreshPR(hasData) {
-            this.lastCommitId = '';
+            // this.lastCommitId = '';
             this.iconRefresh.enabled = false;
             this.iconDetail.enabled = false;
             if (!hasData)
@@ -1888,49 +1886,101 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             this.iconRefresh.enabled = true;
             this.iconDetail.enabled = true;
         }
-        renderCommits() {
-            this.customTabs.updateCount('commits', this.totalCommits);
-            let nodeItems = [];
-            const { guid } = this.packageInfo;
-            for (const commit of this.commits) {
-                const { committer, message, sha, url, version, date, auditStatus } = commit;
-                nodeItems.push(this.$render("i-hstack", { gap: "0.625rem", margin: { bottom: '1rem' }, padding: { top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }, background: { color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }, boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)", border: { radius: '0.375rem' }, verticalAlignment: "center", horizontalAlignment: "space-between" },
-                    this.$render("i-vstack", { gap: "0.5rem", verticalAlignment: "center", maxWidth: "calc(100% - 200px)" },
-                        this.$render("i-hstack", { gap: "0.5rem" },
-                            this.$render("i-label", { caption: message, wordBreak: "break-word", font: { size: '0.875rem', bold: true } }),
-                            this.$render("i-icon", { name: "external-link-alt", class: "icon-hover", cursor: "pointer", width: "0.9rem", height: "0.9rem", onClick: () => this.openLink(url) })),
-                        this.$render("i-label", { caption: `${this.i18n.get('$version')} ${version || '-'}`, font: { size: '0.875rem' } }),
-                        this.$render("i-label", { caption: `${committer} ${this.i18n.get('$committed')} ${(0, index_3.getTimeAgo)(date, this.i18n)}`, font: { size: '0.75rem' }, opacity: 0.8 })),
-                    this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center", wrap: "wrap" },
-                        auditStatus ? this.$render("i-label", { caption: this.getStatusText(auditStatus), font: { size: '0.875rem' }, background: { color: this.getStatusColor(auditStatus) }, border: { radius: '1rem' }, padding: { left: '0.625rem', right: '0.625rem', top: '0.3125rem', bottom: '0.3125rem' }, minWidth: '5.5rem', class: "text-center" }) : [],
-                        auditStatus && auditStatus !== interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: "$view_record", background: { color: '#212128' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onViewCommitRecord(commit.guid) }) : [],
-                        this.isAuditPR && auditStatus === interface_2.PackageStatus.AUDITING ? this.$render("i-button", { caption: '$audit', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onAuditCommit(commit.guid) }) : [],
-                        this.isProject && this.isProjectOwner && !auditStatus ? this.$render("i-button", { id: `btn-${sha}`, caption: '$submit_for_audit', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, rightIcon: { spin: true, visible: false }, onClick: () => this.onShowRequestAudit(commit.guid, guid, sha, version) }) : [],
-                        this.isProject && this.isProjectOwner && auditStatus === interface_2.PackageStatus.AUDIT_PASSED ? this.$render("i-button", { caption: '$publish', padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, onClick: () => this.onPublish(commit.guid) }) : [])));
-            }
-            if (!nodeItems.length) {
-                nodeItems.push(this.$render("i-hstack", { gap: "0.625rem", margin: { bottom: '1rem' }, padding: { top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }, background: { color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }, boxShadow: "0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)", border: { radius: '0.375rem' }, verticalAlignment: "center", horizontalAlignment: "center" },
-                    this.$render("i-label", { caption: "$there_is_no_commit" })));
-            }
-            this.vStackListCommit.clearInnerHTML();
-            this.vStackListCommit.append(...nodeItems);
-        }
-        onViewCommitRecord(guid) {
-            this.viewReportModal.visible = true;
-            this.auditReport.prInfo = undefined;
-            this.auditReport.commitGuid = guid;
-            this.auditReport.scrollTop = 0;
-        }
+        // private renderCommits() {
+        //   this.customTabs.updateCount('commits', this.totalCommits);
+        //   let nodeItems: HTMLElement[] = [];
+        //   const { guid } = this.packageInfo;
+        //   for (const commit of this.commits) {
+        //     const { committer, message, sha, url, version, date, auditStatus } = commit;
+        //     nodeItems.push(<i-hstack
+        //       gap="0.625rem"
+        //       margin={{ bottom: '1rem' }}
+        //       padding={{ top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }}
+        //       background={{ color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }}
+        //       boxShadow="0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)"
+        //       border={{ radius: '0.375rem' }}
+        //       verticalAlignment="center"
+        //       horizontalAlignment="space-between"
+        //     >
+        //       <i-vstack gap="0.5rem" verticalAlignment="center" maxWidth="calc(100% - 200px)">
+        //         <i-hstack gap="0.5rem">
+        //           <i-label caption={message} wordBreak="break-word" font={{ size: '0.875rem', bold: true }} />
+        //           <i-icon name="external-link-alt" class="icon-hover" cursor="pointer" width="0.9rem" height="0.9rem" onClick={() => this.openLink(url)} />
+        //         </i-hstack>
+        //         <i-label caption={`${this.i18n.get('$version')} ${version || '-'}`} font={{ size: '0.875rem' }} />
+        //         <i-label caption={`${committer} ${this.i18n.get('$committed')} ${getTimeAgo(date, this.i18n)}`} font={{ size: '0.75rem' }} opacity={0.8} />
+        //       </i-vstack>
+        //       <i-hstack gap="1rem" verticalAlignment="center" wrap="wrap">
+        //         {auditStatus ? <i-label
+        //           caption={this.getStatusText(auditStatus)}
+        //           font={{ size: '0.875rem' }}
+        //           background={{ color: this.getStatusColor(auditStatus) }}
+        //           border={{ radius: '1rem' }}
+        //           padding={{ left: '0.625rem', right: '0.625rem', top: '0.3125rem', bottom: '0.3125rem' }}
+        //           minWidth={'5.5rem'}
+        //           class="text-center"
+        //         /> : []}
+        //         {auditStatus && auditStatus !== PackageStatus.AUDITING ? <i-button
+        //           caption="$view_record"
+        //           background={{ color: '#212128' }}
+        //           padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+        //           rightIcon={{ spin: true, visible: false }}
+        //           onClick={() => this.onViewCommitRecord(commit.guid)}
+        //         /> : []}
+        //         {this.isAuditPR && auditStatus === PackageStatus.AUDITING ? <i-button
+        //           caption={'$audit'}
+        //           padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+        //           rightIcon={{ spin: true, visible: false }}
+        //           onClick={() => this.onAuditCommit(commit.guid)}
+        //         /> : []}
+        //         {this.isProject && this.isProjectOwner && !auditStatus ? <i-button
+        //           id={`btn-${sha}`}
+        //           caption={'$submit_for_audit'}
+        //           padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+        //           rightIcon={{ spin: true, visible: false }}
+        //           onClick={() => this.onShowRequestAudit(commit.guid, guid, sha, version)}
+        //         /> : []}
+        //         {this.isProject && this.isProjectOwner && auditStatus === PackageStatus.AUDIT_PASSED ? <i-button
+        //           caption={'$publish'}
+        //           padding={{ top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }}
+        //           onClick={() => this.onPublish(commit.guid)}
+        //         /> : []}
+        //       </i-hstack>
+        //     </i-hstack>);
+        //   }
+        //   if (!nodeItems.length) {
+        //     nodeItems.push(<i-hstack
+        //       gap="0.625rem"
+        //       margin={{ bottom: '1rem' }}
+        //       padding={{ top: '0.75rem', bottom: '0.75rem', left: '0.75rem', right: '0.75rem' }}
+        //       background={{ color: 'linear-gradient(rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.07))' }}
+        //       boxShadow="0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)"
+        //       border={{ radius: '0.375rem' }}
+        //       verticalAlignment="center"
+        //       horizontalAlignment="center"
+        //     >
+        //       <i-label caption="$there_is_no_commit" />
+        //     </i-hstack>)
+        //   }
+        //   this.vStackListCommit.clearInnerHTML();
+        //   this.vStackListCommit.append(...nodeItems);
+        // }
+        // private onViewCommitRecord(guid: string) {
+        //   this.viewReportModal.visible = true;
+        //   this.auditReport.prInfo = undefined;
+        //   this.auditReport.commitGuid = guid;
+        //   this.auditReport.scrollTop = 0;
+        // }
         onViewRecord(mergeId, owner, repo, prNumber) {
             this.viewReportModal.visible = true;
             this.auditReport.commitGuid = undefined;
             this.auditReport.prInfo = { mergeId, owner, repo, prNumber };
             this.auditReport.scrollTop = 0;
         }
-        async onAuditCommit(guid) {
-            let queries = new URLSearchParams({ guid }).toString();
-            window.location.href = `#/audit-commit-form?${queries}`;
-        }
+        // private async onAuditCommit(guid: string) {
+        //   let queries = new URLSearchParams({ guid }).toString();
+        //   window.location.href = `#/audit-commit-form?${queries}`;
+        // }
         async onAuditPR(owner, repo, prNumber) {
             let queries = new URLSearchParams({ owner, repo, prNumber }).toString();
             window.location.href = `#/review-pr-form?${queries}`;
@@ -2016,19 +2066,19 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                 showError();
             }
         }
-        async onShowRequestAudit(commitGuid, packageGuid, sha, version) {
-            if (this.isProject && this.isProjectOwner) {
-                this.selectedCommit = {
-                    commitGuid,
-                    packageGuid,
-                    sha,
-                    version
-                };
-                this.lbCommitId.caption = sha;
-                this.lbCommitVersion.caption = version;
-                this.mdPublish.visible = true;
-            }
-        }
+        // private async onShowRequestAudit(commitGuid: string, packageGuid: string, sha: string, version: string) {
+        //   if (this.isProject && this.isProjectOwner) {
+        //     this.selectedCommit = {
+        //       commitGuid,
+        //       packageGuid,
+        //       sha,
+        //       version
+        //     }
+        //     this.lbCommitId.caption = sha;
+        //     this.lbCommitVersion.caption = version;
+        //     this.mdPublish.visible = true;
+        //   }
+        // }
         onClosePublish() {
             this.mdPublish.visible = false;
         }
@@ -2040,9 +2090,9 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             this.btnPublish.rightIcon.visible = false;
             this.mdPublish.visible = false;
         }
-        async onPublish(guid) {
-            window.location.assign(`/#/publish-commit/${guid}`);
-        }
+        // private async onPublish(guid: string) {
+        //   window.location.assign(`/#/publish-commit/${guid}`);
+        // }
         async onRequestAudit() {
             if (this.isProject && this.isProjectOwner) {
                 this.setMessage({
@@ -2186,14 +2236,16 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             }
         }
         onOpenDeploy() {
-            const repoName = this.data?.full_name;
-            if (typeof this.onDeploy === 'function') {
-                this.onDeploy(repoName);
+            if (this.data.type && ['contract', 'agent'].includes(this.data.type)) {
+                const repoName = this.data?.full_name;
+                if (typeof this.onDeploy === 'function') {
+                    this.onDeploy(repoName);
+                }
             }
         }
         onTabClick(target) {
             this.vStackListPR.visible = target.tag === 'prs';
-            this.vstackCommitTab.visible = target.tag === 'commits';
+            // this.vstackCommitTab.visible = target.tag === 'commits';
         }
         init() {
             const i18nData = {};
@@ -2203,65 +2255,69 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             this.i18n.init({ ...i18nData });
             super.init();
             this.isInitialized = true;
-            this.pagiCommitList.currentPage = 1;
-            this.pagiCommitList.onPageChanged = () => this.getCommits();
-            this.initInputDate();
+            // this.pagiCommitList.currentPage = 1;
+            // this.pagiCommitList.onPageChanged = () => this.getCommits();
+            // this.initInputDate();
             this.renderUI();
         }
         render() {
             return (this.$render("i-vstack", { width: "100%", height: "100%", verticalAlignment: "center", padding: { left: '1rem', right: '1rem' } },
                 this.$render("i-hstack", { gap: "0.625rem", verticalAlignment: "center", horizontalAlignment: "space-between" },
-                    this.$render("i-hstack", { gap: "0.3rem", width: "calc(100% - 15rem)", minWidth: "15rem", padding: { top: '1rem', bottom: '1rem' }, verticalAlignment: "center", wrap: "wrap" },
-                        this.$render("i-vstack", { gap: "0.5rem", width: "48%" },
+                    this.$render("i-stack", { gap: "0.3rem", width: "calc(100% - 15rem)", minWidth: "15rem", padding: { top: '1rem', bottom: '1rem' }, wrap: "wrap", alignItems: "center", mediaQueries: [
+                            {
+                                maxWidth: '767px',
+                                properties: {
+                                    direction: 'vertical',
+                                    alignItems: 'start',
+                                }
+                            }
+                        ] },
+                        this.$render("i-vstack", { gap: "0.5rem", width: "45%", mediaQueries: [
+                                {
+                                    maxWidth: '767px',
+                                    properties: {
+                                        width: '100%'
+                                    }
+                                }
+                            ] },
                             this.$render("i-hstack", { gap: "0.5rem" },
                                 this.$render("i-label", { id: "lbName", font: { size: '1.125rem', bold: true } })),
                             this.$render("i-hstack", { id: "hStackLink", gap: "0.5rem", width: "fit-content", cursor: "pointer", class: "icon-hover" },
                                 this.$render("i-label", { id: "lbPath", font: { size: '0.75rem' }, opacity: 0.8 }),
                                 this.$render("i-icon", { name: "external-link-alt", width: "0.85rem", height: "0.85em", minWidth: "0.85rem" }))),
+                        this.$render("i-hstack", { verticalAlignment: "center", minWidth: '5%' },
+                            this.$render("i-label", { id: "lblType", caption: "" })),
                         this.$render("i-hstack", { width: "3rem", horizontalAlignment: "center" },
                             this.$render("i-label", { id: "lbVersion", font: { size: '0.875rem' } })),
-                        this.$render("i-hstack", { width: "5rem", minWidth: "5rem", horizontalAlignment: "center" },
+                        this.$render("i-hstack", { width: "5rem", horizontalAlignment: "center", mediaQueries: [
+                                {
+                                    maxWidth: '767px',
+                                    properties: {
+                                        justifyContent: 'start'
+                                    }
+                                }
+                            ] },
                             this.$render("i-hstack", { id: "hStackCount", gap: "0.5rem", width: "fit-content", verticalAlignment: "center", tooltip: { trigger: 'hover', content: 'Pull requests' } },
                                 this.$render("i-icon", { name: "retweet", width: "1.25rem", height: "1.25rem", opacity: 0.8 }),
                                 this.$render("i-label", { id: "lbCount", lineHeight: 1, font: { size: '0.75rem', color: Theme.colors.primary.contrastText }, background: { color: Theme.colors.primary.main }, border: { radius: '0.625rem' }, padding: { left: '0.3rem', right: '0.3rem', top: '0.125rem', bottom: '0.125rem' } }))),
                         this.$render("i-hstack", { gap: "0.5rem", width: "calc(52% - 9rem)", minWidth: "11rem", verticalAlignment: "center" },
                             this.$render("i-label", { id: "lbPushedAt", font: { size: '0.875rem' }, opacity: 0.8 }),
                             this.$render("i-icon", { id: "iconRefresh", name: "sync-alt", class: "icon-hover", cursor: "pointer", width: "0.9rem", height: "0.9rem", minWidth: "0.9rem", onClick: () => this.onRefreshData() }))),
-                    this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center" },
-                        this.$render("i-button", { id: "btnEdit", caption: "$edit", stack: { shrink: '0' }, icon: { name: 'pen', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenBuilder }),
-                        this.$render("i-button", { id: "btnDeployer", caption: "$deploy", stack: { shrink: '0' }, icon: { name: 'file-upload', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, visible: false, onClick: this.onOpenDeploy })),
+                    this.$render("i-stack", { gap: "0.5rem", alignItems: "center", mediaQueries: [
+                            {
+                                maxWidth: '767px',
+                                properties: {
+                                    direction: 'vertical'
+                                }
+                            }
+                        ] },
+                        this.$render("i-button", { id: "btnEdit", caption: "$view", stack: { shrink: '0' }, icon: { name: 'eye', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenBuilder }),
+                        this.$render("i-button", { id: "btnDeployer", caption: "$deploy", stack: { shrink: '0' }, icon: { name: 'file-upload', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, enabled: false, onClick: this.onOpenDeploy })),
                     this.$render("i-icon", { id: "iconDetail", name: "angle-down", class: "icon-expansion", cursor: "pointer", width: "1.5rem", height: "1.5rem", stack: { shrink: '0' }, onClick: this.onShowDetail })),
                 this.$render("i-vstack", { id: "tabs", visible: false, width: "100%", maxHeight: '33rem', position: "relative", zIndex: 0 },
                     this.$render("i-scom-widget-repos--tabs", { id: "customTabs", width: "100%", display: "flex", onChanged: this.onTabClick, class: index_css_1.stickyStyle }),
                     this.$render("i-panel", { minHeight: 60, maxHeight: '30rem', overflow: 'auto', padding: { bottom: '1rem' }, class: index_css_1.wrapperStyle },
-                        this.$render("i-vstack", { id: "vStackListPR", verticalAlignment: "center" }),
-                        this.$render("i-vstack", { id: "vstackCommitTab", gap: "1rem", verticalAlignment: "center", visible: false },
-                            this.$render("i-vstack", { gap: "1rem", width: "100%" },
-                                this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center", wrap: "wrap", width: "100%", mediaQueries: [{ maxWidth: '767px', properties: { gap: '1rem' } }] },
-                                    this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "space-between", minWidth: "calc(50% - 1rem)", stack: { grow: '1' } },
-                                        this.$render("i-label", { caption: "$commit_id", width: 80 }),
-                                        this.$render("i-input", { id: "inputCommitId", class: index_css_1.inputStyle, height: 40, width: "calc(100% - 75px)" })),
-                                    this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "space-between", minWidth: "calc(50% - 1rem)", stack: { grow: '1' } },
-                                        this.$render("i-label", { caption: "$title", width: 80 }),
-                                        this.$render("i-input", { id: "inputMessage", class: index_css_1.inputStyle, height: 40, width: "calc(100% - 75px)" }))),
-                                this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center", wrap: "wrap", width: "100%", mediaQueries: [{ maxWidth: '767px', properties: { gap: '1rem' } }] },
-                                    this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "space-between", minWidth: "calc(50% - 1rem)", stack: { grow: '1' } },
-                                        this.$render("i-label", { caption: "$start_date", width: 80 }),
-                                        this.$render("i-vstack", { gap: "0.25rem", width: "calc(100% - 75px)" },
-                                            this.$render("i-datepicker", { id: "inputStartDate", type: "dateTime", placeholder: "dd/mm/yyyy hh:mm", class: index_css_1.inputDateStyle, height: 40, width: "100%", onChanged: this.onStartDateChanged }),
-                                            this.$render("i-label", { id: "lbStartDateErr", font: { color: Theme.colors.error.main } }))),
-                                    this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "space-between", minWidth: "calc(50% - 1rem)", stack: { grow: '1' } },
-                                        this.$render("i-label", { caption: "$end_date", width: 80 }),
-                                        this.$render("i-vstack", { gap: "0.25rem", width: "calc(100% - 75px)" },
-                                            this.$render("i-datepicker", { id: "inputEndDate", type: "dateTime", placeholder: "dd/mm/yyyy hh:mm", class: index_css_1.inputDateStyle, height: 40, width: "100%", onChanged: this.onEndDateChanged }),
-                                            this.$render("i-label", { id: "lbEndDateErr", font: { color: Theme.colors.error.main } })))),
-                                this.$render("i-hstack", { gap: "1rem", verticalAlignment: "center", horizontalAlignment: "end", wrap: "wrap" },
-                                    this.$render("i-button", { id: "btnSync", caption: "$sync", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onSyncCommits }),
-                                    this.$render("i-button", { id: "btnSearch", caption: "$search", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onSearchCommits }),
-                                    this.$render("i-button", { id: "btnClear", caption: "$clear", width: "10rem", padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, background: { color: '#17a2b8' }, onClick: this.onClearSearch }))),
-                            this.$render("i-vstack", { id: "vStackListCommit", verticalAlignment: "center" }),
-                            this.$render("i-vstack", { horizontalAlignment: 'center' },
-                                this.$render("i-pagination", { id: "pagiCommitList", width: "auto", margin: { top: '1rem' }, pageSize: this.pageSize }))))),
+                        this.$render("i-vstack", { id: "vStackListPR", verticalAlignment: "center" }))),
                 this.$render("i-modal", { id: "mdPublish", class: index_css_1.modalStyle, maxWidth: "600px" },
                     this.$render("i-vstack", { width: "100%", gap: "0.625rem", padding: { top: '1.5rem', bottom: '1.5rem', left: '1.5rem', right: '1.5rem' } },
                         this.$render("i-hstack", { gap: "1rem", horizontalAlignment: "space-between", verticalAlignment: "center" },
@@ -2400,6 +2456,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this._listRepos = [];
             this.initedConfig = false;
             this._redirectUri = '';
+            this._selectedType = [];
         }
         get guid() {
             return this._guid;
@@ -2455,6 +2512,9 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             const onlyPRs = this.filterSwitch?.checked ?? false;
             if (onlyPRs) {
                 list = list.filter(v => v.open_issues > 0).sort((a, b) => (0, components_7.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
+            }
+            if (this._selectedType?.length) {
+                list = list.filter(v => this._selectedType.includes(v.type));
             }
             return [...list];
         }
@@ -2620,6 +2680,44 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                 }
             });
         }
+        onShowFilter() {
+            this.mdFilter.parent = this.btnFilter;
+            this.mdFilter.showBackdrop = false;
+            this.mdFilter.visible = true;
+        }
+        onHideFilter() {
+            this.mdFilter.visible = false;
+        }
+        renderFilter() {
+            this.pnlFilter.clearInnerHTML();
+            const items = [
+                { caption: '$widget', value: 'widget' },
+                { caption: '$contract', value: 'contract' },
+                { caption: '$dapp', value: 'dapp' },
+                { caption: '$worker', value: 'worker' },
+                { caption: '$sdk', value: 'sdk' },
+                { caption: '$component', value: 'component' },
+                { caption: '$agent', value: 'agent' },
+            ];
+            for (const item of items) {
+                this.pnlFilter.appendChild(this.$render("i-checkbox", { caption: item.caption, tag: item.value, checked: false, onChanged: (target) => this.onFilterChanged(target) }));
+            }
+        }
+        onFilterChanged(target) {
+            const checked = target.checked;
+            const value = target.tag;
+            if (checked) {
+                this._selectedType.push(value);
+            }
+            else {
+                this._selectedType = this._selectedType.filter(v => v !== value);
+            }
+            if (this.timer)
+                clearTimeout(this.timer);
+            this.timer = setTimeout(() => {
+                this.renderRepos();
+            }, 500);
+        }
         onHide() {
             super.onHide();
             const children = this.vStackRepos?.children || [];
@@ -2634,6 +2732,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             super.init();
             this.isProjectOwner = this.getAttribute('isProjectOwner', true, false);
             this.isProject = this.getAttribute('isProject', true, false);
+            this.renderFilter();
         }
         render() {
             return (this.$render("i-panel", { width: "100%", height: "100%", maxWidth: "75rem", margin: { left: 'auto', right: 'auto' }, padding: { top: '1rem', bottom: '1rem', left: '1rem', right: '1rem' }, class: index_css_3.githubStyle },
@@ -2644,7 +2743,9 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                         this.$render("i-label", { id: "lbOrg", font: { size: '1rem', bold: true, color: Theme.colors.primary.main } }),
                         this.$render("i-label", { id: "lbRepos", font: { size: '1rem' }, opacity: 0.8 }),
                         this.$render("i-icon", { id: "iconRefresh", visible: false, class: "icon-hover", name: "sync-alt", width: "1.25rem", height: "1.25rem", cursor: "pointer", onClick: this.onRefresh }),
-                        this.$render("i-switch", { id: "filterSwitch", checked: false, uncheckedTrackColor: Theme.colors.secondary.main, checkedTrackColor: Theme.colors.primary.main, tooltip: { content: '$show_only_PRs', placement: 'bottom' }, onChanged: this.onSwitchFilter })),
+                        this.$render("i-switch", { id: "filterSwitch", checked: false, uncheckedTrackColor: Theme.colors.secondary.main, checkedTrackColor: Theme.colors.primary.main, tooltip: { content: '$show_only_PRs', placement: 'bottom' }, onChanged: this.onSwitchFilter }),
+                        this.$render("i-hstack", { verticalAlignment: "center", horizontalAlignment: "end", position: "relative", margin: { left: 'auto' } },
+                            this.$render("i-button", { id: "btnFilter", caption: "Filter", icon: { name: 'sliders-h', width: '1rem', height: '1rem' }, stack: { shrink: '0', grow: '0' }, padding: { top: '0.25rem', bottom: '0.25rem', left: '0.75rem', right: '0.75rem' }, onClick: this.onShowFilter }))),
                     this.$render("i-vstack", { id: "vStackRepos", width: "100%" }),
                     this.$render("i-hstack", { horizontalAlignment: "center", margin: { top: '2rem' } },
                         this.$render("i-pagination", { id: "paginationElm", margin: { bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, width: "auto", currentPage: this.pageNumber, totalPages: this.totalPage, onPageChanged: this.onSelectIndex }))),
@@ -2652,7 +2753,13 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                     this.$render("i-panel", { width: '100dvw', height: '100dvh', overflow: 'hidden' },
                         this.$render("i-vstack", { id: "pnlBuilderLoader", position: "absolute", width: "100%", height: "100%", horizontalAlignment: "center", verticalAlignment: "center", padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, background: { color: Theme.background.main }, visible: false },
                             this.$render("i-panel", { class: index_css_3.spinnerStyle })),
-                        this.$render("i-scom-widget-builder", { id: "widgetBuilder", width: '100dvw', height: '100dvh', display: 'flex', onClosed: () => this.closeBuilder() })))));
+                        this.$render("i-scom-widget-builder", { id: "widgetBuilder", width: '100dvw', height: '100dvh', display: 'flex', onClosed: () => this.closeBuilder() }))),
+                this.$render("i-modal", { id: "mdFilter", popupPlacement: "bottomRight", showBackdrop: false, closeOnBackdropClick: false, width: '300px', maxWidth: '100%', border: { radius: '0.25rem' }, boxShadow: Theme.shadows[1], padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' } },
+                    this.$render("i-vstack", { width: "100%", gap: "1rem" },
+                        this.$render("i-hstack", { verticalAlignment: "center", gap: "0.5rem", horizontalAlignment: "space-between", padding: { top: '0.5rem', bottom: '0.5rem' }, border: { bottom: { color: Theme.divider, width: '1px', style: 'solid' } } },
+                            this.$render("i-label", { caption: "Select Type" }),
+                            this.$render("i-icon", { name: "times", fill: Theme.text.primary, width: '1rem', height: '1rem', cursor: "pointer", stack: { shrink: '0', grow: '0' }, onClick: this.onHideFilter })),
+                        this.$render("i-vstack", { id: "pnlFilter", width: "100%" })))));
         }
     };
     __decorate([
@@ -3925,7 +4032,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
                         this.$render("i-hstack", { position: "absolute", height: "100%", verticalAlignment: "center", padding: { left: '1rem' } },
                             this.$render("i-icon", { width: 14, height: 14, name: "search", fill: Theme.input.fontColor })),
                         this.$render("i-input", { id: "edtSearchRepo", width: "100%", height: 40, border: { width: 1, style: 'solid', color: Theme.divider, radius: 8 }, placeholder: "$search_repositories", onChanged: this.onRepoSearch })),
-                    this.$render("i-button", { id: "btnCreateRepo", height: 40, caption: "$create_repository", padding: { top: '0.25rem', bottom: '0.25rem', left: '1rem', right: '1rem' }, border: { radius: 8 }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, icon: { name: 'plus' }, onClick: this.onCreateRepoClick })),
+                    this.$render("i-button", { id: "btnCreateRepo", height: 40, caption: "$create_repository", padding: { top: '0.25rem', bottom: '0.25rem', left: '1rem', right: '1rem' }, border: { radius: 8 }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, icon: { name: 'plus' }, visible: false, onClick: this.onCreateRepoClick })),
                 this.$render("i-panel", { width: "100%" },
                     this.$render("i-vstack", { width: "100%", gap: "1.5rem", margin: { bottom: '1.5rem' } },
                         this.$render("i-scom-widget-repos--github", { id: "githubElm" })))));
