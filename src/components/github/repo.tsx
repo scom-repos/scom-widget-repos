@@ -67,6 +67,7 @@ export class ScomWidgetReposGithubRepo extends Module {
   private mdAlert: Alert;
   private viewReportModal: Modal;
   private auditReport: ScomWidgetReposAuditReport;
+  private btnDeployer: Button;
 
   private selectedCommit: { commitGuid: string, packageGuid: string, version: string, sha: string };
   private mdPublish: Modal;
@@ -177,6 +178,8 @@ export class ScomWidgetReposGithubRepo extends Module {
         { caption: this.i18n.get('$commits'), tag: 'commits', count: 0, hasCount: false }
       ]
     });
+
+    this.btnDeployer.visible = true;
   }
 
   private clearListTimer() {
@@ -874,7 +877,7 @@ export class ScomWidgetReposGithubRepo extends Module {
         padding={{ left: '1rem', right: '1rem' }}
       >
         <i-hstack gap="0.625rem" verticalAlignment="center" horizontalAlignment="space-between">
-          <i-hstack gap="0.3rem" width="calc(100% - 11rem)" minWidth="15rem" padding={{ top: '1rem', bottom: '1rem' }} verticalAlignment="center" wrap="wrap">
+          <i-hstack gap="0.3rem" width="calc(100% - 15rem)" minWidth="15rem" padding={{ top: '1rem', bottom: '1rem' }} verticalAlignment="center" wrap="wrap">
             <i-vstack gap="0.5rem" width="48%">
               <i-hstack gap="0.5rem">
                 <i-label id="lbName" font={{ size: '1.125rem', bold: true }} />
@@ -905,27 +908,36 @@ export class ScomWidgetReposGithubRepo extends Module {
               <i-icon id="iconRefresh" name="sync-alt" class="icon-hover" cursor="pointer" width="0.9rem" height="0.9rem" minWidth="0.9rem" onClick={() => this.onRefreshData()} />
             </i-hstack>
           </i-hstack>
-          <i-button
-            id="btnEdit"
-            caption="$edit"
+          <i-hstack gap="0.5rem" verticalAlignment="center">
+            <i-button
+              id="btnEdit"
+              caption="$edit"
+              stack={{ shrink: '0' }}
+              icon={{ name: 'pen', width: '0.675rem', height: '0.675rem' }}
+              padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
+              font={{ color: Theme.colors.primary.contrastText }}
+              background={{ color: '#17a2b8' }}
+              onClick={this.onOpenBuilder}
+            />
+            <i-button
+              id="btnDeployer"
+              caption="$deploy"
+              stack={{ shrink: '0' }}
+              icon={{ name: 'file-upload', width: '0.675rem', height: '0.675rem' }}
+              padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
+              font={{ color: Theme.colors.primary.contrastText }}
+              background={{ color: '#17a2b8' }}
+              visible={false}
+              onClick={this.onOpenDeploy}
+            />
+          </i-hstack>
+          <i-icon
+            id="iconDetail"
+            name="angle-down" class="icon-expansion"
+            cursor="pointer" width="1.5rem" height="1.5rem"
             stack={{ shrink: '0' }}
-            icon={{ name: 'pen', width: '0.675rem', height: '0.675rem' }}
-            padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
-            font={{ color: Theme.colors.primary.contrastText }}
-            background={{ color: '#17a2b8' }}
-            onClick={this.onOpenBuilder}
+            onClick={this.onShowDetail}
           />
-          <i-button
-            id="btnDeployer"
-            caption="$deploy"
-            stack={{ shrink: '0' }}
-            icon={{ name: 'file-upload', width: '0.675rem', height: '0.675rem' }}
-            padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
-            font={{ color: Theme.colors.primary.contrastText }}
-            background={{ color: '#17a2b8' }}
-            onClick={this.onOpenDeploy}
-          />
-          <i-icon id="iconDetail" name="angle-down" class="icon-expansion" cursor="pointer" width="1.75rem" height="1.75rem" onClick={this.onShowDetail} />
         </i-hstack>
 
         <i-vstack

@@ -723,6 +723,7 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         private mdAlert;
         private viewReportModal;
         private auditReport;
+        private btnDeployer;
         private selectedCommit;
         private mdPublish;
         private lbCommitId;

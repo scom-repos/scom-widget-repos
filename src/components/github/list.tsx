@@ -288,18 +288,18 @@ export default class ScomWidgetReposGithubList extends Module {
 
   private async openDeploy(name: string) {
     if (!this.deployer) {
-      this.deployer = new ScomWidgetReposDeployer(undefined, {
-        contract: name
-      });
-    } else if (this.deployer.contract !== name) {
-      this.deployer.setData(name);
+      this.deployer = await ScomWidgetReposDeployer.create({
+        contract: name,
+      }, undefined);
+    } else {
+      await this.deployer.setData(name);
     }
 
-    const modal = this.deployer.openModal({
+    this.deployer.openModal({
       width: 800,
       maxWidth: '100%',
       height: '100dvh',
-      overflow: {y: 'auto'},
+      overflow: {y: 'auto', x: 'hidden'},
       closeOnBackdropClick: false,
       padding: {top: '0.5rem', right: '0.5rem', bottom: 0, left: '0.5rem'},
       onClose: () => {

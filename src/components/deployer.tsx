@@ -58,15 +58,18 @@ export class ScomWidgetReposDeployer extends Module {
   private async handleInit() {
     if (this.pnlLoader) this.pnlLoader.visible = true;
     this.pnlDeploy.clearInnerHTML();
-    const path = application.currentModulePath;
-    const scconfigPath = `${path}/libs/@scom/contract-deployer/scconfig.json`;
+    let rootDir = application.rootDir;
+    if (rootDir.endsWith('/')) rootDir = rootDir.slice(0, -1);
+    if (rootDir.startsWith('/')) rootDir = rootDir.slice(1);
+    const mainPath = `${window.location.origin}/${rootDir ? rootDir + '/' : ''}libs/@scom/contract-deployer`;
+    const scconfigPath = `${mainPath}/scconfig.json`;
 
     const scconfig = await fetch(scconfigPath).then(res => res.json());
     const contract = (this.contract || '').replace('scom-repos', '@scom');
 
     if (scconfig) {
       scconfig.contract = contract; 
-      scconfig.rootDir = `${path}/libs/@scom/contract-deployer`
+      scconfig.rootDir = mainPath
     }
 
     try {
@@ -76,6 +79,14 @@ export class ScomWidgetReposDeployer extends Module {
       const module = await application.newModule(scconfig.main, scconfig);
       if (module) {
         this.pnlDeploy.append(module);
+        const firstChild = module.firstChild as Panel;
+        const pnlMain = firstChild?.children?.[2] as Panel;
+        
+        if (pnlMain) {
+          const innerModule = await application.newModule("@modules/module1", scconfig);
+          pnlMain.clearInnerHTML();
+          pnlMain.append(innerModule);
+        }
       }
     } catch (err) {
       console.error('deploy error', err);
@@ -120,7 +131,7 @@ export class ScomWidgetReposDeployer extends Module {
         >
           <i-panel class={spinnerStyle} />
         </i-vstack>
-        <i-panel id="pnlDeploy" width="100%" height="100%" />
+        <i-panel id="pnlDeploy" width="100%" height="100%"></i-panel>
       </i-panel>
     )
   }

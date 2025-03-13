@@ -1673,6 +1673,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                     { caption: this.i18n.get('$commits'), tag: 'commits', count: 0, hasCount: false }
                 ]
             });
+            this.btnDeployer.visible = true;
         }
         clearListTimer() {
             for (const item of this.listTimer) {
@@ -2210,7 +2211,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
         render() {
             return (this.$render("i-vstack", { width: "100%", height: "100%", verticalAlignment: "center", padding: { left: '1rem', right: '1rem' } },
                 this.$render("i-hstack", { gap: "0.625rem", verticalAlignment: "center", horizontalAlignment: "space-between" },
-                    this.$render("i-hstack", { gap: "0.3rem", width: "calc(100% - 11rem)", minWidth: "15rem", padding: { top: '1rem', bottom: '1rem' }, verticalAlignment: "center", wrap: "wrap" },
+                    this.$render("i-hstack", { gap: "0.3rem", width: "calc(100% - 15rem)", minWidth: "15rem", padding: { top: '1rem', bottom: '1rem' }, verticalAlignment: "center", wrap: "wrap" },
                         this.$render("i-vstack", { gap: "0.5rem", width: "48%" },
                             this.$render("i-hstack", { gap: "0.5rem" },
                                 this.$render("i-label", { id: "lbName", font: { size: '1.125rem', bold: true } })),
@@ -2226,9 +2227,10 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                         this.$render("i-hstack", { gap: "0.5rem", width: "calc(52% - 9rem)", minWidth: "11rem", verticalAlignment: "center" },
                             this.$render("i-label", { id: "lbPushedAt", font: { size: '0.875rem' }, opacity: 0.8 }),
                             this.$render("i-icon", { id: "iconRefresh", name: "sync-alt", class: "icon-hover", cursor: "pointer", width: "0.9rem", height: "0.9rem", minWidth: "0.9rem", onClick: () => this.onRefreshData() }))),
-                    this.$render("i-button", { id: "btnEdit", caption: "$edit", stack: { shrink: '0' }, icon: { name: 'pen', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenBuilder }),
-                    this.$render("i-button", { id: "btnDeployer", caption: "$deploy", stack: { shrink: '0' }, icon: { name: 'file-upload', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenDeploy }),
-                    this.$render("i-icon", { id: "iconDetail", name: "angle-down", class: "icon-expansion", cursor: "pointer", width: "1.75rem", height: "1.75rem", onClick: this.onShowDetail })),
+                    this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center" },
+                        this.$render("i-button", { id: "btnEdit", caption: "$edit", stack: { shrink: '0' }, icon: { name: 'pen', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenBuilder }),
+                        this.$render("i-button", { id: "btnDeployer", caption: "$deploy", stack: { shrink: '0' }, icon: { name: 'file-upload', width: '0.675rem', height: '0.675rem' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, visible: false, onClick: this.onOpenDeploy })),
+                    this.$render("i-icon", { id: "iconDetail", name: "angle-down", class: "icon-expansion", cursor: "pointer", width: "1.5rem", height: "1.5rem", stack: { shrink: '0' }, onClick: this.onShowDetail })),
                 this.$render("i-vstack", { id: "tabs", visible: false, width: "100%", maxHeight: '33rem', position: "relative", zIndex: 0 },
                     this.$render("i-scom-widget-repos--tabs", { id: "customTabs", width: "100%", display: "flex", onChanged: this.onTabClick, class: index_css_1.stickyStyle }),
                     this.$render("i-panel", { minHeight: 60, maxHeight: '30rem', overflow: 'auto', padding: { bottom: '1rem' }, class: index_css_1.wrapperStyle },
@@ -2316,13 +2318,18 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             if (this.pnlLoader)
                 this.pnlLoader.visible = true;
             this.pnlDeploy.clearInnerHTML();
-            const path = components_6.application.currentModulePath;
-            const scconfigPath = `${path}/libs/@scom/contract-deployer/scconfig.json`;
+            let rootDir = components_6.application.rootDir;
+            if (rootDir.endsWith('/'))
+                rootDir = rootDir.slice(0, -1);
+            if (rootDir.startsWith('/'))
+                rootDir = rootDir.slice(1);
+            const mainPath = `${window.location.origin}/${rootDir ? rootDir + '/' : ''}libs/@scom/contract-deployer`;
+            const scconfigPath = `${mainPath}/scconfig.json`;
             const scconfig = await fetch(scconfigPath).then(res => res.json());
             const contract = (this.contract || '').replace('scom-repos', '@scom');
             if (scconfig) {
                 scconfig.contract = contract;
-                scconfig.rootDir = `${path}/libs/@scom/contract-deployer`;
+                scconfig.rootDir = mainPath;
             }
             try {
                 const content = await this.getContent(contract);
@@ -2332,6 +2339,13 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
                 const module = await components_6.application.newModule(scconfig.main, scconfig);
                 if (module) {
                     this.pnlDeploy.append(module);
+                    const firstChild = module.firstChild;
+                    const pnlMain = firstChild?.children?.[2];
+                    if (pnlMain) {
+                        const innerModule = await components_6.application.newModule("@modules/module1", scconfig);
+                        pnlMain.clearInnerHTML();
+                        pnlMain.append(innerModule);
+                    }
                 }
             }
             catch (err) {
@@ -2587,18 +2601,18 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
         }
         async openDeploy(name) {
             if (!this.deployer) {
-                this.deployer = new deployer_1.ScomWidgetReposDeployer(undefined, {
-                    contract: name
-                });
+                this.deployer = await deployer_1.ScomWidgetReposDeployer.create({
+                    contract: name,
+                }, undefined);
             }
-            else if (this.deployer.contract !== name) {
-                this.deployer.setData(name);
+            else {
+                await this.deployer.setData(name);
             }
-            const modal = this.deployer.openModal({
+            this.deployer.openModal({
                 width: 800,
                 maxWidth: '100%',
                 height: '100dvh',
-                overflow: { y: 'auto' },
+                overflow: { y: 'auto', x: 'hidden' },
                 closeOnBackdropClick: false,
                 padding: { top: '0.5rem', right: '0.5rem', bottom: 0, left: '0.5rem' },
                 onClose: () => {
