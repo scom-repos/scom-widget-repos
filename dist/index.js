@@ -2754,7 +2754,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                         this.$render("i-vstack", { id: "pnlBuilderLoader", position: "absolute", width: "100%", height: "100%", horizontalAlignment: "center", verticalAlignment: "center", padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, background: { color: Theme.background.main }, visible: false },
                             this.$render("i-panel", { class: index_css_3.spinnerStyle })),
                         this.$render("i-scom-widget-builder", { id: "widgetBuilder", width: '100dvw', height: '100dvh', display: 'flex', onClosed: () => this.closeBuilder() }))),
-                this.$render("i-modal", { id: "mdFilter", popupPlacement: "bottomRight", showBackdrop: false, closeOnBackdropClick: false, width: '300px', maxWidth: '100%', border: { radius: '0.25rem' }, boxShadow: Theme.shadows[1], padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' } },
+                this.$render("i-modal", { id: "mdFilter", popupPlacement: "bottomRight", showBackdrop: false, closeOnBackdropClick: false, width: '300px', maxWidth: '100%', border: { radius: '0.25rem' }, boxShadow: Theme.shadows[0], padding: { top: '0.5rem', bottom: '0.5rem', left: '0.5rem', right: '0.5rem' } },
                     this.$render("i-vstack", { width: "100%", gap: "1rem" },
                         this.$render("i-hstack", { verticalAlignment: "center", gap: "0.5rem", horizontalAlignment: "space-between", padding: { top: '0.5rem', bottom: '0.5rem' }, border: { bottom: { color: Theme.divider, width: '1px', style: 'solid' } } },
                             this.$render("i-label", { caption: "Select Type" }),
