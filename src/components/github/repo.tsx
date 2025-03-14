@@ -1,4 +1,4 @@
-import { Module, Container, Styles, VStack, Label, Icon, customElements, ControlElement, Button, HStack, Modal, Input, Pagination, Datepicker, moment, Alert } from "@ijstech/components";
+import { Module, Container, Styles, VStack, Label, Icon, customElements, ControlElement, Button, HStack, Modal, Input, Pagination, Datepicker, moment, Alert, application } from "@ijstech/components";
 import { compareVersions, createNewPackage, createNewPackageVersion, getAllPulls, getAuditPRList, getCommits, getExplorerTxUrl, getMergeMsg, getPackageByNames, getTimeAgo, mergePR, parseContractError, requestAuditCommit, syncCommits, updatePackageVersionIpfsCid, updatePackageVersionToAuditing, uploadDataToIpfs } from "../../utils/index";
 import { inputDateStyle, inputStyle, modalStyle, stickyStyle, wrapperStyle } from "./index.css";
 import { ICommit, ISemanticVersion, PackageStatus } from "../../interface";
@@ -181,7 +181,8 @@ export class ScomWidgetReposGithubRepo extends Module {
       ]
     });
 
-    this.btnDeployer.enabled = type && ['contract', 'agent'].includes(type);
+    // this.btnDeployer.enabled = type && ['contract', 'agent'].includes(type);
+    this.btnDeployer.enabled = true;
   }
 
   private clearListTimer() {
@@ -845,12 +846,12 @@ export class ScomWidgetReposGithubRepo extends Module {
   }
 
   private onOpenDeploy() {
-    if (this.data.type && ['contract', 'agent'].includes(this.data.type)) {
+    // if (this.data.type && ['contract', 'agent'].includes(this.data.type)) {
       const repoName = this.data?.full_name;
       if (typeof this.onDeploy === 'function') {
         this.onDeploy(repoName);
       }
-    }
+    // }
   }
 
   private onTabClick(target: HStack) {

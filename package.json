@@ -13,7 +13,8 @@
         "@scom/scom-buffer": "^0.1.0",
         "@scom/scom-code-editor": "^0.1.6",
         "@scom/scom-designer": "^0.1.22",
-        "@scom/scom-widget-builder": "^0.1.13"
+        "@scom/scom-widget-builder": "^0.1.13",
+        "@scom/scom-enclave-attestation": "^0.1.0"
     },
     "devDependencies": {
         "@ijstech/cli": "^0.1.28",

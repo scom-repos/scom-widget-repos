@@ -8,6 +8,7 @@
         "@scom/ton-core",
         "@scom/scom-code-editor",
         "@scom/scom-designer",
-        "@scom/scom-widget-builder"
+        "@scom/scom-widget-builder",
+        "@scom/scom-enclave-attestation"
     ]
 }
