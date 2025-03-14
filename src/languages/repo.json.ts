@@ -64,7 +64,11 @@ export default {
     "view_record": "View Record",
     "your_repository_has_been_created_successfully": "Your repository has been created successfully.",
     "deploy": "Deploy",
-    "view": "View"
+    "view": "View",
+    "verify": "Verify",
+    'enclave': 'Enclave',
+    'enclave_verification_successful': 'Enclave verification successful',
+    'enclave_verification_failed': 'Enclave verification failed'
   },
   "zh-hant": {
     "all": "全部",
@@ -131,7 +135,11 @@ export default {
     "view_record": "查看記錄",
     "your_repository_has_been_created_successfully": "您的存儲庫已成功創建。",
     "deploy": "部署",
-    "view": "查看"
+    "view": "查看",
+    "verify": "驗證",
+    'enclave': '飛地',
+    'enclave_verification_successful': '飛地驗證成功',
+    'enclave_verification_failed': '飛地驗證失敗'
   },
   "vi": {
     "all": "Tất cả",
@@ -198,6 +206,10 @@ export default {
     "view_record": "Xem bản ghi",
     "your_repository_has_been_created_successfully": "Kho lưu trữ của bạn đã được tạo thành công.",
     "deploy": "Phát hành",
-    "view": "Xem"
+    "view": "Xem",
+    "verify": "Xác minh",
+    'enclave': 'Enclave',
+    'enclave_verification_successful': 'Xác minh Enclave thành công',
+    'enclave_verification_failed': 'Xác minh Enclave thất bại'
   }
 }

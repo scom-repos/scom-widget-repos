@@ -6,10 +6,15 @@ import {
   Panel,
   application,
   Styles,
-  VStack
+  VStack,
+  Input,
+  Label,
+  ComboBox,
+  IComboItem
 } from '@ijstech/components';
 import { getPackage } from '../utils';
 import { spinnerStyle } from './github/index.css';
+import { verify } from '@scom/scom-enclave-attestation';
 
 const Theme = Styles.Theme.ThemeVars;
 
@@ -29,6 +34,9 @@ declare global {
 export class ScomWidgetReposDeployer extends Module {
   private pnlDeploy: Panel;
   private pnlLoader: VStack;
+  private comboEnclave: ComboBox;
+  private enclaveItems: IComboItem[];
+  private lblVerificationMessage: Label;
 
   private _contract: string;
   private cachedContract: Record<string, string> = {};
@@ -52,6 +60,15 @@ export class ScomWidgetReposDeployer extends Module {
 
   async setData(name: string) {
     this.contract = name;
+    this.enclaveItems = [
+      {
+        label: 'Enclave 1',
+        value: 'https://enclave01.decom.dev/attDoc'
+      }
+    ]
+    await this.comboEnclave.ready();
+    this.comboEnclave.items = this.enclaveItems;
+    this.comboEnclave.selectedItem = this.enclaveItems[0];
     await this.handleInit();
   }
 
@@ -68,7 +85,7 @@ export class ScomWidgetReposDeployer extends Module {
     const contract = (this.contract || '').replace('scom-repos', '@scom');
 
     if (scconfig) {
-      scconfig.contract = contract; 
+      scconfig.contract = contract;
       scconfig.rootDir = mainPath
     }
 
@@ -81,7 +98,7 @@ export class ScomWidgetReposDeployer extends Module {
         this.pnlDeploy.append(module);
         const firstChild = module.firstChild as Panel;
         const pnlMain = firstChild?.children?.[2] as Panel;
-        
+
         if (pnlMain) {
           const innerModule = await application.newModule("@modules/module1", scconfig);
           pnlMain.clearInnerHTML();
@@ -104,6 +121,15 @@ export class ScomWidgetReposDeployer extends Module {
     return content;
   }
 
+  private async onOpenVerify() {
+    const moduleDir = application.currentModuleDir;
+    const selectedItem = this.comboEnclave.selectedItem;
+    let doc = new Uint8Array(await (await fetch(selectedItem.value)).arrayBuffer());
+    let rootCert = await (await fetch("certs/aws-root.pem")).text();
+    let { attDoc, verified } = await verify(doc, rootCert);
+    this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
+  }
+
   clear() {
     this.pnlDeploy.clearInnerHTML();
   }
@@ -116,7 +142,7 @@ export class ScomWidgetReposDeployer extends Module {
 
   render() {
     return (
-      <i-panel width="100%" height="100%" padding={{top: '1rem'}}>
+      <i-panel width="100%" height="100%" padding={{ top: '1rem' }}>
         <i-vstack
           id="pnlLoader"
           position="absolute"
@@ -131,7 +157,27 @@ export class ScomWidgetReposDeployer extends Module {
         >
           <i-panel class={spinnerStyle} />
         </i-vstack>
-        <i-panel id="pnlDeploy" width="100%" height="100%"></i-panel>
+        <i-stack direction='vertical' width="100%" height="100%">
+          <i-label caption='$enclave' font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
+          <i-combo-box
+            id="comboEnclave"
+            height={36}
+            width='100%'
+            icon={{ width: 14, height: 14, name: 'angle-down' }}
+            border={{ radius: 5 }}
+          ></i-combo-box>
+          <i-button
+            id="btnVerify"
+            caption="$verify"
+            stack={{ shrink: '0' }}
+            padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
+            font={{ color: Theme.colors.primary.contrastText }}
+            background={{ color: '#17a2b8' }}
+            onClick={this.onOpenVerify}
+          />
+          <i-label id="lblVerificationMessage" caption="" font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
+          <i-panel id="pnlDeploy" width="100%" height="100%"></i-panel>
+        </i-stack>
       </i-panel>
     )
   }
