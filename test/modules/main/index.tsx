@@ -12,7 +12,7 @@ export default class Main extends Module {
       prefix: 'scom',
       baseUrl: '',
       transportEndpoint: 'https://storage.decom.app',
-      scomCid: 'bafybeigc6tp3yaaymlteebkdodx7hfobmlvc5fzssubrro4tpemeulpouy'
+      scomCid: 'bafybeidx5halau22ytcmnat252g4xnuq3catwoxclypygui3aalcek2ty4'
     });
   }
 

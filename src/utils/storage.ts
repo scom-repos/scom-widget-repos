@@ -36,6 +36,19 @@ const getPackage = async (name: string) => {
   return '';
 }
 
+const getScconfig = async (name: string) => {
+  try {
+    const splitted = name.split('/');
+    const contractName = splitted[splitted.length - 1];
+    const cid = getPackageCid(contractName);
+    if (!cid) return;
+    const scconfigJson = await getFileContent(`${cid}/scconfig.json`);
+    return scconfigJson ? JSON.parse(scconfigJson) : null;
+  } catch {}
+
+  return null;
+}
+
 const getFileContent = async (path: string) => {
   try {
     if (path.startsWith('/')) path = path.slice(1);
@@ -48,5 +61,6 @@ const getFileContent = async (path: string) => {
 
 export {
   getPackages,
-  getPackage
+  getPackage,
+  getScconfig
 };

@@ -5,6 +5,11 @@ export * from './API';
 
 export * from './storage';
 
+export {
+  getSchema,
+  workerSchemas
+} from './schema';
+
 const formatDate = (date: string | number, customType?: string) => {
   const formatType = customType || 'DD/MM/YYYY';
   return moment(date).format(formatType);
