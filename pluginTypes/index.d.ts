@@ -239,13 +239,246 @@ declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
 declare module "@scom/scom-widget-repos/utils/storage.ts" {
     const getPackages: () => Promise<void>;
     const getPackage: (name: string) => Promise<string>;
-    export { getPackages, getPackage };
+    const getScconfig: (name: string) => Promise<any>;
+    export { getPackages, getPackage, getScconfig };
+}
+/// <amd-module name="@scom/scom-widget-repos/utils/schema.ts" />
+declare module "@scom/scom-widget-repos/utils/schema.ts" {
+    const getSchema: (scconfig: Record<string, any>, result: any) => any;
+    const workerSchemas: {
+        schema: {
+            type: string;
+            properties: {
+                workers: {
+                    type: string;
+                    description: string;
+                    patternProperties: {
+                        "^[a-zA-Z0-9_-]+$": {
+                            type: string;
+                            properties: {
+                                module: {
+                                    type: string;
+                                    description: string;
+                                };
+                                plugins: {
+                                    type: string;
+                                    description: string;
+                                    properties: {
+                                        cache: {
+                                            type: string;
+                                        };
+                                        db: {
+                                            type: string;
+                                        };
+                                        wallet: {
+                                            type: string;
+                                        };
+                                        fetch: {
+                                            type: string;
+                                        };
+                                    };
+                                    additionalProperties: boolean;
+                                };
+                            };
+                            required: string[];
+                        };
+                    };
+                    additionalProperties: boolean;
+                };
+                scheduler: {
+                    type: string;
+                    properties: {
+                        params: {
+                            type: string;
+                            description: string;
+                            additionalProperties: boolean;
+                        };
+                        schedules: {
+                            type: string;
+                            description: string;
+                            items: {
+                                type: string;
+                                properties: {
+                                    id: {
+                                        type: string;
+                                        description: string;
+                                    };
+                                    cron: {
+                                        type: string;
+                                        description: string;
+                                    };
+                                    worker: {
+                                        type: string;
+                                        description: string;
+                                    };
+                                    params: {
+                                        type: string;
+                                        description: string;
+                                        additionalProperties: boolean;
+                                    };
+                                };
+                                required: string[];
+                            };
+                        };
+                    };
+                    required: string[];
+                };
+                router: {
+                    type: string;
+                    properties: {
+                        baseUrl: {
+                            type: string;
+                            description: string;
+                        };
+                        routes: {
+                            type: string;
+                            description: string;
+                            items: {
+                                type: string;
+                                properties: {
+                                    methods: {
+                                        type: string;
+                                        description: string;
+                                        items: {
+                                            type: string;
+                                            enum: string[];
+                                        };
+                                    };
+                                    url: {
+                                        type: string;
+                                        description: string;
+                                    };
+                                    worker: {
+                                        type: string;
+                                        description: string;
+                                    };
+                                };
+                                required: string[];
+                            };
+                        };
+                    };
+                    required: string[];
+                };
+            };
+            required: string[];
+        };
+        uischema: {
+            type: string;
+            elements: ({
+                type: string;
+                label: string;
+                elements: {
+                    type: string;
+                    scope: string;
+                    options: {
+                        detail: {
+                            type: string;
+                            elements: ({
+                                type: string;
+                                scope: string;
+                                label?: undefined;
+                                elements?: undefined;
+                            } | {
+                                type: string;
+                                label: string;
+                                elements: {
+                                    type: string;
+                                    scope: string;
+                                }[];
+                                scope?: undefined;
+                            })[];
+                        };
+                    };
+                }[];
+            } | {
+                type: string;
+                label: string;
+                elements: ({
+                    type: string;
+                    scope: string;
+                    options: {
+                        multi: boolean;
+                        format: string;
+                        detail?: undefined;
+                    };
+                } | {
+                    type: string;
+                    scope: string;
+                    options: {
+                        detail: {
+                            type: string;
+                            elements: ({
+                                type: string;
+                                scope: string;
+                                label?: undefined;
+                                options?: undefined;
+                            } | {
+                                type: string;
+                                scope: string;
+                                label: string;
+                                options?: undefined;
+                            } | {
+                                type: string;
+                                scope: string;
+                                options: {
+                                    enum: any[];
+                                    multi?: undefined;
+                                    format?: undefined;
+                                };
+                                label?: undefined;
+                            } | {
+                                type: string;
+                                scope: string;
+                                options: {
+                                    multi: boolean;
+                                    format: string;
+                                    enum?: undefined;
+                                };
+                                label?: undefined;
+                            })[];
+                        };
+                        multi?: undefined;
+                        format?: undefined;
+                    };
+                })[];
+            } | {
+                type: string;
+                label: string;
+                elements: ({
+                    type: string;
+                    scope: string;
+                    options?: undefined;
+                } | {
+                    type: string;
+                    scope: string;
+                    options: {
+                        detail: {
+                            type: string;
+                            elements: ({
+                                type: string;
+                                scope: string;
+                                options?: undefined;
+                            } | {
+                                type: string;
+                                scope: string;
+                                options: {
+                                    enum: any[];
+                                };
+                            })[];
+                        };
+                    };
+                })[];
+            })[];
+        };
+    };
+    export { getSchema, workerSchemas };
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/index.ts" />
 declare module "@scom/scom-widget-repos/utils/index.ts" {
     import { I18n } from '@ijstech/components';
     export * from "@scom/scom-widget-repos/utils/API.ts";
     export * from "@scom/scom-widget-repos/utils/storage.ts";
+    export { getSchema, workerSchemas } from "@scom/scom-widget-repos/utils/schema.ts";
     const formatDate: (date: string | number, customType?: string) => string;
     const getTimeAgo: (timestamp: string, i18n: I18n) => string;
     const getExplorerTxUrl: (txHash: string, chainId?: number) => string;
@@ -799,6 +1032,7 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         private comboEnclave;
         private enclaveItems;
         private lblVerificationMessage;
+        private jsonForm;
         private _contract;
         private cachedContract;
         get contract(): string;
@@ -807,6 +1041,7 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         static create(options?: any, parent?: Container): Promise<ScomWidgetReposDeployer>;
         setData(name: string): Promise<void>;
         private handleInit;
+        private renderJsonForm;
         private getContent;
         private onOpenVerify;
         clear(): void;
@@ -844,6 +1079,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private itemEnd;
         private paginationElm;
         private mdWidgetBuilder;
+        private pnlBuilder;
         private widgetBuilder;
         private deployer;
         private mdFilter;

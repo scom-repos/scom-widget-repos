@@ -7,12 +7,14 @@ import {
   application,
   Styles,
   VStack,
-  Input,
   Label,
   ComboBox,
-  IComboItem
+  IComboItem,
+  Form,
+  IDataSchema,
+  IUISchema
 } from '@ijstech/components';
-import { getPackage } from '../utils';
+import { getPackage, getScconfig, getSchema, workerSchemas } from '../utils';
 import { spinnerStyle } from './github/index.css';
 import { verify } from '@scom/scom-enclave-attestation';
 
@@ -37,6 +39,7 @@ export class ScomWidgetReposDeployer extends Module {
   private comboEnclave: ComboBox;
   private enclaveItems: IComboItem[];
   private lblVerificationMessage: Label;
+  private jsonForm: Form;
 
   private _contract: string;
   private cachedContract: Record<string, string> = {};
@@ -109,7 +112,42 @@ export class ScomWidgetReposDeployer extends Module {
       console.error('deploy error', err);
     }
 
+    const pkgScconfig = await getScconfig(contract);
+    if (pkgScconfig?.type === 'worker') {
+      this.renderJsonForm(pkgScconfig);
+    }
+
     if (this.pnlLoader) this.pnlLoader.visible = false;
+  }
+
+  private renderJsonForm(scconfig: Record<string, any>) {
+    this.jsonForm.clearFormData();
+    // const schemaObj: IDataSchema = {
+    //   "type": "object",
+    //   "properties": {}
+    // }
+    this.jsonForm.jsonSchema = workerSchemas.schema as IDataSchema;
+    this.jsonForm.uiSchema = workerSchemas.uischema as IUISchema;
+    this.jsonForm.formOptions = {
+      columnWidth: '100%',
+      columnsPerRow: 1,
+      confirmButtonOptions: {
+        caption: '$confirm',
+        backgroundColor: Theme.colors.primary.main,
+        fontColor: Theme.colors.primary.contrastText,
+        hide: false,
+        onClick: async () => {
+        }
+      },
+      dateTimeFormat: {
+        date: 'YYYY-MM-DD',
+        time: 'HH:mm:ss',
+        dateTime: 'MM/DD/YYYY HH:mm'
+      },
+    };
+    this.jsonForm.renderForm();
+    this.jsonForm.visible = true;
+    this.jsonForm.setFormData(scconfig);
   }
 
   private async getContent(contract: string) {
@@ -176,6 +214,9 @@ export class ScomWidgetReposDeployer extends Module {
             onClick={this.onOpenVerify}
           />
           <i-label id="lblVerificationMessage" caption="" font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
+          <i-stack gap="0.5rem">
+            <i-form id="jsonForm" width="100%" height="100%" visible={false}></i-form>
+          </i-stack>
           <i-panel id="pnlDeploy" width="100%" height="100%"></i-panel>
         </i-stack>
       </i-panel>
