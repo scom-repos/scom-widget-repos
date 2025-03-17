@@ -522,6 +522,10 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             your_repository_has_been_created_successfully: string;
             deploy: string;
             view: string;
+            verify: string;
+            enclave: string;
+            enclave_verification_successful: string;
+            enclave_verification_failed: string;
         };
         "zh-hant": {
             all: string;
@@ -589,6 +593,10 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             your_repository_has_been_created_successfully: string;
             deploy: string;
             view: string;
+            verify: string;
+            enclave: string;
+            enclave_verification_successful: string;
+            enclave_verification_failed: string;
         };
         vi: {
             all: string;
@@ -656,6 +664,10 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             your_repository_has_been_created_successfully: string;
             deploy: string;
             view: string;
+            verify: string;
+            enclave: string;
+            enclave_verification_successful: string;
+            enclave_verification_failed: string;
         };
     };
     export default _default_2;
@@ -784,6 +796,9 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
     export class ScomWidgetReposDeployer extends Module {
         private pnlDeploy;
         private pnlLoader;
+        private comboEnclave;
+        private enclaveItems;
+        private lblVerificationMessage;
         private _contract;
         private cachedContract;
         get contract(): string;
@@ -793,6 +808,7 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         setData(name: string): Promise<void>;
         private handleInit;
         private getContent;
+        private onOpenVerify;
         clear(): void;
         init(): void;
         render(): any;

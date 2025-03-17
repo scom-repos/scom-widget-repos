@@ -1388,7 +1388,11 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "view_record": "View Record",
             "your_repository_has_been_created_successfully": "Your repository has been created successfully.",
             "deploy": "Deploy",
-            "view": "View"
+            "view": "View",
+            "verify": "Verify",
+            'enclave': 'Enclave',
+            'enclave_verification_successful': 'Enclave verification successful',
+            'enclave_verification_failed': 'Enclave verification failed'
         },
         "zh-hant": {
             "all": "全部",
@@ -1455,7 +1459,11 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "view_record": "查看記錄",
             "your_repository_has_been_created_successfully": "您的存儲庫已成功創建。",
             "deploy": "部署",
-            "view": "查看"
+            "view": "查看",
+            "verify": "驗證",
+            'enclave': '飛地',
+            'enclave_verification_successful': '飛地驗證成功',
+            'enclave_verification_failed': '飛地驗證失敗'
         },
         "vi": {
             "all": "Tất cả",
@@ -1522,7 +1530,11 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "view_record": "Xem bản ghi",
             "your_repository_has_been_created_successfully": "Kho lưu trữ của bạn đã được tạo thành công.",
             "deploy": "Phát hành",
-            "view": "Xem"
+            "view": "Xem",
+            "verify": "Xác minh",
+            'enclave': 'Enclave',
+            'enclave_verification_successful': 'Xác minh Enclave thành công',
+            'enclave_verification_failed': 'Xác minh Enclave thất bại'
         }
     };
 });
@@ -1638,7 +1650,8 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
                     // { caption: this.i18n.get('$commits'), tag: 'commits', count: 0, hasCount: false }
                 ]
             });
-            this.btnDeployer.enabled = type && ['contract', 'agent'].includes(type);
+            // this.btnDeployer.enabled = type && ['contract', 'agent'].includes(type);
+            this.btnDeployer.enabled = true;
         }
         clearListTimer() {
             for (const item of this.listTimer) {
@@ -2236,12 +2249,12 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
             }
         }
         onOpenDeploy() {
-            if (this.data.type && ['contract', 'agent'].includes(this.data.type)) {
-                const repoName = this.data?.full_name;
-                if (typeof this.onDeploy === 'function') {
-                    this.onDeploy(repoName);
-                }
+            // if (this.data.type && ['contract', 'agent'].includes(this.data.type)) {
+            const repoName = this.data?.full_name;
+            if (typeof this.onDeploy === 'function') {
+                this.onDeploy(repoName);
             }
+            // }
         }
         onTabClick(target) {
             this.vStackListPR.visible = target.tag === 'prs';
@@ -2345,7 +2358,7 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
     ], ScomWidgetReposGithubRepo);
     exports.ScomWidgetReposGithubRepo = ScomWidgetReposGithubRepo;
 });
-define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts"], function (require, exports, components_6, utils_1, index_css_2) {
+define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-enclave-attestation"], function (require, exports, components_6, utils_1, index_css_2, scom_enclave_attestation_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposDeployer = void 0;
@@ -2368,6 +2381,15 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         }
         async setData(name) {
             this.contract = name;
+            this.enclaveItems = [
+                {
+                    label: 'Enclave 1',
+                    value: 'https://enclave01.decom.dev/attDoc'
+                }
+            ];
+            await this.comboEnclave.ready();
+            this.comboEnclave.items = this.enclaveItems;
+            this.comboEnclave.selectedItem = this.enclaveItems[0];
             await this.handleInit();
         }
         async handleInit() {
@@ -2419,6 +2441,14 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             this.cachedContract[contract] = content;
             return content;
         }
+        async onOpenVerify() {
+            const moduleDir = components_6.application.currentModuleDir;
+            const selectedItem = this.comboEnclave.selectedItem;
+            let doc = new Uint8Array(await (await fetch(selectedItem.value)).arrayBuffer());
+            let rootCert = await (await fetch("certs/aws-root.pem")).text();
+            let { attDoc, verified } = await (0, scom_enclave_attestation_1.verify)(doc, rootCert);
+            this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
+        }
         clear() {
             this.pnlDeploy.clearInnerHTML();
         }
@@ -2432,7 +2462,12 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             return (this.$render("i-panel", { width: "100%", height: "100%", padding: { top: '1rem' } },
                 this.$render("i-vstack", { id: "pnlLoader", position: "absolute", width: "100%", height: "100%", minHeight: 400, horizontalAlignment: "center", verticalAlignment: "center", background: { color: Theme.background.main }, padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, visible: false },
                     this.$render("i-panel", { class: index_css_2.spinnerStyle })),
-                this.$render("i-panel", { id: "pnlDeploy", width: "100%", height: "100%" })));
+                this.$render("i-stack", { direction: 'vertical', width: "100%", height: "100%" },
+                    this.$render("i-label", { caption: '$enclave', font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
+                    this.$render("i-combo-box", { id: "comboEnclave", height: 36, width: '100%', icon: { width: 14, height: 14, name: 'angle-down' }, border: { radius: 5 } }),
+                    this.$render("i-button", { id: "btnVerify", caption: "$verify", stack: { shrink: '0' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenVerify }),
+                    this.$render("i-label", { id: "lblVerificationMessage", caption: "", font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
+                    this.$render("i-panel", { id: "pnlDeploy", width: "100%", height: "100%" }))));
         }
     };
     ScomWidgetReposDeployer = __decorate([

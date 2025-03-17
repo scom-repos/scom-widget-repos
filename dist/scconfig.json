@@ -1,9 +1,10 @@
 {
     "name": "@scom/scom-widget-repos",
     "type": "widget",
-    "version": "0.1.9",
+    "version": "0.1.12",
     "dependencies": [
         "@ijstech/components",
-        "@ijstech/eth-wallet"
+        "@ijstech/eth-wallet",
+        "@scom/scom-enclave-attestation"
     ]
 }
