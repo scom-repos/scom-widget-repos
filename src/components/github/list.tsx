@@ -1,7 +1,6 @@
 import { customModule, Module, Container, Panel, VStack, Label, observable, Pagination, Icon, customElements, ControlElement, Styles, Modal, Switch, moment, application, Button, Checkbox } from "@ijstech/components";
 import { ScomWidgetReposGithubRepo } from "./repo";
 import { customModalStyle, githubStyle, spinnerStyle } from "./index.css";
-import { ScomWidgetBuilder } from "@scom/scom-widget-builder";
 import { getStorageConfig } from "../../store/index";
 import { repoJson } from "../../languages/index";
 import { ScomWidgetReposDeployer } from "../deployer";
@@ -41,7 +40,8 @@ export default class ScomWidgetReposGithubList extends Module {
   private itemEnd = pageSize;
   private paginationElm: Pagination;
   private mdWidgetBuilder: Modal;
-  private widgetBuilder: ScomWidgetBuilder;
+  private pnlBuilder: Panel;
+  private widgetBuilder: any;
   private deployer: ScomWidgetReposDeployer;
   private mdFilter: Modal;
   private pnlFilter: Panel;
@@ -259,6 +259,18 @@ export default class ScomWidgetReposGithubList extends Module {
   private async showBuilder(name: string) {
     this.mdWidgetBuilder.visible = true;
     this.pnlBuilderLoader.visible = true;
+    if (!this.widgetBuilder) {
+      const pack = await application.loadPackage('@scom/scom-widget-builder');
+      this.widgetBuilder = await pack['ScomWidgetBuilder'].create({
+        id: 'widgetBuilder',
+        width: '100dvw',
+        height: '100dvh',
+        display: 'flex',
+        onClosed: () => this.closeBuilder()
+      }, undefined);
+      this.widgetBuilder.parent = this.pnlBuilder;
+    }
+
     const config: any = getStorageConfig();
     if (!this.initedConfig && config.transportEndpoint) {
       this.initedConfig = true;
@@ -462,7 +474,7 @@ export default class ScomWidgetReposGithubList extends Module {
           onClose={this.onBuilderClose}
           class={customModalStyle}
         >
-          <i-panel width={'100dvw'} height={'100dvh'} overflow={'hidden'}>
+          <i-panel id="pnlBuilder" width={'100dvw'} height={'100dvh'} overflow={'hidden'}>
             <i-vstack
               id="pnlBuilderLoader"
               position="absolute"
@@ -476,13 +488,13 @@ export default class ScomWidgetReposGithubList extends Module {
             >
               <i-panel class={spinnerStyle} />
             </i-vstack>
-            <i-scom-widget-builder
+            {/* <i-scom-widget-builder
               id="widgetBuilder"
               width={'100dvw'}
               height={'100dvh'}
               display={'flex'}
               onClosed={() => this.closeBuilder()}
-            ></i-scom-widget-builder>
+            ></i-scom-widget-builder> */}
           </i-panel>
         </i-modal>
         <i-modal

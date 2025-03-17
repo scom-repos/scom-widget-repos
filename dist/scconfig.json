@@ -4,10 +4,6 @@
     "version": "0.1.9",
     "dependencies": [
         "@ijstech/components",
-        "@ijstech/eth-wallet",
-        "@scom/ton-core",
-        "@scom/scom-code-editor",
-        "@scom/scom-designer",
-        "@scom/scom-widget-builder"
+        "@ijstech/eth-wallet"
     ]
 }

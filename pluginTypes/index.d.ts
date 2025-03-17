@@ -828,6 +828,7 @@ declare module "@scom/scom-widget-repos/components/github/list.tsx" {
         private itemEnd;
         private paginationElm;
         private mdWidgetBuilder;
+        private pnlBuilder;
         private widgetBuilder;
         private deployer;
         private mdFilter;
