@@ -6,8 +6,7 @@ export * from './API';
 export * from './storage';
 
 export {
-  getSchema,
-  workerSchemas
+  getWorkersSchemas
 } from './schema';
 
 const formatDate = (date: string | number, customType?: string) => {

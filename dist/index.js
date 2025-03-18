@@ -706,7 +706,7 @@ define("@scom/scom-widget-repos/utils/API.ts", ["require", "exports", "@ijstech/
 define("@scom/scom-widget-repos/components/github/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.customModalStyle = exports.wrapperStyle = exports.stickyStyle = exports.childTabStyle = exports.tabStyle = exports.inputDateStyle = exports.textareaStyle = exports.inputStyle = exports.modalStyle = exports.spinnerStyle = exports.githubStyle = void 0;
+    exports.customExpandStyle = exports.customModalStyle = exports.wrapperStyle = exports.stickyStyle = exports.childTabStyle = exports.tabStyle = exports.inputDateStyle = exports.textareaStyle = exports.inputStyle = exports.modalStyle = exports.spinnerStyle = exports.githubStyle = void 0;
     const Theme = components_3.Styles.Theme.ThemeVars;
     exports.githubStyle = components_3.Styles.style({
         $nest: {
@@ -983,6 +983,14 @@ define("@scom/scom-widget-repos/components/github/index.css.ts", ["require", "ex
             }
         }
     });
+    exports.customExpandStyle = components_3.Styles.style({
+        $nest: {
+            '.modal-wrapper': {
+                paddingLeft: '0 !important',
+                paddingTop: '0 !important'
+            }
+        }
+    });
 });
 define("@scom/scom-widget-repos/utils/storage.ts", ["require", "exports", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, index_2) {
     "use strict";
@@ -1056,290 +1064,312 @@ define("@scom/scom-widget-repos/utils/storage.ts", ["require", "exports", "@scom
 define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.workerSchemas = exports.getSchema = void 0;
-    const getSchema = (scconfig, result) => {
-        for (const key in scconfig) {
-            const value = scconfig[key];
-            if (typeof value === 'object') {
-                const childSchema = {
-                    "type": "object",
-                    "properties": {}
-                };
-                result.properties[key] = childSchema;
-                getSchema(value, result.properties[key]);
-            }
-            else {
-                result.properties[key] = {
-                    type: 'string'
-                };
-            }
-            return result;
+    exports.getWorkersSchemas = void 0;
+    ///<amd-module name='@scom/scom-widget-repos/utils/schema.ts'/> 
+    function getWorkersSchema(workers) {
+        if (!workers)
+            return {};
+        const result = {
+            "properties": {}
+        };
+        for (const key in workers) {
+            result.properties[key] = {
+                "type": 'object',
+                "properties": {
+                    "module": {
+                        "type": "string",
+                        "description": "Module path for the worker"
+                    },
+                    "plugins": {
+                        "type": "object",
+                        "description": "Predefined plugins for the worker",
+                        "properties": {
+                            "cache": {
+                                "type": "boolean"
+                            },
+                            "db": {
+                                "type": "boolean"
+                            },
+                            "wallet": {
+                                "type": "boolean"
+                            },
+                            "fetch": {
+                                "type": "boolean"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "required": ["module", "plugins"]
+            };
         }
-    };
-    exports.getSchema = getSchema;
-    const workerSchemas = {
-        "schema": {
-            "type": "object",
-            "properties": {
-                "workers": {
-                    "type": "object",
-                    "description": "Map of worker definitions. The key is the worker name.",
-                    "patternProperties": {
-                        "^[a-zA-Z0-9_-]+$": {
-                            "type": "object",
-                            "properties": {
-                                "module": {
-                                    "type": "string",
-                                    "description": "Module path for the worker"
+        return result.properties;
+    }
+    const getWorkersSchemas = (scconfig) => {
+        return {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "workers": {
+                        "type": "object",
+                        "description": "Map of worker definitions. The key is the worker name.",
+                        "patternProperties": {
+                            "^[a-zA-Z0-9_-]+$": {
+                                "type": "object",
+                                "properties": {
+                                    "module": {
+                                        "type": "string",
+                                        "description": "Module path for the worker"
+                                    },
+                                    "plugins": {
+                                        "type": "object",
+                                        "description": "Predefined plugins for the worker",
+                                        "properties": {
+                                            "cache": {
+                                                "type": "boolean"
+                                            },
+                                            "db": {
+                                                "type": "boolean"
+                                            },
+                                            "wallet": {
+                                                "type": "boolean"
+                                            },
+                                            "fetch": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "additionalProperties": false
+                                    }
                                 },
-                                "plugins": {
+                                "required": ["module", "plugins"]
+                            }
+                        },
+                        "additionalProperties": false,
+                        "properties": getWorkersSchema(scconfig.workers)
+                    },
+                    "scheduler": {
+                        "type": "object",
+                        "properties": {
+                            "params": {
+                                "type": "object",
+                                "description": "Custom scheduler parameters",
+                                "additionalProperties": true
+                            },
+                            "schedules": {
+                                "type": "array",
+                                "description": "Array of schedule items",
+                                "items": {
                                     "type": "object",
-                                    "description": "Predefined plugins for the worker",
                                     "properties": {
-                                        "cache": {
-                                            "type": "boolean"
+                                        "id": {
+                                            "type": "string",
+                                            "description": "Unique identifier for the schedule"
                                         },
-                                        "db": {
-                                            "type": "boolean"
+                                        "cron": {
+                                            "type": "string",
+                                            "description": "Cron expression for schedule timing"
                                         },
-                                        "wallet": {
-                                            "type": "boolean"
+                                        "worker": {
+                                            "type": "string",
+                                            "description": "Worker to run (must match a key in workers)"
                                         },
-                                        "fetch": {
-                                            "type": "boolean"
+                                        "params": {
+                                            "type": "object",
+                                            "description": "Custom parameters for the schedule",
+                                            "additionalProperties": true
                                         }
                                     },
-                                    "additionalProperties": false
+                                    "required": ["id", "cron", "worker", "params"]
+                                }
+                            }
+                        },
+                        "required": ["schedules"]
+                    },
+                    "router": {
+                        "type": "object",
+                        "properties": {
+                            "baseUrl": {
+                                "type": "string",
+                                "description": "Base URL for the router"
+                            },
+                            "routes": {
+                                "type": "array",
+                                "description": "Array of route definitions",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "methods": {
+                                            "type": "array",
+                                            "description": "HTTP methods allowed for this route",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
+                                            }
+                                        },
+                                        "url": {
+                                            "type": "string",
+                                            "description": "Route URL (path)"
+                                        },
+                                        "worker": {
+                                            "type": "string",
+                                            "description": "Worker assigned to this route (must match a key in workers)"
+                                        }
+                                    },
+                                    "required": ["methods", "url", "worker"]
+                                }
+                            }
+                        },
+                        "required": ["routes"]
+                    }
+                },
+                "required": ["workers", "scheduler", "router"]
+            },
+            "uischema": {
+                "type": "VerticalLayout",
+                "elements": [
+                    {
+                        "type": "Group",
+                        "label": "Workers",
+                        "elements": [
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/workers",
+                                "options": {
+                                    "detail": {
+                                        "type": "VerticalLayout",
+                                        "elements": [
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/module"
+                                            },
+                                            {
+                                                "type": "Group",
+                                                "label": "Plugins",
+                                                "elements": [
+                                                    {
+                                                        "type": "Control",
+                                                        "scope": "#/properties/plugins/properties/cache"
+                                                    },
+                                                    {
+                                                        "type": "Control",
+                                                        "scope": "#/properties/plugins/properties/db"
+                                                    },
+                                                    {
+                                                        "type": "Control",
+                                                        "scope": "#/properties/plugins/properties/wallet"
+                                                    },
+                                                    {
+                                                        "type": "Control",
+                                                        "scope": "#/properties/plugins/properties/fetch"
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "type": "Group",
+                        "label": "Scheduler",
+                        "elements": [
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/scheduler/properties/params",
+                                "options": {
+                                    "multi": true,
+                                    "format": "json"
                                 }
                             },
-                            "required": ["module", "plugins"]
-                        }
-                    },
-                    "additionalProperties": false
-                },
-                "scheduler": {
-                    "type": "object",
-                    "properties": {
-                        "params": {
-                            "type": "object",
-                            "description": "Custom scheduler parameters",
-                            "additionalProperties": true
-                        },
-                        "schedules": {
-                            "type": "array",
-                            "description": "Array of schedule items",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "id": {
-                                        "type": "string",
-                                        "description": "Unique identifier for the schedule"
-                                    },
-                                    "cron": {
-                                        "type": "string",
-                                        "description": "Cron expression for schedule timing"
-                                    },
-                                    "worker": {
-                                        "type": "string",
-                                        "description": "Worker to run (must match a key in workers)"
-                                    },
-                                    "params": {
-                                        "type": "object",
-                                        "description": "Custom parameters for the schedule",
-                                        "additionalProperties": true
-                                    }
-                                },
-                                "required": ["id", "cron", "worker", "params"]
-                            }
-                        }
-                    },
-                    "required": ["schedules"]
-                },
-                "router": {
-                    "type": "object",
-                    "properties": {
-                        "baseUrl": {
-                            "type": "string",
-                            "description": "Base URL for the router"
-                        },
-                        "routes": {
-                            "type": "array",
-                            "description": "Array of route definitions",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "methods": {
-                                        "type": "array",
-                                        "description": "HTTP methods allowed for this route",
-                                        "items": {
-                                            "type": "string",
-                                            "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-                                        }
-                                    },
-                                    "url": {
-                                        "type": "string",
-                                        "description": "Route URL (path)"
-                                    },
-                                    "worker": {
-                                        "type": "string",
-                                        "description": "Worker assigned to this route (must match a key in workers)"
-                                    }
-                                },
-                                "required": ["methods", "url", "worker"]
-                            }
-                        }
-                    },
-                    "required": ["routes"]
-                }
-            },
-            "required": ["workers", "scheduler", "router"]
-        },
-        "uischema": {
-            "type": "VerticalLayout",
-            "elements": [
-                {
-                    "type": "Group",
-                    "label": "Workers",
-                    "elements": [
-                        {
-                            "type": "Control",
-                            "scope": "#/properties/workers",
-                            "options": {
-                                "detail": {
-                                    "type": "VerticalLayout",
-                                    "elements": [
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/module"
-                                        },
-                                        {
-                                            "type": "Group",
-                                            "label": "Plugins",
-                                            "elements": [
-                                                {
-                                                    "type": "Control",
-                                                    "scope": "#/properties/plugins/properties/cache"
-                                                },
-                                                {
-                                                    "type": "Control",
-                                                    "scope": "#/properties/plugins/properties/db"
-                                                },
-                                                {
-                                                    "type": "Control",
-                                                    "scope": "#/properties/plugins/properties/wallet"
-                                                },
-                                                {
-                                                    "type": "Control",
-                                                    "scope": "#/properties/plugins/properties/fetch"
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/scheduler/properties/schedules",
+                                "options": {
+                                    "detail": {
+                                        "type": "VerticalLayout",
+                                        "elements": [
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/id"
+                                            },
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/cron",
+                                                "label": "Cron Expression"
+                                            },
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/worker",
+                                                "options": {
+                                                    "enum": []
+                                                    /* This dropdown should be populated with keys from "workers" */
                                                 }
-                                            ]
-                                        }
-                                    ]
+                                            },
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/params",
+                                                "options": {
+                                                    "multi": true,
+                                                    "format": "json"
+                                                }
+                                            }
+                                        ]
+                                    }
                                 }
                             }
-                        }
-                    ]
-                },
-                {
-                    "type": "Group",
-                    "label": "Scheduler",
-                    "elements": [
-                        {
-                            "type": "Control",
-                            "scope": "#/properties/scheduler/properties/params",
-                            "options": {
-                                "multi": true,
-                                "format": "json"
-                            }
-                        },
-                        {
-                            "type": "Control",
-                            "scope": "#/properties/scheduler/properties/schedules",
-                            "options": {
-                                "detail": {
-                                    "type": "VerticalLayout",
-                                    "elements": [
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/id"
-                                        },
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/cron",
-                                            "label": "Cron Expression"
-                                        },
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/worker",
-                                            "options": {
-                                                "enum": []
-                                                /* This dropdown should be populated with keys from "workers" */
+                        ]
+                    },
+                    {
+                        "type": "Group",
+                        "label": "Router",
+                        "elements": [
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/router/properties/baseUrl"
+                            },
+                            {
+                                "type": "Control",
+                                "scope": "#/properties/router/properties/routes",
+                                "options": {
+                                    "detail": {
+                                        "type": "VerticalLayout",
+                                        "elements": [
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/methods"
+                                            },
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/url"
+                                            },
+                                            {
+                                                "type": "Control",
+                                                "scope": "#/properties/worker",
+                                                "options": {
+                                                    "enum": []
+                                                    /* This dropdown should be populated with keys from "workers" */
+                                                }
                                             }
-                                        },
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/params",
-                                            "options": {
-                                                "multi": true,
-                                                "format": "json"
-                                            }
-                                        }
-                                    ]
+                                        ]
+                                    }
                                 }
                             }
-                        }
-                    ]
-                },
-                {
-                    "type": "Group",
-                    "label": "Router",
-                    "elements": [
-                        {
-                            "type": "Control",
-                            "scope": "#/properties/router/properties/baseUrl"
-                        },
-                        {
-                            "type": "Control",
-                            "scope": "#/properties/router/properties/routes",
-                            "options": {
-                                "detail": {
-                                    "type": "VerticalLayout",
-                                    "elements": [
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/methods"
-                                        },
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/url"
-                                        },
-                                        {
-                                            "type": "Control",
-                                            "scope": "#/properties/worker",
-                                            "options": {
-                                                "enum": []
-                                                /* This dropdown should be populated with keys from "workers" */
-                                            }
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
+                        ]
+                    }
+                ]
+            }
+        };
     };
-    exports.workerSchemas = workerSchemas;
+    exports.getWorkersSchemas = getWorkersSchemas;
 });
 define("@scom/scom-widget-repos/utils/index.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/utils/storage.ts", "@scom/scom-widget-repos/utils/schema.ts"], function (require, exports, components_4, eth_wallet_3, API_1, storage_1, schema_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.compareVersions = exports.parseContractError = exports.getExplorerTxUrl = exports.getTimeAgo = exports.formatDate = exports.workerSchemas = exports.getSchema = void 0;
+    exports.compareVersions = exports.parseContractError = exports.getExplorerTxUrl = exports.getTimeAgo = exports.formatDate = exports.getWorkersSchemas = void 0;
     __exportStar(API_1, exports);
     __exportStar(storage_1, exports);
-    Object.defineProperty(exports, "getSchema", { enumerable: true, get: function () { return schema_1.getSchema; } });
-    Object.defineProperty(exports, "workerSchemas", { enumerable: true, get: function () { return schema_1.workerSchemas; } });
+    Object.defineProperty(exports, "getWorkersSchemas", { enumerable: true, get: function () { return schema_1.getWorkersSchemas; } });
     const formatDate = (date, customType) => {
         const formatType = customType || 'DD/MM/YYYY';
         return (0, components_4.moment)(date).format(formatType);
@@ -2668,6 +2698,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         constructor(parent, options) {
             super(parent, options);
             this.cachedContract = {};
+            this._isExpanded = false;
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -2733,12 +2764,9 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         }
         renderJsonForm(scconfig) {
             this.jsonForm.clearFormData();
-            // const schemaObj: IDataSchema = {
-            //   "type": "object",
-            //   "properties": {}
-            // }
-            this.jsonForm.jsonSchema = utils_1.workerSchemas.schema;
-            this.jsonForm.uiSchema = utils_1.workerSchemas.uischema;
+            const workerSchemas = (0, utils_1.getWorkersSchemas)(scconfig);
+            this.jsonForm.jsonSchema = workerSchemas.schema;
+            this.jsonForm.uiSchema = workerSchemas.uischema;
             this.jsonForm.formOptions = {
                 columnWidth: '100%',
                 columnsPerRow: 1,
@@ -2777,17 +2805,27 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             let { attDoc, verified } = await (0, scom_enclave_attestation_1.verify)(doc, rootCert);
             this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
         }
+        handleExpand() {
+            this._isExpanded = !this._isExpanded;
+            if (typeof this.onExpand === 'function') {
+                this.onExpand(this._isExpanded);
+            }
+            this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
+        }
         clear() {
             this.pnlDeploy.clearInnerHTML();
         }
         init() {
             super.init();
+            this.onExpand = this.getAttribute('onExpand', true) || this.onExpand;
             const name = this.getAttribute('contract', true);
             if (name)
                 this.setData(name);
         }
         render() {
             return (this.$render("i-panel", { width: "100%", height: "100%", padding: { top: '1rem' } },
+                this.$render("i-panel", { width: 30, height: 30, border: { radius: 12 }, hover: { backgroundColor: Theme.action.hoverBackground }, cursor: 'pointer', top: -20, left: 0, position: 'absolute', onClick: this.handleExpand },
+                    this.$render("i-icon", { id: "iconExpand", name: "expand", width: 20, height: 20, fill: Theme.colors.primary.main, padding: { top: 8, left: 8 } })),
                 this.$render("i-vstack", { id: "pnlLoader", position: "absolute", width: "100%", height: "100%", minHeight: 400, horizontalAlignment: "center", verticalAlignment: "center", background: { color: Theme.background.main }, padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, visible: false },
                     this.$render("i-panel", { class: index_css_2.spinnerStyle })),
                 this.$render("i-stack", { direction: 'vertical', width: "100%", height: "100%" },
@@ -3036,15 +3074,28 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.renderRepos();
         }
         async openDeploy(name) {
+            let modal;
             if (!this.deployer) {
                 this.deployer = await deployer_1.ScomWidgetReposDeployer.create({
                     contract: name,
+                    onExpand: (value) => {
+                        if (value) {
+                            modal.width = '100dvw';
+                            modal.height = '100dvh';
+                            modal.classList.add(index_css_3.customExpandStyle);
+                        }
+                        else {
+                            modal.width = 800;
+                            modal.height = '100dvh';
+                            modal.classList.remove(index_css_3.customExpandStyle);
+                        }
+                    }
                 }, undefined);
             }
             else {
                 await this.deployer.setData(name);
             }
-            this.deployer.openModal({
+            modal = this.deployer.openModal({
                 width: 800,
                 maxWidth: '100%',
                 height: '100dvh',
