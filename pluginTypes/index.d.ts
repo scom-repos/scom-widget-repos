@@ -244,8 +244,7 @@ declare module "@scom/scom-widget-repos/utils/storage.ts" {
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/schema.ts" />
 declare module "@scom/scom-widget-repos/utils/schema.ts" {
-    const getSchema: (scconfig: Record<string, any>, result: any) => any;
-    const workerSchemas: {
+    const getWorkersSchemas: (scconfig: Record<string, any>) => {
         schema: {
             type: string;
             properties: {
@@ -284,6 +283,7 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
                         };
                     };
                     additionalProperties: boolean;
+                    properties: {};
                 };
                 scheduler: {
                     type: string;
@@ -471,14 +471,14 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
             })[];
         };
     };
-    export { getSchema, workerSchemas };
+    export { getWorkersSchemas };
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/index.ts" />
 declare module "@scom/scom-widget-repos/utils/index.ts" {
     import { I18n } from '@ijstech/components';
     export * from "@scom/scom-widget-repos/utils/API.ts";
     export * from "@scom/scom-widget-repos/utils/storage.ts";
-    export { getSchema, workerSchemas } from "@scom/scom-widget-repos/utils/schema.ts";
+    export { getWorkersSchemas } from "@scom/scom-widget-repos/utils/schema.ts";
     const formatDate: (date: string | number, customType?: string) => string;
     const getTimeAgo: (timestamp: string, i18n: I18n) => string;
     const getExplorerTxUrl: (txHash: string, chainId?: number) => string;

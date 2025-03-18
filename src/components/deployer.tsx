@@ -14,7 +14,7 @@ import {
   IDataSchema,
   IUISchema
 } from '@ijstech/components';
-import { getPackage, getScconfig, getSchema, workerSchemas } from '../utils';
+import { getPackage, getScconfig, getWorkersSchemas } from '../utils';
 import { spinnerStyle } from './github/index.css';
 import { verify } from '@scom/scom-enclave-attestation';
 
@@ -122,10 +122,7 @@ export class ScomWidgetReposDeployer extends Module {
 
   private renderJsonForm(scconfig: Record<string, any>) {
     this.jsonForm.clearFormData();
-    // const schemaObj: IDataSchema = {
-    //   "type": "object",
-    //   "properties": {}
-    // }
+    const workerSchemas = getWorkersSchemas(scconfig);
     this.jsonForm.jsonSchema = workerSchemas.schema as IDataSchema;
     this.jsonForm.uiSchema = workerSchemas.uischema as IUISchema;
     this.jsonForm.formOptions = {
