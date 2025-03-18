@@ -292,7 +292,6 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
                         params: {
                             type: string;
                             description: string;
-                            additionalProperties: boolean;
                         };
                         schedules: {
                             type: string;
@@ -311,11 +310,11 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
                                     worker: {
                                         type: string;
                                         description: string;
+                                        enum: string[];
                                     };
                                     params: {
                                         type: string;
                                         description: string;
-                                        additionalProperties: boolean;
                                     };
                                 };
                                 required: string[];
@@ -352,6 +351,7 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
                                     worker: {
                                         type: string;
                                         description: string;
+                                        enum: string[];
                                     };
                                 };
                                 required: string[];
@@ -422,18 +422,8 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
                                 type: string;
                                 scope: string;
                                 options: {
-                                    enum: any[];
-                                    multi?: undefined;
-                                    format?: undefined;
-                                };
-                                label?: undefined;
-                            } | {
-                                type: string;
-                                scope: string;
-                                options: {
                                     multi: boolean;
                                     format: string;
-                                    enum?: undefined;
                                 };
                                 label?: undefined;
                             })[];
@@ -455,17 +445,10 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
                     options: {
                         detail: {
                             type: string;
-                            elements: ({
+                            elements: {
                                 type: string;
                                 scope: string;
-                                options?: undefined;
-                            } | {
-                                type: string;
-                                scope: string;
-                                options: {
-                                    enum: any[];
-                                };
-                            })[];
+                            }[];
                         };
                     };
                 })[];
@@ -1036,10 +1019,12 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         private lblVerificationMessage;
         private jsonForm;
         private iconExpand;
+        private pnlForm;
         onExpand?: (value: boolean) => void;
         private _contract;
         private cachedContract;
         private _isExpanded;
+        private _currentSchemas;
         get contract(): string;
         set contract(value: string);
         constructor(parent?: Container, options?: any);
@@ -1050,6 +1035,7 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         private getContent;
         private onOpenVerify;
         private handleExpand;
+        private onConfirmClick;
         clear(): void;
         init(): void;
         render(): any;

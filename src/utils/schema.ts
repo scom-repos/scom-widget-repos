@@ -40,6 +40,9 @@ function getWorkersSchema(workers: Record<string, any>) {
 }
 
 const getWorkersSchemas = (scconfig: Record<string, any>) => {
+  const workers = getWorkersSchema(scconfig.workers);
+  const workerKeys = Object.keys(workers);
+
   return {
     "schema": {
       "type": "object",
@@ -79,15 +82,15 @@ const getWorkersSchemas = (scconfig: Record<string, any>) => {
             }
           },
           "additionalProperties": false,
-          "properties": getWorkersSchema(scconfig.workers)
+          "properties": workers
         },
         "scheduler": {
           "type": "object",
           "properties": {
             "params": {
               "type": "object",
-              "description": "Custom scheduler parameters",
-              "additionalProperties": true
+              "description": "Custom scheduler parameters"
+              // "additionalProperties": true
             },
             "schedules": {
               "type": "array",
@@ -105,12 +108,13 @@ const getWorkersSchemas = (scconfig: Record<string, any>) => {
                   },
                   "worker": {
                     "type": "string",
-                    "description": "Worker to run (must match a key in workers)"
+                    "description": "Worker to run (must match a key in workers)",
+                    "enum": workerKeys
                   },
                   "params": {
                     "type": "object",
-                    "description": "Custom parameters for the schedule",
-                    "additionalProperties": true
+                    "description": "Custom parameters for the schedule"
+                    // "additionalProperties": true
                   }
                 },
                 "required": ["id", "cron", "worker", "params"]
@@ -146,7 +150,8 @@ const getWorkersSchemas = (scconfig: Record<string, any>) => {
                   },
                   "worker": {
                     "type": "string",
-                    "description": "Worker assigned to this route (must match a key in workers)"
+                    "description": "Worker assigned to this route (must match a key in workers)",
+                    "enum": workerKeys
                   }
                 },
                 "required": ["methods", "url", "worker"]
@@ -234,11 +239,7 @@ const getWorkersSchemas = (scconfig: Record<string, any>) => {
                     },
                     {
                       "type": "Control",
-                      "scope": "#/properties/worker",
-                      "options": {
-                        "enum": [] 
-                        /* This dropdown should be populated with keys from "workers" */
-                      }
+                      "scope": "#/properties/worker"
                     },
                     {
                       "type": "Control",
@@ -279,11 +280,7 @@ const getWorkersSchemas = (scconfig: Record<string, any>) => {
                     },
                     {
                       "type": "Control",
-                      "scope": "#/properties/worker",
-                      "options": {
-                        "enum": [] 
-                        /* This dropdown should be populated with keys from "workers" */
-                      }
+                      "scope": "#/properties/worker"
                     }
                   ]
                 }

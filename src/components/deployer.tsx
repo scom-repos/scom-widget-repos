@@ -13,7 +13,8 @@ import {
   Form,
   IDataSchema,
   IUISchema,
-  Icon
+  Icon,
+  Input
 } from '@ijstech/components';
 import { getPackage, getScconfig, getWorkersSchemas } from '../utils';
 import { spinnerStyle } from './github/index.css';
@@ -43,12 +44,20 @@ export class ScomWidgetReposDeployer extends Module {
   private lblVerificationMessage: Label;
   private jsonForm: Form;
   private iconExpand: Icon;
+  private pnlForm: Panel;
 
   onExpand?: (value: boolean) => void;
 
   private _contract: string;
   private cachedContract: Record<string, string> = {};
   private _isExpanded: boolean = false;
+  private _currentSchemas: {
+    schema: any;
+    uischema: any;
+  } = {
+    schema: {},
+    uischema: {}
+  };
 
   get contract() {
     return this._contract;
@@ -96,6 +105,7 @@ export class ScomWidgetReposDeployer extends Module {
     if (scconfig) {
       scconfig.contract = contract;
       scconfig.rootDir = mainPath
+      scconfig.type = 'widget';
     }
 
     try {
@@ -129,6 +139,7 @@ export class ScomWidgetReposDeployer extends Module {
   private renderJsonForm(scconfig: Record<string, any>) {
     this.jsonForm.clearFormData();
     const workerSchemas = getWorkersSchemas(scconfig);
+    this._currentSchemas = workerSchemas;
     this.jsonForm.jsonSchema = workerSchemas.schema as IDataSchema;
     this.jsonForm.uiSchema = workerSchemas.uischema as IUISchema;
     this.jsonForm.formOptions = {
@@ -138,18 +149,55 @@ export class ScomWidgetReposDeployer extends Module {
         caption: '$confirm',
         backgroundColor: Theme.colors.primary.main,
         fontColor: Theme.colors.primary.contrastText,
-        hide: false,
-        onClick: async () => {
-        }
+        hide: true
       },
       dateTimeFormat: {
         date: 'YYYY-MM-DD',
         time: 'HH:mm:ss',
         dateTime: 'MM/DD/YYYY HH:mm'
       },
+      customControls: {
+        "#/properties/scheduler/properties/schedules/properties/params": {
+          render: () => {
+            return <i-input
+              inputType="textarea"
+              rows={5}
+              width="100%"
+              height="auto"
+              resize="auto-grow"
+            ></i-input>
+          },
+          getData: (control: Input) => {
+            const value = control.value;
+            return value ? JSON.parse(value) : {};
+          },
+          setData: (control: Input, value: Record<string, any>) => {
+            console.log(value)
+            control.value = value ? JSON.stringify(value) : '';
+          }
+        },
+        "#/properties/scheduler/properties/params": {
+          render: () => {
+            return <i-input
+              inputType="textarea"
+              rows={5}
+              width="100%"
+              height="auto"
+              resize="auto-grow"
+            ></i-input>
+          },
+          getData: (control: Input) => {
+            const value = control.value;
+            return value ? JSON.parse(value) : {};
+          },
+          setData: (control: Input, value: Record<string, any>) => {
+            control.value = value ? JSON.stringify(value) : '';
+          }
+        }
+      }
     };
     this.jsonForm.renderForm();
-    this.jsonForm.visible = true;
+    this.pnlForm.visible = true;
     this.jsonForm.setFormData(scconfig);
   }
 
@@ -179,8 +227,15 @@ export class ScomWidgetReposDeployer extends Module {
     this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
   }
 
+  private async onConfirmClick() {
+    const data = await this.jsonForm.getFormData();
+    const validated = await this.jsonForm.validate(data, this._currentSchemas.schema as any, { changing: false });
+    console.log('====', data, validated);
+  }
+
   clear() {
     this.pnlDeploy.clearInnerHTML();
+    this.pnlForm.visible = false;
   }
 
   init() {
@@ -242,9 +297,16 @@ export class ScomWidgetReposDeployer extends Module {
             onClick={this.onOpenVerify}
           />
           <i-label id="lblVerificationMessage" caption="" font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
-          <i-stack gap="0.5rem">
-            <i-form id="jsonForm" width="100%" height="100%" visible={false}></i-form>
-          </i-stack>
+          <i-vstack id="pnlForm" visible={false} gap="0.5rem">
+            <i-form id="jsonForm" width="100%" height="100%"></i-form>
+            <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="end">
+              <i-button
+                caption='$confirm'
+                padding={{top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem'}}
+                onClick={this.onConfirmClick}
+              ></i-button>
+            </i-hstack>
+          </i-vstack>
           <i-panel id="pnlDeploy" width="100%" height="100%"></i-panel>
         </i-stack>
       </i-panel>

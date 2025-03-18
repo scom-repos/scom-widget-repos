@@ -1106,6 +1106,8 @@ define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], functi
         return result.properties;
     }
     const getWorkersSchemas = (scconfig) => {
+        const workers = getWorkersSchema(scconfig.workers);
+        const workerKeys = Object.keys(workers);
         return {
             "schema": {
                 "type": "object",
@@ -1145,15 +1147,15 @@ define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], functi
                             }
                         },
                         "additionalProperties": false,
-                        "properties": getWorkersSchema(scconfig.workers)
+                        "properties": workers
                     },
                     "scheduler": {
                         "type": "object",
                         "properties": {
                             "params": {
                                 "type": "object",
-                                "description": "Custom scheduler parameters",
-                                "additionalProperties": true
+                                "description": "Custom scheduler parameters"
+                                // "additionalProperties": true
                             },
                             "schedules": {
                                 "type": "array",
@@ -1171,12 +1173,13 @@ define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], functi
                                         },
                                         "worker": {
                                             "type": "string",
-                                            "description": "Worker to run (must match a key in workers)"
+                                            "description": "Worker to run (must match a key in workers)",
+                                            "enum": workerKeys
                                         },
                                         "params": {
                                             "type": "object",
-                                            "description": "Custom parameters for the schedule",
-                                            "additionalProperties": true
+                                            "description": "Custom parameters for the schedule"
+                                            // "additionalProperties": true
                                         }
                                     },
                                     "required": ["id", "cron", "worker", "params"]
@@ -1212,7 +1215,8 @@ define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], functi
                                         },
                                         "worker": {
                                             "type": "string",
-                                            "description": "Worker assigned to this route (must match a key in workers)"
+                                            "description": "Worker assigned to this route (must match a key in workers)",
+                                            "enum": workerKeys
                                         }
                                     },
                                     "required": ["methods", "url", "worker"]
@@ -1300,11 +1304,7 @@ define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], functi
                                             },
                                             {
                                                 "type": "Control",
-                                                "scope": "#/properties/worker",
-                                                "options": {
-                                                    "enum": []
-                                                    /* This dropdown should be populated with keys from "workers" */
-                                                }
+                                                "scope": "#/properties/worker"
                                             },
                                             {
                                                 "type": "Control",
@@ -1345,11 +1345,7 @@ define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], functi
                                             },
                                             {
                                                 "type": "Control",
-                                                "scope": "#/properties/worker",
-                                                "options": {
-                                                    "enum": []
-                                                    /* This dropdown should be populated with keys from "workers" */
-                                                }
+                                                "scope": "#/properties/worker"
                                             }
                                         ]
                                     }
@@ -2699,6 +2695,10 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             super(parent, options);
             this.cachedContract = {};
             this._isExpanded = false;
+            this._currentSchemas = {
+                schema: {},
+                uischema: {}
+            };
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -2734,6 +2734,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             if (scconfig) {
                 scconfig.contract = contract;
                 scconfig.rootDir = mainPath;
+                scconfig.type = 'widget';
             }
             try {
                 const content = await this.getContent(contract);
@@ -2765,6 +2766,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         renderJsonForm(scconfig) {
             this.jsonForm.clearFormData();
             const workerSchemas = (0, utils_1.getWorkersSchemas)(scconfig);
+            this._currentSchemas = workerSchemas;
             this.jsonForm.jsonSchema = workerSchemas.schema;
             this.jsonForm.uiSchema = workerSchemas.uischema;
             this.jsonForm.formOptions = {
@@ -2774,18 +2776,43 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
                     caption: '$confirm',
                     backgroundColor: Theme.colors.primary.main,
                     fontColor: Theme.colors.primary.contrastText,
-                    hide: false,
-                    onClick: async () => {
-                    }
+                    hide: true
                 },
                 dateTimeFormat: {
                     date: 'YYYY-MM-DD',
                     time: 'HH:mm:ss',
                     dateTime: 'MM/DD/YYYY HH:mm'
                 },
+                customControls: {
+                    "#/properties/scheduler/properties/schedules/properties/params": {
+                        render: () => {
+                            return this.$render("i-input", { inputType: "textarea", rows: 5, width: "100%", height: "auto", resize: "auto-grow" });
+                        },
+                        getData: (control) => {
+                            const value = control.value;
+                            return value ? JSON.parse(value) : {};
+                        },
+                        setData: (control, value) => {
+                            console.log(value);
+                            control.value = value ? JSON.stringify(value) : '';
+                        }
+                    },
+                    "#/properties/scheduler/properties/params": {
+                        render: () => {
+                            return this.$render("i-input", { inputType: "textarea", rows: 5, width: "100%", height: "auto", resize: "auto-grow" });
+                        },
+                        getData: (control) => {
+                            const value = control.value;
+                            return value ? JSON.parse(value) : {};
+                        },
+                        setData: (control, value) => {
+                            control.value = value ? JSON.stringify(value) : '';
+                        }
+                    }
+                }
             };
             this.jsonForm.renderForm();
-            this.jsonForm.visible = true;
+            this.pnlForm.visible = true;
             this.jsonForm.setFormData(scconfig);
         }
         async getContent(contract) {
@@ -2812,8 +2839,14 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             }
             this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
         }
+        async onConfirmClick() {
+            const data = await this.jsonForm.getFormData();
+            const validated = await this.jsonForm.validate(data, this._currentSchemas.schema, { changing: false });
+            console.log('====', data, validated);
+        }
         clear() {
             this.pnlDeploy.clearInnerHTML();
+            this.pnlForm.visible = false;
         }
         init() {
             super.init();
@@ -2833,8 +2866,10 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
                     this.$render("i-combo-box", { id: "comboEnclave", height: 36, width: '100%', icon: { width: 14, height: 14, name: 'angle-down' }, border: { radius: 5 } }),
                     this.$render("i-button", { id: "btnVerify", caption: "$verify", stack: { shrink: '0' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenVerify }),
                     this.$render("i-label", { id: "lblVerificationMessage", caption: "", font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
-                    this.$render("i-stack", { gap: "0.5rem" },
-                        this.$render("i-form", { id: "jsonForm", width: "100%", height: "100%", visible: false })),
+                    this.$render("i-vstack", { id: "pnlForm", visible: false, gap: "0.5rem" },
+                        this.$render("i-form", { id: "jsonForm", width: "100%", height: "100%" }),
+                        this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "end" },
+                            this.$render("i-button", { caption: '$confirm', padding: { top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }, onClick: this.onConfirmClick }))),
                     this.$render("i-panel", { id: "pnlDeploy", width: "100%", height: "100%" }))));
         }
     };
