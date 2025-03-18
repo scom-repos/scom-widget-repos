@@ -1,6 +1,6 @@
 import { customModule, Module, Container, Panel, VStack, Label, observable, Pagination, Icon, customElements, ControlElement, Styles, Modal, Switch, moment, application, Button, Checkbox } from "@ijstech/components";
 import { ScomWidgetReposGithubRepo } from "./repo";
-import { customModalStyle, githubStyle, spinnerStyle } from "./index.css";
+import { customExpandStyle, customModalStyle, githubStyle, spinnerStyle } from "./index.css";
 import { getStorageConfig } from "../../store/index";
 import { repoJson } from "../../languages/index";
 import { ScomWidgetReposDeployer } from "../deployer";
@@ -309,15 +309,28 @@ export default class ScomWidgetReposGithubList extends Module {
   }
 
   private async openDeploy(name: string) {
+    let modal: Modal;
+
     if (!this.deployer) {
       this.deployer = await ScomWidgetReposDeployer.create({
         contract: name,
+        onExpand: (value: boolean) => {
+          if (value) {
+            modal.width = '100dvw';
+            modal.height = '100dvh';
+            modal.classList.add(customExpandStyle);
+          } else {
+            modal.width = 800;
+            modal.height = '100dvh';
+            modal.classList.remove(customExpandStyle);
+          }
+        }
       }, undefined);
     } else {
       await this.deployer.setData(name);
     }
 
-    this.deployer.openModal({
+    modal = this.deployer.openModal({
       width: 800,
       maxWidth: '100%',
       height: '100dvh',

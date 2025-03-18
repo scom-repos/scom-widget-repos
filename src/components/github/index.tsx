@@ -129,7 +129,7 @@ export class ScomWidgetReposGithub extends Module {
     // const result = await getAllRepos(this.userInfo?.data?.login, this.isProject ? this.prefix : '', !this.isProject);
     const result = await getAllRepos('yc-wong', 'scom', false);
     if (result?.data) {
-      this.listRepos = [
+    this.listRepos = [
         ...result.data,
         // ...dataJson.map(v => {
         //   return {
