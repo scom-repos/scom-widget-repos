@@ -706,7 +706,7 @@ define("@scom/scom-widget-repos/utils/API.ts", ["require", "exports", "@ijstech/
 define("@scom/scom-widget-repos/components/github/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_3) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.customModalStyle = exports.wrapperStyle = exports.stickyStyle = exports.childTabStyle = exports.tabStyle = exports.inputDateStyle = exports.textareaStyle = exports.inputStyle = exports.modalStyle = exports.spinnerStyle = exports.githubStyle = void 0;
+    exports.customExpandStyle = exports.customModalStyle = exports.wrapperStyle = exports.stickyStyle = exports.childTabStyle = exports.tabStyle = exports.inputDateStyle = exports.textareaStyle = exports.inputStyle = exports.modalStyle = exports.spinnerStyle = exports.githubStyle = void 0;
     const Theme = components_3.Styles.Theme.ThemeVars;
     exports.githubStyle = components_3.Styles.style({
         $nest: {
@@ -980,6 +980,14 @@ define("@scom/scom-widget-repos/components/github/index.css.ts", ["require", "ex
                 paddingTop: '0 !important',
                 maxHeight: '100%',
                 overflow: 'hidden !important'
+            }
+        }
+    });
+    exports.customExpandStyle = components_3.Styles.style({
+        $nest: {
+            '.modal-wrapper': {
+                paddingLeft: '0 !important',
+                paddingTop: '0 !important'
             }
         }
     });
@@ -2690,6 +2698,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         constructor(parent, options) {
             super(parent, options);
             this.cachedContract = {};
+            this._isExpanded = false;
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -2796,17 +2805,27 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             let { attDoc, verified } = await (0, scom_enclave_attestation_1.verify)(doc, rootCert);
             this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
         }
+        handleExpand() {
+            this._isExpanded = !this._isExpanded;
+            if (typeof this.onExpand === 'function') {
+                this.onExpand(this._isExpanded);
+            }
+            this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
+        }
         clear() {
             this.pnlDeploy.clearInnerHTML();
         }
         init() {
             super.init();
+            this.onExpand = this.getAttribute('onExpand', true) || this.onExpand;
             const name = this.getAttribute('contract', true);
             if (name)
                 this.setData(name);
         }
         render() {
             return (this.$render("i-panel", { width: "100%", height: "100%", padding: { top: '1rem' } },
+                this.$render("i-panel", { width: 30, height: 30, border: { radius: 12 }, hover: { backgroundColor: Theme.action.hoverBackground }, cursor: 'pointer', top: -20, left: 0, position: 'absolute', onClick: this.handleExpand },
+                    this.$render("i-icon", { id: "iconExpand", name: "expand", width: 20, height: 20, fill: Theme.colors.primary.main, padding: { top: 8, left: 8 } })),
                 this.$render("i-vstack", { id: "pnlLoader", position: "absolute", width: "100%", height: "100%", minHeight: 400, horizontalAlignment: "center", verticalAlignment: "center", background: { color: Theme.background.main }, padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, visible: false },
                     this.$render("i-panel", { class: index_css_2.spinnerStyle })),
                 this.$render("i-stack", { direction: 'vertical', width: "100%", height: "100%" },
@@ -3055,15 +3074,28 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.renderRepos();
         }
         async openDeploy(name) {
+            let modal;
             if (!this.deployer) {
                 this.deployer = await deployer_1.ScomWidgetReposDeployer.create({
                     contract: name,
+                    onExpand: (value) => {
+                        if (value) {
+                            modal.width = '100dvw';
+                            modal.height = '100dvh';
+                            modal.classList.add(index_css_3.customExpandStyle);
+                        }
+                        else {
+                            modal.width = 800;
+                            modal.height = '100dvh';
+                            modal.classList.remove(index_css_3.customExpandStyle);
+                        }
+                    }
                 }, undefined);
             }
             else {
                 await this.deployer.setData(name);
             }
-            this.deployer.openModal({
+            modal = this.deployer.openModal({
                 width: 800,
                 maxWidth: '100%',
                 height: '100dvh',

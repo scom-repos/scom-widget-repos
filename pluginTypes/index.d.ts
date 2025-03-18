@@ -234,6 +234,7 @@ declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
     export const stickyStyle: string;
     export const wrapperStyle: string;
     export const customModalStyle: string;
+    export const customExpandStyle: string;
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/storage.ts" />
 declare module "@scom/scom-widget-repos/utils/storage.ts" {
@@ -1018,6 +1019,7 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
     import { Module, ControlElement, Container } from '@ijstech/components';
     interface ScomWidgetReposDeployerElement extends ControlElement {
         contract?: string;
+        onExpand?: (value: boolean) => void;
     }
     global {
         namespace JSX {
@@ -1033,8 +1035,11 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         private enclaveItems;
         private lblVerificationMessage;
         private jsonForm;
+        private iconExpand;
+        onExpand?: (value: boolean) => void;
         private _contract;
         private cachedContract;
+        private _isExpanded;
         get contract(): string;
         set contract(value: string);
         constructor(parent?: Container, options?: any);
@@ -1044,6 +1049,7 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         private renderJsonForm;
         private getContent;
         private onOpenVerify;
+        private handleExpand;
         clear(): void;
         init(): void;
         render(): any;

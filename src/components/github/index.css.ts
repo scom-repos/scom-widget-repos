@@ -288,3 +288,12 @@ export const customModalStyle = Styles.style({
         }
     }
 })
+
+export const customExpandStyle = Styles.style({
+    $nest: {
+        '.modal-wrapper': {
+            paddingLeft: '0 !important',
+            paddingTop: '0 !important'
+        }
+    }
+})

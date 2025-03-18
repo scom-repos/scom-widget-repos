@@ -12,7 +12,8 @@ import {
   IComboItem,
   Form,
   IDataSchema,
-  IUISchema
+  IUISchema,
+  Icon
 } from '@ijstech/components';
 import { getPackage, getScconfig, getWorkersSchemas } from '../utils';
 import { spinnerStyle } from './github/index.css';
@@ -22,6 +23,7 @@ const Theme = Styles.Theme.ThemeVars;
 
 interface ScomWidgetReposDeployerElement extends ControlElement {
   contract?: string;
+  onExpand?: (value: boolean) => void;
 }
 
 declare global {
@@ -40,9 +42,13 @@ export class ScomWidgetReposDeployer extends Module {
   private enclaveItems: IComboItem[];
   private lblVerificationMessage: Label;
   private jsonForm: Form;
+  private iconExpand: Icon;
+
+  onExpand?: (value: boolean) => void;
 
   private _contract: string;
   private cachedContract: Record<string, string> = {};
+  private _isExpanded: boolean = false;
 
   get contract() {
     return this._contract;
@@ -165,12 +171,21 @@ export class ScomWidgetReposDeployer extends Module {
     this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
   }
 
+  private handleExpand() {
+    this._isExpanded = !this._isExpanded;
+    if (typeof this.onExpand === 'function') {
+      this.onExpand(this._isExpanded);
+    }
+    this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
+  }
+
   clear() {
     this.pnlDeploy.clearInnerHTML();
   }
 
   init() {
     super.init();
+    this.onExpand = this.getAttribute('onExpand', true) || this.onExpand;
     const name = this.getAttribute('contract', true);
     if (name) this.setData(name);
   }
@@ -178,6 +193,22 @@ export class ScomWidgetReposDeployer extends Module {
   render() {
     return (
       <i-panel width="100%" height="100%" padding={{ top: '1rem' }}>
+        <i-panel
+          width={30} height={30}
+          border={{ radius: 12 }}
+          hover={{ backgroundColor: Theme.action.hoverBackground }}
+          cursor='pointer'
+          top={-20} left={0} position='absolute'
+          onClick={this.handleExpand}
+        >
+          <i-icon
+            id="iconExpand"
+            name="expand"
+            width={20} height={20}
+            fill={Theme.colors.primary.main}
+            padding={{top: 8, left: 8}}
+          ></i-icon>
+        </i-panel>
         <i-vstack
           id="pnlLoader"
           position="absolute"
