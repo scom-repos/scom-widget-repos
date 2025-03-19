@@ -10,21 +10,20 @@ import {
   Label,
   ComboBox,
   IComboItem,
-  Form,
-  IDataSchema,
-  IUISchema,
-  Icon,
-  Input
+  Icon
 } from '@ijstech/components';
-import { getPackage, getScconfig, getWorkersSchemas } from '../utils';
+import { getPackage, getScconfig } from '../utils';
 import { spinnerStyle } from './github/index.css';
 import { verify } from '@scom/scom-enclave-attestation';
+import { ScomWidgetReposForm } from './jsonForm';
+import { repoJson } from '../languages/index';
 
 const Theme = Styles.Theme.ThemeVars;
 
 interface ScomWidgetReposDeployerElement extends ControlElement {
   contract?: string;
   onExpand?: (value: boolean) => void;
+  onChange?: (target: ScomWidgetReposDeployer) => void;
 }
 
 declare global {
@@ -42,22 +41,14 @@ export class ScomWidgetReposDeployer extends Module {
   private comboEnclave: ComboBox;
   private enclaveItems: IComboItem[];
   private lblVerificationMessage: Label;
-  private jsonForm: Form;
   private iconExpand: Icon;
-  private pnlForm: Panel;
+  private formEl: ScomWidgetReposForm;
 
   onExpand?: (value: boolean) => void;
 
   private _contract: string;
   private cachedContract: Record<string, string> = {};
   private _isExpanded: boolean = false;
-  private _currentSchemas: {
-    schema: any;
-    uischema: any;
-  } = {
-    schema: {},
-    uischema: {}
-  };
 
   get contract() {
     return this._contract;
@@ -129,76 +120,13 @@ export class ScomWidgetReposDeployer extends Module {
     }
 
     const pkgScconfig = await getScconfig(contract);
-    if (pkgScconfig?.type === 'worker') {
-      this.renderJsonForm(pkgScconfig);
+    const parsedScconfig = pkgScconfig ? JSON.parse(pkgScconfig) : null;
+    if (parsedScconfig?.type === 'worker') {
+      this.formEl.visible = true;
+      this.formEl.setData({value: pkgScconfig});
     }
 
     if (this.pnlLoader) this.pnlLoader.visible = false;
-  }
-
-  private renderJsonForm(scconfig: Record<string, any>) {
-    this.jsonForm.clearFormData();
-    const workerSchemas = getWorkersSchemas(scconfig);
-    this._currentSchemas = workerSchemas;
-    this.jsonForm.jsonSchema = workerSchemas.schema as IDataSchema;
-    this.jsonForm.uiSchema = workerSchemas.uischema as IUISchema;
-    this.jsonForm.formOptions = {
-      columnWidth: '100%',
-      columnsPerRow: 1,
-      confirmButtonOptions: {
-        caption: '$confirm',
-        backgroundColor: Theme.colors.primary.main,
-        fontColor: Theme.colors.primary.contrastText,
-        hide: true
-      },
-      dateTimeFormat: {
-        date: 'YYYY-MM-DD',
-        time: 'HH:mm:ss',
-        dateTime: 'MM/DD/YYYY HH:mm'
-      },
-      customControls: {
-        "#/properties/scheduler/properties/schedules/properties/params": {
-          render: () => {
-            return <i-input
-              inputType="textarea"
-              rows={5}
-              width="100%"
-              height="auto"
-              resize="auto-grow"
-            ></i-input>
-          },
-          getData: (control: Input) => {
-            const value = control.value;
-            return value ? JSON.parse(value) : {};
-          },
-          setData: (control: Input, value: Record<string, any>) => {
-            console.log(value)
-            control.value = value ? JSON.stringify(value) : '';
-          }
-        },
-        "#/properties/scheduler/properties/params": {
-          render: () => {
-            return <i-input
-              inputType="textarea"
-              rows={5}
-              width="100%"
-              height="auto"
-              resize="auto-grow"
-            ></i-input>
-          },
-          getData: (control: Input) => {
-            const value = control.value;
-            return value ? JSON.parse(value) : {};
-          },
-          setData: (control: Input, value: Record<string, any>) => {
-            control.value = value ? JSON.stringify(value) : '';
-          }
-        }
-      }
-    };
-    this.jsonForm.renderForm();
-    this.pnlForm.visible = true;
-    this.jsonForm.setFormData(scconfig);
   }
 
   private async getContent(contract: string) {
@@ -227,18 +155,13 @@ export class ScomWidgetReposDeployer extends Module {
     this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
   }
 
-  private async onConfirmClick() {
-    const data = await this.jsonForm.getFormData();
-    const validated = await this.jsonForm.validate(data, this._currentSchemas.schema as any, { changing: false });
-    console.log('====', data, validated);
-  }
-
   clear() {
     this.pnlDeploy.clearInnerHTML();
-    this.pnlForm.visible = false;
+    this.formEl.visible = false;
   }
 
   init() {
+    this.i18n.init({ ...repoJson });
     super.init();
     this.onExpand = this.getAttribute('onExpand', true) || this.onExpand;
     const name = this.getAttribute('contract', true);
@@ -297,16 +220,14 @@ export class ScomWidgetReposDeployer extends Module {
             onClick={this.onOpenVerify}
           />
           <i-label id="lblVerificationMessage" caption="" font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
-          <i-vstack id="pnlForm" visible={false} gap="0.5rem">
-            <i-form id="jsonForm" width="100%" height="100%"></i-form>
-            <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="end">
-              <i-button
-                caption='$confirm'
-                padding={{top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem'}}
-                onClick={this.onConfirmClick}
-              ></i-button>
-            </i-hstack>
-          </i-vstack>
+          <i-scom-widget-repos--form
+            id="formEl"
+            width="100%"
+            stack={{ 'grow': '1' }}
+            maxHeight={`100%`}
+            display='block'
+            visible={false}
+          />
           <i-panel id="pnlDeploy" width="100%" height="100%"></i-panel>
         </i-stack>
       </i-panel>

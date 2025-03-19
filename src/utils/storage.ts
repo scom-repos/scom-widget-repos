@@ -43,7 +43,7 @@ const getScconfig = async (name: string) => {
     const cid = getPackageCid(contractName);
     if (!cid) return;
     const scconfigJson = await getFileContent(`${cid}/scconfig.json`);
-    return scconfigJson ? JSON.parse(scconfigJson) : null;
+    return scconfigJson;
   } catch {}
 
   return null;

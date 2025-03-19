@@ -5,6 +5,7 @@
     "dependencies": [
         "@ijstech/components",
         "@ijstech/eth-wallet",
-        "@scom/scom-enclave-attestation"
+        "@scom/scom-enclave-attestation",
+        "@scom/scom-code-editor"
     ]
 }

@@ -1042,7 +1042,7 @@ define("@scom/scom-widget-repos/utils/storage.ts", ["require", "exports", "@scom
             if (!cid)
                 return;
             const scconfigJson = await getFileContent(`${cid}/scconfig.json`);
-            return scconfigJson ? JSON.parse(scconfigJson) : null;
+            return scconfigJson;
         }
         catch { }
         return null;
@@ -1859,13 +1859,42 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
         }
     };
 });
-define("@scom/scom-widget-repos/languages/index.ts", ["require", "exports", "@scom/scom-widget-repos/languages/main.json.ts", "@scom/scom-widget-repos/languages/audit.json.ts", "@scom/scom-widget-repos/languages/repo.json.ts"], function (require, exports, main_json_1, audit_json_1, repo_json_1) {
+define("@scom/scom-widget-repos/languages/components.json.ts", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.repoJson = exports.auditJson = exports.mainJson = void 0;
+    ///<amd-module name='@scom/scom-widget-repos/languages/components.json.ts'/> 
+    exports.default = {
+        "en": {
+            "cancel": "Cancel",
+            "close": "Close",
+            "confirm": "Confirm",
+            "raw_json": "Raw Json",
+            "form": "Form"
+        },
+        "zh-hant": {
+            "cancel": "取消",
+            "close": "關閉",
+            "confirm": "確認",
+            "form": "表單",
+            "raw_json": "原始 Json"
+        },
+        "vi": {
+            "cancel": "Hủy",
+            "close": "Đóng",
+            "confirm": "Xác nhận",
+            "raw_json": "Mã",
+            "form": "Biểu mẫu"
+        }
+    };
+});
+define("@scom/scom-widget-repos/languages/index.ts", ["require", "exports", "@scom/scom-widget-repos/languages/main.json.ts", "@scom/scom-widget-repos/languages/audit.json.ts", "@scom/scom-widget-repos/languages/repo.json.ts", "@scom/scom-widget-repos/languages/components.json.ts"], function (require, exports, main_json_1, audit_json_1, repo_json_1, components_json_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.componentsJson = exports.repoJson = exports.auditJson = exports.mainJson = void 0;
     exports.mainJson = main_json_1.default;
     exports.auditJson = audit_json_1.default;
     exports.repoJson = repo_json_1.default;
+    exports.componentsJson = components_json_1.default;
 });
 define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/interface.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_5, index_3, index_css_1, interface_2, eth_wallet_4, index_4) {
     "use strict";
@@ -2679,12 +2708,195 @@ define("@scom/scom-widget-repos/components/github/repo.tsx", ["require", "export
     ], ScomWidgetReposGithubRepo);
     exports.ScomWidgetReposGithubRepo = ScomWidgetReposGithubRepo;
 });
-define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-enclave-attestation"], function (require, exports, components_6, utils_1, index_css_2, scom_enclave_attestation_1) {
+define("@scom/scom-widget-repos/components/deployer.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_6) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.codeTabsStyle = void 0;
+    const Theme = components_6.Styles.Theme.ThemeVars;
+    exports.codeTabsStyle = components_6.Styles.style({
+        $nest: {
+            "> .tabs-nav-wrap": {
+                background: "#181818",
+                $nest: {
+                    'i-tab:not(.disabled).active': {
+                        borderTop: `1px solid ${Theme.colors.primary.main}`
+                    }
+                }
+            },
+            "> .tabs-content": {
+                maxHeight: "calc(100% - 36px)",
+            },
+        },
+    });
+});
+define("@scom/scom-widget-repos/components/jsonForm.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/deployer.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_7, deployer_css_1, index_5, index_6) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.ScomWidgetReposForm = void 0;
+    const Theme = components_7.Styles.Theme.ThemeVars;
+    let ScomWidgetReposForm = class ScomWidgetReposForm extends components_7.Module {
+        constructor(parent, options) {
+            super(parent, options);
+            this._data = { value: '' };
+            this.isInited = false;
+            this._currentSchemas = {
+                schema: {},
+                uischema: {}
+            };
+        }
+        static async create(options, parent) {
+            let self = new this(parent, options);
+            await self.ready();
+            return self;
+        }
+        get parseData() {
+            try {
+                return JSON.parse(this.value);
+            }
+            catch (err) {
+                return {};
+            }
+        }
+        set value(data) {
+            this._data.value = data;
+        }
+        get value() {
+            return this._data.value;
+        }
+        setData(value) {
+            this._data = value;
+            this.renderJsonForm();
+            this.renderEditor();
+        }
+        renderJsonForm() {
+            const scconfig = this.parseData;
+            this.jsonForm.clearFormData();
+            const workerSchemas = (0, index_5.getWorkersSchemas)(scconfig);
+            this._currentSchemas = workerSchemas;
+            this.jsonForm.jsonSchema = workerSchemas.schema;
+            this.jsonForm.uiSchema = workerSchemas.uischema;
+            this.jsonForm.formOptions = {
+                columnWidth: '100%',
+                columnsPerRow: 1,
+                confirmButtonOptions: {
+                    caption: '$confirm',
+                    backgroundColor: Theme.colors.primary.main,
+                    fontColor: Theme.colors.primary.contrastText,
+                    hide: true
+                },
+                dateTimeFormat: {
+                    date: 'YYYY-MM-DD',
+                    time: 'HH:mm:ss',
+                    dateTime: 'MM/DD/YYYY HH:mm'
+                },
+                customControls: {
+                    "#/properties/scheduler/properties/schedules/properties/params": {
+                        render: () => {
+                            return this.$render("i-input", { inputType: "textarea", rows: 5, width: "100%" });
+                        },
+                        getData: (control) => {
+                            const value = control.value;
+                            return value ? JSON.parse(value) : {};
+                        },
+                        setData: (control, value) => {
+                            control.value = value ? JSON.stringify(value) : '';
+                        }
+                    },
+                    "#/properties/scheduler/properties/params": {
+                        render: () => {
+                            return this.$render("i-input", { inputType: "textarea", rows: 5, width: "100%" });
+                        },
+                        getData: (control) => {
+                            const value = control.value;
+                            return value ? JSON.parse(value) : {};
+                        },
+                        setData: (control, value) => {
+                            control.value = value ? JSON.stringify(value) : '';
+                        }
+                    }
+                }
+            };
+            this.jsonForm.renderForm();
+            this.jsonForm.setFormData(scconfig);
+            this.initEvents();
+        }
+        initEvents() {
+            const inputs = this.jsonForm.querySelectorAll('[scope]');
+            for (let i = 0; i < inputs.length; i++) {
+                const input = inputs[i];
+                input.onChanged = async () => {
+                    const data = await this.jsonForm.getFormData();
+                    this.value = JSON.stringify({ ...this.parseData, ...data }, null, 2);
+                    if (this.codeEditor)
+                        this.renderEditor();
+                    if (this.onChange)
+                        this.onChange(this);
+                };
+            }
+        }
+        renderEditor() {
+            if (this.codeEditor)
+                this.codeEditor.loadContent(this.value, 'json', 'scconfig.json');
+        }
+        handleCodeEditorChange() {
+            this.value = this.codeEditor.value;
+            if (this.jsonForm && this.jsonForm.isConnected)
+                this.renderJsonForm();
+            if (this.onChange && this.isInited)
+                this.onChange(this);
+            this.isInited = true;
+        }
+        async onConfirmClick() {
+            const data = await this.jsonForm.getFormData();
+            const validated = await this.jsonForm.validate(data, this._currentSchemas.schema, { changing: false });
+            console.log('====', data, validated);
+        }
+        getErrors() {
+            return this.codeEditor.getErrors();
+        }
+        dispose() {
+            if (!this.codeEditor)
+                return;
+            this.codeEditor.dispose();
+        }
+        disposeEditor() {
+            if (!this.codeEditor)
+                return;
+            if ('disposeEditor' in this.codeEditor && typeof this.codeEditor?.disposeEditor === 'function')
+                this.codeEditor.disposeEditor();
+            this.codeEditor.onChange = null;
+        }
+        init() {
+            this.i18n.init({ ...index_6.componentsJson });
+            super.init();
+            this.onChange = this.getAttribute('onChange', true) || this.onChange;
+            const value = this.getAttribute('value', true);
+            if (value)
+                this.setData({ value });
+        }
+        render() {
+            return (this.$render("i-vstack", { width: '100%', height: `100%`, overflow: 'hidden', position: 'relative' },
+                this.$render("i-tabs", { id: "formTabs", stack: { 'grow': '1' }, maxHeight: `100%`, class: deployer_css_1.codeTabsStyle },
+                    this.$render("i-tab", { caption: "$form" },
+                        this.$render("i-vstack", { gap: "0.5rem" },
+                            this.$render("i-form", { id: "jsonForm", width: "100%", height: "100%" }),
+                            this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "end" },
+                                this.$render("i-button", { caption: '$confirm', padding: { top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }, onClick: this.onConfirmClick })))),
+                    this.$render("i-tab", { caption: "$raw_json" },
+                        this.$render("i-scom-code-editor", { id: "codeEditor", width: '100%', height: 500, display: "block", onChange: this.handleCodeEditorChange })))));
+        }
+    };
+    ScomWidgetReposForm = __decorate([
+        (0, components_7.customElements)('i-scom-widget-repos--form')
+    ], ScomWidgetReposForm);
+    exports.ScomWidgetReposForm = ScomWidgetReposForm;
+});
+define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-enclave-attestation", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_8, utils_1, index_css_2, scom_enclave_attestation_1, index_7) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposDeployer = void 0;
-    const Theme = components_6.Styles.Theme.ThemeVars;
-    let ScomWidgetReposDeployer = class ScomWidgetReposDeployer extends components_6.Module {
+    const Theme = components_8.Styles.Theme.ThemeVars;
+    let ScomWidgetReposDeployer = class ScomWidgetReposDeployer extends components_8.Module {
         get contract() {
             return this._contract;
         }
@@ -2695,10 +2907,6 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             super(parent, options);
             this.cachedContract = {};
             this._isExpanded = false;
-            this._currentSchemas = {
-                schema: {},
-                uischema: {}
-            };
         }
         static async create(options, parent) {
             let self = new this(parent, options);
@@ -2722,7 +2930,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             if (this.pnlLoader)
                 this.pnlLoader.visible = true;
             this.pnlDeploy.clearInnerHTML();
-            let rootDir = components_6.application.rootDir;
+            let rootDir = components_8.application.rootDir;
             if (rootDir.endsWith('/'))
                 rootDir = rootDir.slice(0, -1);
             if (rootDir.startsWith('/'))
@@ -2740,14 +2948,14 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
                 const content = await this.getContent(contract);
                 if (!content)
                     throw new Error('Contract not found');
-                await components_6.application.loadScript(contract, content, true);
-                const module = await components_6.application.newModule(scconfig.main, scconfig);
+                await components_8.application.loadScript(contract, content, true);
+                const module = await components_8.application.newModule(scconfig.main, scconfig);
                 if (module) {
                     this.pnlDeploy.append(module);
                     const firstChild = module.firstChild;
                     const pnlMain = firstChild?.children?.[2];
                     if (pnlMain) {
-                        const innerModule = await components_6.application.newModule("@modules/module1", scconfig);
+                        const innerModule = await components_8.application.newModule("@modules/module1", scconfig);
                         pnlMain.clearInnerHTML();
                         pnlMain.append(innerModule);
                     }
@@ -2757,63 +2965,13 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
                 console.error('deploy error', err);
             }
             const pkgScconfig = await (0, utils_1.getScconfig)(contract);
-            if (pkgScconfig?.type === 'worker') {
-                this.renderJsonForm(pkgScconfig);
+            const parsedScconfig = pkgScconfig ? JSON.parse(pkgScconfig) : null;
+            if (parsedScconfig?.type === 'worker') {
+                this.formEl.visible = true;
+                this.formEl.setData({ value: pkgScconfig });
             }
             if (this.pnlLoader)
                 this.pnlLoader.visible = false;
-        }
-        renderJsonForm(scconfig) {
-            this.jsonForm.clearFormData();
-            const workerSchemas = (0, utils_1.getWorkersSchemas)(scconfig);
-            this._currentSchemas = workerSchemas;
-            this.jsonForm.jsonSchema = workerSchemas.schema;
-            this.jsonForm.uiSchema = workerSchemas.uischema;
-            this.jsonForm.formOptions = {
-                columnWidth: '100%',
-                columnsPerRow: 1,
-                confirmButtonOptions: {
-                    caption: '$confirm',
-                    backgroundColor: Theme.colors.primary.main,
-                    fontColor: Theme.colors.primary.contrastText,
-                    hide: true
-                },
-                dateTimeFormat: {
-                    date: 'YYYY-MM-DD',
-                    time: 'HH:mm:ss',
-                    dateTime: 'MM/DD/YYYY HH:mm'
-                },
-                customControls: {
-                    "#/properties/scheduler/properties/schedules/properties/params": {
-                        render: () => {
-                            return this.$render("i-input", { inputType: "textarea", rows: 5, width: "100%", height: "auto", resize: "auto-grow" });
-                        },
-                        getData: (control) => {
-                            const value = control.value;
-                            return value ? JSON.parse(value) : {};
-                        },
-                        setData: (control, value) => {
-                            console.log(value);
-                            control.value = value ? JSON.stringify(value) : '';
-                        }
-                    },
-                    "#/properties/scheduler/properties/params": {
-                        render: () => {
-                            return this.$render("i-input", { inputType: "textarea", rows: 5, width: "100%", height: "auto", resize: "auto-grow" });
-                        },
-                        getData: (control) => {
-                            const value = control.value;
-                            return value ? JSON.parse(value) : {};
-                        },
-                        setData: (control, value) => {
-                            control.value = value ? JSON.stringify(value) : '';
-                        }
-                    }
-                }
-            };
-            this.jsonForm.renderForm();
-            this.pnlForm.visible = true;
-            this.jsonForm.setFormData(scconfig);
         }
         async getContent(contract) {
             if (this.cachedContract[contract])
@@ -2825,7 +2983,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             return content;
         }
         async onOpenVerify() {
-            const moduleDir = components_6.application.currentModuleDir;
+            const moduleDir = components_8.application.currentModuleDir;
             const selectedItem = this.comboEnclave.selectedItem;
             let doc = new Uint8Array(await (await fetch(selectedItem.value)).arrayBuffer());
             let rootCert = await (await fetch("certs/aws-root.pem")).text();
@@ -2839,16 +2997,12 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             }
             this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
         }
-        async onConfirmClick() {
-            const data = await this.jsonForm.getFormData();
-            const validated = await this.jsonForm.validate(data, this._currentSchemas.schema, { changing: false });
-            console.log('====', data, validated);
-        }
         clear() {
             this.pnlDeploy.clearInnerHTML();
-            this.pnlForm.visible = false;
+            this.formEl.visible = false;
         }
         init() {
+            this.i18n.init({ ...index_7.repoJson });
             super.init();
             this.onExpand = this.getAttribute('onExpand', true) || this.onExpand;
             const name = this.getAttribute('contract', true);
@@ -2866,24 +3020,21 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
                     this.$render("i-combo-box", { id: "comboEnclave", height: 36, width: '100%', icon: { width: 14, height: 14, name: 'angle-down' }, border: { radius: 5 } }),
                     this.$render("i-button", { id: "btnVerify", caption: "$verify", stack: { shrink: '0' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenVerify }),
                     this.$render("i-label", { id: "lblVerificationMessage", caption: "", font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
-                    this.$render("i-vstack", { id: "pnlForm", visible: false, gap: "0.5rem" },
-                        this.$render("i-form", { id: "jsonForm", width: "100%", height: "100%" }),
-                        this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "end" },
-                            this.$render("i-button", { caption: '$confirm', padding: { top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }, onClick: this.onConfirmClick }))),
+                    this.$render("i-scom-widget-repos--form", { id: "formEl", width: "100%", stack: { 'grow': '1' }, maxHeight: `100%`, display: 'block', visible: false }),
                     this.$render("i-panel", { id: "pnlDeploy", width: "100%", height: "100%" }))));
         }
     };
     ScomWidgetReposDeployer = __decorate([
-        (0, components_6.customElements)('i-scom-widget-repos--deployer')
+        (0, components_8.customElements)('i-scom-widget-repos--deployer')
     ], ScomWidgetReposDeployer);
     exports.ScomWidgetReposDeployer = ScomWidgetReposDeployer;
 });
-define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/repo.tsx", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts", "@scom/scom-widget-repos/components/deployer.tsx"], function (require, exports, components_7, repo_1, index_css_3, index_5, index_6, deployer_1) {
+define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/repo.tsx", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts", "@scom/scom-widget-repos/components/deployer.tsx"], function (require, exports, components_9, repo_1, index_css_3, index_8, index_9, deployer_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const Theme = components_7.Styles.Theme.ThemeVars;
+    const Theme = components_9.Styles.Theme.ThemeVars;
     const pageSize = 10;
-    let ScomWidgetReposGithubList = class ScomWidgetReposGithubList extends components_7.Module {
+    let ScomWidgetReposGithubList = class ScomWidgetReposGithubList extends components_9.Module {
         constructor(parent, options) {
             super(parent, options);
             this.totalPage = 0;
@@ -2949,7 +3100,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             let list = [...this.listRepos];
             const onlyPRs = this.filterSwitch?.checked ?? false;
             if (onlyPRs) {
-                list = list.filter(v => v.open_issues > 0).sort((a, b) => (0, components_7.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
+                list = list.filter(v => v.open_issues > 0).sort((a, b) => (0, components_9.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
             }
             if (this._selectedType?.length) {
                 list = list.filter(v => this._selectedType.includes(v.type));
@@ -3037,7 +3188,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.pnlLoader.visible = true;
             this.resetPaging();
             this.pnlLoader.visible = false;
-            const config = (0, index_5.getStorageConfig)();
+            const config = (0, index_8.getStorageConfig)();
             const baseUrl = config?.baseUrl || '';
             let result = this.extractUrl(baseUrl);
             result = result.split('?')[0];
@@ -3065,7 +3216,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             this.mdWidgetBuilder.visible = true;
             this.pnlBuilderLoader.visible = true;
             if (!this.widgetBuilder) {
-                const pack = await components_7.application.loadPackage('@scom/scom-widget-builder');
+                const pack = await components_9.application.loadPackage('@scom/scom-widget-builder');
                 this.widgetBuilder = await pack['ScomWidgetBuilder'].create({
                     id: 'widgetBuilder',
                     width: '100dvw',
@@ -3075,7 +3226,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
                 }, undefined);
                 this.widgetBuilder.parent = this.pnlBuilder;
             }
-            const config = (0, index_5.getStorageConfig)();
+            const config = (0, index_8.getStorageConfig)();
             if (!this.initedConfig && config.transportEndpoint) {
                 this.initedConfig = true;
                 this.widgetBuilder.setConfig(config);
@@ -3190,7 +3341,7 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
             }
         }
         init() {
-            this.i18n.init({ ...index_6.repoJson });
+            this.i18n.init({ ...index_9.repoJson });
             super.init();
             this.isProjectOwner = this.getAttribute('isProjectOwner', true, false);
             this.isProject = this.getAttribute('isProject', true, false);
@@ -3224,20 +3375,20 @@ define("@scom/scom-widget-repos/components/github/list.tsx", ["require", "export
         }
     };
     __decorate([
-        (0, components_7.observable)()
+        (0, components_9.observable)()
     ], ScomWidgetReposGithubList.prototype, "totalPage", void 0);
     ScomWidgetReposGithubList = __decorate([
-        components_7.customModule,
-        (0, components_7.customElements)('i-scom-widget-repos--github-list')
+        components_9.customModule,
+        (0, components_9.customElements)('i-scom-widget-repos--github-list')
     ], ScomWidgetReposGithubList);
     exports.default = ScomWidgetReposGithubList;
 });
-define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_8, index_css_4, index_7, index_8, index_9) {
+define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_10, index_css_4, index_10, index_11, index_12) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = void 0;
-    const Theme = components_8.Styles.Theme.ThemeVars;
-    let ScomWidgetReposCreateRepo = class ScomWidgetReposCreateRepo extends components_8.Module {
+    const Theme = components_10.Styles.Theme.ThemeVars;
+    let ScomWidgetReposCreateRepo = class ScomWidgetReposCreateRepo extends components_10.Module {
         constructor(parent, options) {
             super(parent, options);
         }
@@ -3247,7 +3398,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
             return self;
         }
         init() {
-            this.i18n.init({ ...index_9.repoJson });
+            this.i18n.init({ ...index_12.repoJson });
             super.init();
             this.onClosed = this.getAttribute('onClosed', true) || this.onClosed;
             const id = this.getAttribute('id', true);
@@ -3316,7 +3467,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                 this.mdAlert.onConfirm = onConfirm;
         }
         async handleConfirmClick() {
-            if (!(0, index_8.isLoggedIn)()) {
+            if (!(0, index_11.isLoggedIn)()) {
                 this.setMessage({
                     status: 'error',
                     content: '$please_login_to_create_your_repository'
@@ -3340,7 +3491,7 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
                     name: `${this.projectPrefix}-${name}`,
                     description: this.edtDescription.value
                 };
-                const result = await (0, index_7.createRepo)(repoInfo);
+                const result = await (0, index_10.createRepo)(repoInfo);
                 if (!result || result.error) {
                     this.setMessage({
                         status: 'error',
@@ -3396,16 +3547,16 @@ define("@scom/scom-widget-repos/components/github/create.tsx", ["require", "expo
         }
     };
     ScomWidgetReposCreateRepo = __decorate([
-        (0, components_8.customElements)('i-scom-widget-repos--create-repo')
+        (0, components_10.customElements)('i-scom-widget-repos--create-repo')
     ], ScomWidgetReposCreateRepo);
     exports.ScomWidgetReposCreateRepo = ScomWidgetReposCreateRepo;
 });
-define("@scom/scom-widget-repos/components/tabs/index.tsx", ["require", "exports", "@ijstech/components"], function (require, exports, components_9) {
+define("@scom/scom-widget-repos/components/tabs/index.tsx", ["require", "exports", "@ijstech/components"], function (require, exports, components_11) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposTabs = void 0;
-    const Theme = components_9.Styles.Theme.ThemeVars;
-    let ScomWidgetReposTabs = class ScomWidgetReposTabs extends components_9.Module {
+    const Theme = components_11.Styles.Theme.ThemeVars;
+    let ScomWidgetReposTabs = class ScomWidgetReposTabs extends components_11.Module {
         constructor(parent, options) {
             super(parent, options);
             this._data = {
@@ -3491,18 +3642,18 @@ define("@scom/scom-widget-repos/components/tabs/index.tsx", ["require", "exports
         }
     };
     ScomWidgetReposTabs = __decorate([
-        (0, components_9.customElements)('i-scom-widget-repos--tabs')
+        (0, components_11.customElements)('i-scom-widget-repos--tabs')
     ], ScomWidgetReposTabs);
     exports.ScomWidgetReposTabs = ScomWidgetReposTabs;
 });
-define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_10, API_2, index_css_5, create_1, index_10) {
+define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/utils/API.ts", "@scom/scom-widget-repos/components/github/index.css.ts", "@scom/scom-widget-repos/components/github/create.tsx", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_12, API_2, index_css_5, create_1, index_13) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
     Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return create_1.ScomWidgetReposCreateRepo; } });
     // import dataJson from './data.json';
-    const Theme = components_10.Styles.Theme.ThemeVars;
-    let ScomWidgetReposGithub = class ScomWidgetReposGithub extends components_10.Module {
+    const Theme = components_12.Styles.Theme.ThemeVars;
+    let ScomWidgetReposGithub = class ScomWidgetReposGithub extends components_12.Module {
         constructor(parent, options) {
             super(parent, options);
             this.countPRs = 0;
@@ -3564,13 +3715,13 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
             let list = [...this.listRepos];
             if (this.searchName)
                 list = list.filter(v => v.name.toLowerCase().includes(this.searchName.toLowerCase()));
-            return list.sort((a, b) => (0, components_10.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
+            return list.sort((a, b) => (0, components_12.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
         }
         get listPRsFiltered() {
             let list = [...this.listRepos];
             if (this.searchName)
                 list = list.filter(v => v.name.toLowerCase().includes(this.searchName.toLowerCase()));
-            return list.filter(v => v.open_issues > 0).sort((a, b) => (0, components_10.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
+            return list.filter(v => v.open_issues > 0).sort((a, b) => (0, components_12.moment)(a.pushed_at).isSameOrBefore(b.pushed_at) ? 1 : -1);
         }
         async getAllRepos() {
             // const result = await getAllRepos(this.userInfo?.data?.login, this.isProject ? this.prefix : '', !this.isProject);
@@ -3694,7 +3845,7 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
                 this.elmPackages.onHide();
         }
         init() {
-            this.i18n.init({ ...index_10.repoJson });
+            this.i18n.init({ ...index_13.repoJson });
             super.init();
             this.isProject = this.getAttribute('isProject', true);
             this.isProjectOwner = this.getAttribute('isProjectOwner', true);
@@ -3714,15 +3865,15 @@ define("@scom/scom-widget-repos/components/github/index.tsx", ["require", "expor
         }
     };
     ScomWidgetReposGithub = __decorate([
-        (0, components_10.customElements)('i-scom-widget-repos--github')
+        (0, components_12.customElements)('i-scom-widget-repos--github')
     ], ScomWidgetReposGithub);
     exports.ScomWidgetReposGithub = ScomWidgetReposGithub;
 });
-define("@scom/scom-widget-repos/components/audit_report/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_11) {
+define("@scom/scom-widget-repos/components/audit_report/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_13) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    const Theme = components_11.Styles.Theme.ThemeVars;
-    exports.default = components_11.Styles.style({
+    const Theme = components_13.Styles.Theme.ThemeVars;
+    exports.default = components_13.Styles.style({
         '$nest': {
             '&::-webkit-scrollbar-track': {
                 borderRadius: '12px',
@@ -3768,11 +3919,11 @@ define("@scom/scom-widget-repos/components/audit_report/data.json.ts", ["require
         'Does the DApp register an excessive amount of whitelisted smart contracts (i.e. registered in SC-Registry but not interact in codebase)?'
     ];
 });
-define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_12, index_css_6, data_json_1, eth_wallet_5, index_11, interface_3, index_12) {
+define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/audit_report/index.css.ts", "@scom/scom-widget-repos/components/audit_report/data.json.ts", "@ijstech/eth-wallet", "@scom/scom-widget-repos/utils/index.ts", "@scom/scom-widget-repos/interface.ts", "@scom/scom-widget-repos/languages/index.ts"], function (require, exports, components_14, index_css_6, data_json_1, eth_wallet_5, index_14, interface_3, index_15) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposAuditReport = void 0;
-    const Theme = components_12.Styles.Theme.ThemeVars;
+    const Theme = components_14.Styles.Theme.ThemeVars;
     var ReportStatus;
     (function (ReportStatus) {
         ReportStatus[ReportStatus["EDIT"] = 0] = "EDIT";
@@ -3780,13 +3931,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         ReportStatus[ReportStatus["POPUP"] = 2] = "POPUP";
     })(ReportStatus || (ReportStatus = {}));
     ;
-    let ScomWidgetReposAuditReport = class ScomWidgetReposAuditReport extends components_12.Module {
+    let ScomWidgetReposAuditReport = class ScomWidgetReposAuditReport extends components_14.Module {
         constructor(parent, options) {
             super(parent, options);
             this.mergeInfo = {};
             this.auditReportInfo = {};
             this.getPackageFiles = async () => {
-                const res = await (0, index_11.getAllFiles)(this.commitGuid);
+                const res = await (0, index_14.getAllFiles)(this.commitGuid);
                 if (res?.files) {
                     const files = res.files;
                     return files;
@@ -3796,7 +3947,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             this.submitAuditReport = async () => {
                 this.btnSubmit.rightIcon.visible = true;
                 if (!this.isAuditPR) {
-                    let auditInfo = await (0, index_11.getAuditInfo)(this.commitGuid);
+                    let auditInfo = await (0, index_14.getAuditInfo)(this.commitGuid);
                     if (auditInfo.auditStatus !== interface_3.PackageStatus.AUDITING) {
                         this.setMessage({
                             status: 'error',
@@ -3816,7 +3967,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 const { packageOwner, packageName } = resultInfo;
                 const { number, commit_sha, created_at } = this.mergeInfo;
                 const reportFileName = this.isAuditPR ? `Audit-Report-PR-${packageOwner}-${packageName}-${number}-${commit_sha}.md` : `Audit-Report-${this.commitGuid}.md`;
-                const ipfsReportCid = await (0, index_11.uploadDataToIpfs)(JSON.stringify(resultInfo), reportFileName);
+                const ipfsReportCid = await (0, index_14.uploadDataToIpfs)(JSON.stringify(resultInfo), reportFileName);
                 if (ipfsReportCid) {
                     // Upload all files to ipfs
                     let ipfsCid = '';
@@ -3854,7 +4005,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                     this.mdAlert.showModal();
                     let res;
                     if (this.isAuditPR) {
-                        res = await (0, index_11.auditPR)(packageOwner, packageName, number, commit_sha, ipfsReportCid, ipfsCid, this.auditReportInfo.result);
+                        res = await (0, index_14.auditPR)(packageOwner, packageName, number, commit_sha, ipfsReportCid, ipfsCid, this.auditReportInfo.result);
                         if (res?.success) {
                             this.setMessage({
                                 status: 'success',
@@ -3880,7 +4031,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                             if (err) {
                                 this.setMessage({
                                     status: 'error',
-                                    content: (0, index_11.parseContractError)(err.message)
+                                    content: (0, index_14.parseContractError)(err.message)
                                 });
                                 this.mdAlert.showModal();
                             }
@@ -3890,7 +4041,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                     title: '$transaction_submitted',
                                     link: {
                                         caption: receipt,
-                                        href: (0, index_11.getExplorerTxUrl)(receipt)
+                                        href: (0, index_14.getExplorerTxUrl)(receipt)
                                     }
                                 });
                                 this.mdAlert.showModal();
@@ -3905,7 +4056,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                 ipfsCid,
                                 auditStatus: result
                             };
-                            res = await (0, index_11.auditCommit)(data);
+                            res = await (0, index_14.auditCommit)(data);
                             if (res?.success) {
                                 this.setMessage({
                                     status: 'success',
@@ -3926,7 +4077,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                                 this.btnSubmit.rightIcon.visible = false;
                             }
                         };
-                        await (0, index_11.auditPackageVersion)(this.auditReportInfo.packageVersionId, this.auditReportInfo.result === interface_3.PackageStatus.AUDIT_PASSED, ipfsReportCid, callback, confirmationCallback);
+                        await (0, index_14.auditPackageVersion)(this.auditReportInfo.packageVersionId, this.auditReportInfo.result === interface_3.PackageStatus.AUDIT_PASSED, ipfsReportCid, callback, confirmationCallback);
                     }
                 }
                 else {
@@ -3938,7 +4089,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                     this.btnSubmit.rightIcon.visible = false;
                 }
             };
-            this.$eventBus = components_12.application.EventBus;
+            this.$eventBus = components_14.application.EventBus;
         }
         get isAuditPR() {
             return !!this.prInfo;
@@ -3969,8 +4120,8 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         }
         async init() {
             const i18nData = {};
-            for (const key in index_12.auditJson) {
-                i18nData[key] = { ...(index_12.auditJson[key] || {}), ...(index_12.mainJson[key] || {}) };
+            for (const key in index_15.auditJson) {
+                i18nData[key] = { ...(index_15.auditJson[key] || {}), ...(index_15.mainJson[key] || {}) };
             }
             this.i18n.init({ ...i18nData });
             this.classList.add(index_css_6.default);
@@ -4007,13 +4158,13 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         async fetchAuditPR() {
             const { owner, repo, prNumber, mergeId } = this.prInfo;
             if (mergeId) {
-                const result = await (0, index_11.getAuditPRReportInfo)(mergeId);
+                const result = await (0, index_14.getAuditPRReportInfo)(mergeId);
                 if (result) {
                     this.auditReportInfo = result;
                     return;
                 }
             }
-            const result = await (0, index_11.getPull)(owner, repo, prNumber);
+            const result = await (0, index_14.getPull)(owner, repo, prNumber);
             if (result?.data) {
                 this.mergeInfo = result.data;
                 const { number, title, base, commit_sha } = result.data;
@@ -4040,7 +4191,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
             }
         }
         async fetchAuditPackage() {
-            this.auditReportInfo = await (0, index_11.getAuditReportInfo)(this.commitGuid);
+            this.auditReportInfo = await (0, index_14.getAuditReportInfo)(this.commitGuid);
             if (!this.auditReportInfo.checklist || !this.auditReportInfo.checklist.length) {
                 this.auditReportInfo.checklist = new Array(data_json_1.checklistItems.length).fill(null).map(() => ({ checked: false, comment: "" }));
             }
@@ -4069,7 +4220,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                 this.lbPRTitle.caption = this.auditReportInfo.mergeTitle;
                 this.lbPRNumber.caption = this.i18n.get('$opened_by', {
                     qty: `${this.auditReportInfo.mergeNumber ?? ''}`,
-                    date: (0, index_11.getTimeAgo)(this.mergeInfo.created_at, this.i18n),
+                    date: (0, index_14.getTimeAgo)(this.mergeInfo.created_at, this.i18n),
                     by: this.mergeInfo.user_login
                 });
                 this.lbPRSha.caption = `${this.i18n.get('$merge_sha')}: ${this.auditReportInfo.mergeSha || this.mergeInfo.commit_sha}`;
@@ -4192,8 +4343,8 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         }
         renderAuditSummary() {
             this.auditSummary.innerHTML = '';
-            const lastAuditDate = this.auditReportInfo.auditDate ? (0, index_11.formatDate)(this.auditReportInfo.auditDate * 1000, "DD MMM YYYY") : '-';
-            const auditor = this.auditReportInfo.auditedBy ? components_12.FormatUtils.truncateWalletAddress(this.auditReportInfo.auditedBy) : '-';
+            const lastAuditDate = this.auditReportInfo.auditDate ? (0, index_14.formatDate)(this.auditReportInfo.auditDate * 1000, "DD MMM YYYY") : '-';
+            const auditor = this.auditReportInfo.auditedBy ? components_14.FormatUtils.truncateWalletAddress(this.auditReportInfo.auditedBy) : '-';
             this.auditSummary.append(this.$render("i-vstack", { width: '100%', verticalAlignment: 'center' },
                 !this.isAuditPR ? this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
@@ -4209,7 +4360,7 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
                         this.$render("i-label", { caption: 'Owner', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start' },
-                        this.$render("i-label", { caption: this.auditReportInfo.owner ? components_12.FormatUtils.truncateWalletAddress(this.auditReportInfo.owner) : '-', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))) : [],
+                        this.$render("i-label", { caption: this.auditReportInfo.owner ? components_14.FormatUtils.truncateWalletAddress(this.auditReportInfo.owner) : '-', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } }))) : [],
                 this.$render("i-hstack", { width: '100%', verticalAlignment: 'center', background: { color: '#34343A' }, height: '3.125rem', horizontalAlignment: 'center', border: { bottom: { color: '#636363', width: '1px', style: 'solid' } } },
                     this.$render("i-hstack", { height: '100%', width: '50%', verticalAlignment: 'center', horizontalAlignment: 'start', border: { right: { color: '#636363', width: '1px', style: 'solid' } } },
                         this.$render("i-label", { caption: '$title', padding: { top: '0.3125rem', bottom: '0.3125rem', left: '1.25rem', right: '1.25rem' } })),
@@ -4319,26 +4470,26 @@ define("@scom/scom-widget-repos/components/audit_report/index.tsx", ["require", 
         }
     };
     ScomWidgetReposAuditReport = __decorate([
-        (0, components_12.customElements)('i-scom-widget-repos--audit-report')
+        (0, components_14.customElements)('i-scom-widget-repos--audit-report')
     ], ScomWidgetReposAuditReport);
     exports.ScomWidgetReposAuditReport = ScomWidgetReposAuditReport;
 });
-define("@scom/scom-widget-repos/components/index.ts", ["require", "exports", "@scom/scom-widget-repos/components/github/index.tsx", "@scom/scom-widget-repos/components/audit_report/index.tsx", "@scom/scom-widget-repos/components/tabs/index.tsx", "@scom/scom-widget-repos/components/deployer.tsx"], function (require, exports, index_13, index_14, index_15, deployer_2) {
+define("@scom/scom-widget-repos/components/index.ts", ["require", "exports", "@scom/scom-widget-repos/components/github/index.tsx", "@scom/scom-widget-repos/components/audit_report/index.tsx", "@scom/scom-widget-repos/components/tabs/index.tsx", "@scom/scom-widget-repos/components/deployer.tsx"], function (require, exports, index_16, index_17, index_18, deployer_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetReposDeployer = exports.ScomWidgetReposTabs = exports.ScomWidgetReposAuditReport = exports.ScomWidgetReposCreateRepo = exports.ScomWidgetReposGithub = void 0;
-    Object.defineProperty(exports, "ScomWidgetReposGithub", { enumerable: true, get: function () { return index_13.ScomWidgetReposGithub; } });
-    Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return index_13.ScomWidgetReposCreateRepo; } });
-    Object.defineProperty(exports, "ScomWidgetReposAuditReport", { enumerable: true, get: function () { return index_14.ScomWidgetReposAuditReport; } });
-    Object.defineProperty(exports, "ScomWidgetReposTabs", { enumerable: true, get: function () { return index_15.ScomWidgetReposTabs; } });
+    Object.defineProperty(exports, "ScomWidgetReposGithub", { enumerable: true, get: function () { return index_16.ScomWidgetReposGithub; } });
+    Object.defineProperty(exports, "ScomWidgetReposCreateRepo", { enumerable: true, get: function () { return index_16.ScomWidgetReposCreateRepo; } });
+    Object.defineProperty(exports, "ScomWidgetReposAuditReport", { enumerable: true, get: function () { return index_17.ScomWidgetReposAuditReport; } });
+    Object.defineProperty(exports, "ScomWidgetReposTabs", { enumerable: true, get: function () { return index_18.ScomWidgetReposTabs; } });
     Object.defineProperty(exports, "ScomWidgetReposDeployer", { enumerable: true, get: function () { return deployer_2.ScomWidgetReposDeployer; } });
 });
-define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_13) {
+define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/components"], function (require, exports, components_15) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.searchPanelStyle = void 0;
-    const Theme = components_13.Styles.Theme.ThemeVars;
-    exports.searchPanelStyle = components_13.Styles.style({
+    const Theme = components_15.Styles.Theme.ThemeVars;
+    exports.searchPanelStyle = components_15.Styles.style({
         position: 'sticky',
         top: 0,
         zIndex: 1,
@@ -4356,13 +4507,13 @@ define("@scom/scom-widget-repos/index.css.ts", ["require", "exports", "@ijstech/
         }
     });
 });
-define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/index.ts", "@scom/scom-widget-repos/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts", "@scom/scom-widget-repos/utils/index.ts"], function (require, exports, components_14, index_16, index_css_7, index_17, index_18, utils_2) {
+define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", "@scom/scom-widget-repos/components/index.ts", "@scom/scom-widget-repos/index.css.ts", "@scom/scom-widget-repos/store/index.ts", "@scom/scom-widget-repos/languages/index.ts", "@scom/scom-widget-repos/utils/index.ts"], function (require, exports, components_16, index_19, index_css_7, index_20, index_21, utils_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ScomWidgetRepos = void 0;
-    const Theme = components_14.Styles.Theme.ThemeVars;
-    components_14.Styles.Theme.applyTheme(components_14.Styles.Theme.darkTheme);
-    let ScomWidgetRepos = class ScomWidgetRepos extends components_14.Module {
+    const Theme = components_16.Styles.Theme.ThemeVars;
+    components_16.Styles.Theme.applyTheme(components_16.Styles.Theme.darkTheme);
+    let ScomWidgetRepos = class ScomWidgetRepos extends components_16.Module {
         constructor(parent, options) {
             super(parent, options);
             this._data = {};
@@ -4411,11 +4562,11 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
         async setData(value) {
             this._data = value;
-            (0, index_17.setContractInfoByChain)(this.contractInfo);
-            (0, index_17.setTransportEndpoint)(this._data.transportEndpoint);
-            (0, index_17.setScomCid)(this._data.scomCid);
+            (0, index_20.setContractInfoByChain)(this.contractInfo);
+            (0, index_20.setTransportEndpoint)(this._data.transportEndpoint);
+            (0, index_20.setScomCid)(this._data.scomCid);
             if (this._data.transportEndpoint) {
-                (0, index_17.setStorageConfig)({
+                (0, index_20.setStorageConfig)({
                     transportEndpoint: this._data.transportEndpoint,
                     signer: this._data.signer,
                     baseUrl: this._data.baseUrl
@@ -4441,7 +4592,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
         async onCreateRepoClick() {
             if (!this.createRepoElm) {
-                this.createRepoElm = new index_16.ScomWidgetReposCreateRepo(undefined, {
+                this.createRepoElm = new index_19.ScomWidgetReposCreateRepo(undefined, {
                     id: this.guid,
                     prefix: this.prefix
                 });
@@ -4473,7 +4624,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
             }
         }
         async init() {
-            this.i18n.init({ ...index_18.mainJson });
+            this.i18n.init({ ...index_21.mainJson });
             super.init();
             const contractInfo = this.getAttribute('contractInfo', true);
             const prefix = this.getAttribute('prefix', true);
@@ -4500,7 +4651,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
         }
     };
     ScomWidgetRepos = __decorate([
-        (0, components_14.customElements)("i-scom-widget-repos")
+        (0, components_16.customElements)("i-scom-widget-repos")
     ], ScomWidgetRepos);
     exports.ScomWidgetRepos = ScomWidgetRepos;
 });
