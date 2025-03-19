@@ -240,7 +240,7 @@ declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
 declare module "@scom/scom-widget-repos/utils/storage.ts" {
     const getPackages: () => Promise<void>;
     const getPackage: (name: string) => Promise<string>;
-    const getScconfig: (name: string) => Promise<any>;
+    const getScconfig: (name: string) => Promise<string>;
     export { getPackages, getPackage, getScconfig };
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/schema.ts" />
@@ -889,12 +889,40 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
     };
     export default _default_2;
 }
+/// <amd-module name="@scom/scom-widget-repos/languages/components.json.ts" />
+declare module "@scom/scom-widget-repos/languages/components.json.ts" {
+    const _default_3: {
+        en: {
+            cancel: string;
+            close: string;
+            confirm: string;
+            raw_json: string;
+            form: string;
+        };
+        "zh-hant": {
+            cancel: string;
+            close: string;
+            confirm: string;
+            form: string;
+            raw_json: string;
+        };
+        vi: {
+            cancel: string;
+            close: string;
+            confirm: string;
+            raw_json: string;
+            form: string;
+        };
+    };
+    export default _default_3;
+}
 /// <amd-module name="@scom/scom-widget-repos/languages/index.ts" />
 declare module "@scom/scom-widget-repos/languages/index.ts" {
     import mainJson from "@scom/scom-widget-repos/languages/main.json.ts";
     import auditJson from "@scom/scom-widget-repos/languages/audit.json.ts";
     import repoJson from "@scom/scom-widget-repos/languages/repo.json.ts";
-    export { mainJson, auditJson, repoJson };
+    import componentsJson from "@scom/scom-widget-repos/languages/components.json.ts";
+    export { mainJson, auditJson, repoJson, componentsJson };
 }
 /// <amd-module name="@scom/scom-widget-repos/components/github/repo.tsx" />
 declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
@@ -997,12 +1025,60 @@ declare module "@scom/scom-widget-repos/components/github/repo.tsx" {
         render(): any;
     }
 }
+/// <amd-module name="@scom/scom-widget-repos/components/deployer.css.ts" />
+declare module "@scom/scom-widget-repos/components/deployer.css.ts" {
+    export const codeTabsStyle: string;
+}
+/// <amd-module name="@scom/scom-widget-repos/components/jsonForm.tsx" />
+declare module "@scom/scom-widget-repos/components/jsonForm.tsx" {
+    import { ControlElement, Module, Container } from "@ijstech/components";
+    import { Monaco } from "@scom/scom-code-editor";
+    interface ScomWidgetReposjsonFormement extends ControlElement {
+        value?: string;
+        onChange?: (target: ScomWidgetReposForm) => void;
+    }
+    global {
+        namespace JSX {
+            interface IntrinsicElements {
+                ['i-scom-widget-repos--form']: ScomWidgetReposjsonFormement;
+            }
+        }
+    }
+    interface IGuideForm {
+        value?: string;
+    }
+    export class ScomWidgetReposForm extends Module {
+        private codeEditor;
+        private jsonForm;
+        private _data;
+        private isInited;
+        private _currentSchemas;
+        onChange: (target: ScomWidgetReposForm) => void;
+        constructor(parent?: Container, options?: any);
+        static create(options?: ScomWidgetReposjsonFormement, parent?: Container): Promise<ScomWidgetReposForm>;
+        get parseData(): any;
+        set value(data: string);
+        get value(): string;
+        setData(value: IGuideForm): void;
+        private renderJsonForm;
+        private initEvents;
+        private renderEditor;
+        private handleCodeEditorChange;
+        private onConfirmClick;
+        getErrors(): Monaco.editor.IMarker[];
+        dispose(): void;
+        disposeEditor(): void;
+        init(): void;
+        render(): any;
+    }
+}
 /// <amd-module name="@scom/scom-widget-repos/components/deployer.tsx" />
 declare module "@scom/scom-widget-repos/components/deployer.tsx" {
     import { Module, ControlElement, Container } from '@ijstech/components';
     interface ScomWidgetReposDeployerElement extends ControlElement {
         contract?: string;
         onExpand?: (value: boolean) => void;
+        onChange?: (target: ScomWidgetReposDeployer) => void;
     }
     global {
         namespace JSX {
@@ -1017,25 +1093,21 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         private comboEnclave;
         private enclaveItems;
         private lblVerificationMessage;
-        private jsonForm;
         private iconExpand;
-        private pnlForm;
+        private formEl;
         onExpand?: (value: boolean) => void;
         private _contract;
         private cachedContract;
         private _isExpanded;
-        private _currentSchemas;
         get contract(): string;
         set contract(value: string);
         constructor(parent?: Container, options?: any);
         static create(options?: any, parent?: Container): Promise<ScomWidgetReposDeployer>;
         setData(name: string): Promise<void>;
         private handleInit;
-        private renderJsonForm;
         private getContent;
         private onOpenVerify;
         private handleExpand;
-        private onConfirmClick;
         clear(): void;
         init(): void;
         render(): any;
@@ -1275,8 +1347,8 @@ declare module "@scom/scom-widget-repos/components/github/index.tsx" {
 }
 /// <amd-module name="@scom/scom-widget-repos/components/audit_report/index.css.ts" />
 declare module "@scom/scom-widget-repos/components/audit_report/index.css.ts" {
-    const _default_3: string;
-    export default _default_3;
+    const _default_4: string;
+    export default _default_4;
 }
 /// <amd-module name="@scom/scom-widget-repos/components/audit_report/data.json.ts" />
 declare module "@scom/scom-widget-repos/components/audit_report/data.json.ts" {
