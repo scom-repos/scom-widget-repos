@@ -47,43 +47,6 @@ const getWorkersSchemas = (scconfig: Record<string, any>) => {
     "schema": {
       "type": "object",
       "properties": {
-        "workers": {
-          "type": "object",
-          "description": "Map of worker definitions. The key is the worker name.",
-          "patternProperties": {
-            "^[a-zA-Z0-9_-]+$": {
-              "type": "object",
-              "properties": {
-                "module": {
-                  "type": "string",
-                  "description": "Module path for the worker"
-                },
-                "plugins": {
-                  "type": "object",
-                  "description": "Predefined plugins for the worker",
-                  "properties": {
-                    "cache": {
-                      "type": "boolean"
-                    },
-                    "db": {
-                      "type": "boolean"
-                    },
-                    "wallet": {
-                      "type": "boolean"
-                    },
-                    "fetch": {
-                      "type": "boolean"
-                    }
-                  },
-                  "additionalProperties": false
-                }
-              },
-              "required": ["module", "plugins"]
-            }
-          },
-          "additionalProperties": false,
-          "properties": workers
-        },
         "scheduler": {
           "type": "object",
           "properties": {
@@ -161,54 +124,11 @@ const getWorkersSchemas = (scconfig: Record<string, any>) => {
           "required": ["routes"]
         }
       },
-      "required": ["workers", "scheduler", "router"]
+      "required": ["scheduler", "router"]
     },
     "uischema": {
       "type": "VerticalLayout",
       "elements": [
-        {
-          "type": "Group",
-          "label": "Workers",
-          "elements": [
-            {
-              "type": "Control",
-              "scope": "#/properties/workers",
-              "options": {
-                "detail": {
-                  "type": "VerticalLayout",
-                  "elements": [
-                    {
-                      "type": "Control",
-                      "scope": "#/properties/module"
-                    },
-                    {
-                      "type": "Group",
-                      "label": "Plugins",
-                      "elements": [
-                        {
-                          "type": "Control",
-                          "scope": "#/properties/plugins/properties/cache"
-                        },
-                        {
-                          "type": "Control",
-                          "scope": "#/properties/plugins/properties/db"
-                        },
-                        {
-                          "type": "Control",
-                          "scope": "#/properties/plugins/properties/wallet"
-                        },
-                        {
-                          "type": "Control",
-                          "scope": "#/properties/plugins/properties/fetch"
-                        }
-                      ]
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        },
         {
           "type": "Group",
           "label": "Scheduler",
