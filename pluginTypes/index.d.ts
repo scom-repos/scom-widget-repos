@@ -249,43 +249,6 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
         schema: {
             type: string;
             properties: {
-                workers: {
-                    type: string;
-                    description: string;
-                    patternProperties: {
-                        "^[a-zA-Z0-9_-]+$": {
-                            type: string;
-                            properties: {
-                                module: {
-                                    type: string;
-                                    description: string;
-                                };
-                                plugins: {
-                                    type: string;
-                                    description: string;
-                                    properties: {
-                                        cache: {
-                                            type: string;
-                                        };
-                                        db: {
-                                            type: string;
-                                        };
-                                        wallet: {
-                                            type: string;
-                                        };
-                                        fetch: {
-                                            type: string;
-                                        };
-                                    };
-                                    additionalProperties: boolean;
-                                };
-                            };
-                            required: string[];
-                        };
-                    };
-                    additionalProperties: boolean;
-                    properties: {};
-                };
                 scheduler: {
                     type: string;
                     properties: {
@@ -366,32 +329,6 @@ declare module "@scom/scom-widget-repos/utils/schema.ts" {
         uischema: {
             type: string;
             elements: ({
-                type: string;
-                label: string;
-                elements: {
-                    type: string;
-                    scope: string;
-                    options: {
-                        detail: {
-                            type: string;
-                            elements: ({
-                                type: string;
-                                scope: string;
-                                label?: undefined;
-                                elements?: undefined;
-                            } | {
-                                type: string;
-                                label: string;
-                                elements: {
-                                    type: string;
-                                    scope: string;
-                                }[];
-                                scope?: undefined;
-                            })[];
-                        };
-                    };
-                }[];
-            } | {
                 type: string;
                 label: string;
                 elements: ({
@@ -743,6 +680,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             enclave: string;
             enclave_verification_successful: string;
             enclave_verification_failed: string;
+            user_data: string;
         };
         "zh-hant": {
             all: string;
@@ -814,6 +752,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             enclave: string;
             enclave_verification_successful: string;
             enclave_verification_failed: string;
+            user_data: string;
         };
         vi: {
             all: string;
@@ -885,6 +824,7 @@ declare module "@scom/scom-widget-repos/languages/repo.json.ts" {
             enclave: string;
             enclave_verification_successful: string;
             enclave_verification_failed: string;
+            user_data: string;
         };
     };
     export default _default_2;
@@ -1095,6 +1035,8 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         private lblVerificationMessage;
         private iconExpand;
         private formEl;
+        private pnlEnclave;
+        private edtUserData;
         onExpand?: (value: boolean) => void;
         private _contract;
         private cachedContract;
@@ -1106,6 +1048,8 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         setData(name: string): Promise<void>;
         private handleInit;
         private getContent;
+        private toHexString;
+        private toPossibleString;
         private onOpenVerify;
         private handleExpand;
         clear(): void;
