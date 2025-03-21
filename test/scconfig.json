@@ -11,10 +11,10 @@
     "@ijstech/eth-wallet": "*",
 		"@ijstech/eth-contract": "*",
     "@scom/scom-dev-contract": "*",
+    "@scom/scom-token-list": "*",
+    "@scom/contract-deployer-widget": "*",
     "@scom/scom-widget-builder": "*",
     "@scom/scom-widget-repos": "*"
   },
-  "packages": [
-    "@scom/contract-deployer"
-  ]
+  "packages": []
 }

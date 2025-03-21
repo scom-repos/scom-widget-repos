@@ -1035,6 +1035,7 @@ declare module "@scom/scom-widget-repos/components/deployer.tsx" {
         private lblVerificationMessage;
         private iconExpand;
         private formEl;
+        private contractWiget;
         private pnlEnclave;
         private edtUserData;
         onExpand?: (value: boolean) => void;

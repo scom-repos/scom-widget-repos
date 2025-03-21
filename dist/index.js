@@ -2852,40 +2852,16 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         async handleInit() {
             if (this.pnlLoader)
                 this.pnlLoader.visible = true;
-            this.pnlDeploy.clearInnerHTML();
-            let rootDir = components_8.application.rootDir;
-            if (rootDir.endsWith('/'))
-                rootDir = rootDir.slice(0, -1);
-            if (rootDir.startsWith('/'))
-                rootDir = rootDir.slice(1);
-            const mainPath = `${window.location.origin}/${rootDir ? rootDir + '/' : ''}libs/@scom/contract-deployer`;
-            const scconfigPath = `${mainPath}/scconfig.json`;
-            const scconfig = await fetch(scconfigPath).then(res => res.json());
             const contract = (this.contract || '').replace('scom-repos', '@scom');
-            if (scconfig) {
-                scconfig.contract = contract;
-                scconfig.rootDir = mainPath;
-                scconfig.type = 'widget';
+            const contractScript = await this.getContent(contract);
+            if (!this.contractWiget) {
+                const lib = await components_8.application.loadPackage('@scom/contract-deployer-widget');
+                const contractWiget = await lib.create({ contract, script: contractScript });
+                this.contractWiget = contractWiget;
+                this.pnlDeploy.append(contractWiget);
             }
-            try {
-                const content = await this.getContent(contract);
-                if (!content)
-                    throw new Error('Contract not found');
-                await components_8.application.loadScript(contract, content, true);
-                const module = await components_8.application.newModule(scconfig.main, scconfig);
-                if (module) {
-                    this.pnlDeploy.append(module);
-                    const firstChild = module.firstChild;
-                    const pnlMain = firstChild?.children?.[2];
-                    if (pnlMain) {
-                        const innerModule = await components_8.application.newModule("@modules/module1", scconfig);
-                        pnlMain.clearInnerHTML();
-                        pnlMain.append(innerModule);
-                    }
-                }
-            }
-            catch (err) {
-                console.error('deploy error', err);
+            else {
+                await this.contractWiget.setData({ contract, script: contractScript });
             }
             const pkgScconfig = await (0, utils_1.getScconfig)(contract);
             const parsedScconfig = pkgScconfig ? JSON.parse(pkgScconfig) : null;
@@ -2939,7 +2915,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
         }
         clear() {
-            this.pnlDeploy.clearInnerHTML();
+            this.formEl.visible = false;
             this.pnlEnclave.visible = false;
         }
         init() {
