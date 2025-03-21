@@ -168,8 +168,8 @@ declare module "@scom/scom-widget-repos/store/index.ts" {
     export const isLoggedIn: () => any;
     export const setStorageConfig: (config: any) => void;
     export const getStorageConfig: () => {};
-    export const setScomCid: (scomCid: string) => void;
-    export const getScomCid: () => string;
+    export const setRootCid: (rootCid: string) => void;
+    export const getRootCid: () => string;
 }
 /// <amd-module name="@scom/scom-widget-repos/utils/API.ts" />
 declare module "@scom/scom-widget-repos/utils/API.ts" {
@@ -239,7 +239,10 @@ declare module "@scom/scom-widget-repos/components/github/index.css.ts" {
 /// <amd-module name="@scom/scom-widget-repos/utils/storage.ts" />
 declare module "@scom/scom-widget-repos/utils/storage.ts" {
     const getPackages: () => Promise<void>;
-    const getPackage: (name: string) => Promise<string>;
+    const getPackage: (name: string) => Promise<{
+        dependencies: any[];
+        script: string;
+    }>;
     const getScconfig: (name: string) => Promise<string>;
     export { getPackages, getPackage, getScconfig };
 }
@@ -1428,7 +1431,7 @@ declare module "@scom/scom-widget-repos" {
         prefix?: string;
         isProject?: boolean;
         isProjectOwner?: boolean;
-        scomCid?: string;
+        rootCid?: string;
     }
     interface IWidgetRepos {
         contractInfo?: Record<string, IContractInfo>;
@@ -1440,7 +1443,7 @@ declare module "@scom/scom-widget-repos" {
         baseUrl?: string;
         transportEndpoint?: string;
         signer?: IPFS.ISigner;
-        scomCid?: string;
+        rootCid?: string;
     }
     global {
         namespace JSX {

@@ -59,7 +59,7 @@ export class ScomWidgetReposDeployer extends Module {
   onExpand?: (value: boolean) => void;
 
   private _contract: string;
-  private cachedContract: Record<string, string> = {};
+  private cachedContract: Record<string, any> = {};
   private _isExpanded: boolean = false;
 
   get contract() {
@@ -96,15 +96,20 @@ export class ScomWidgetReposDeployer extends Module {
   private async handleInit() {
     if (this.pnlLoader) this.pnlLoader.visible = true;
     const contract = (this.contract || '').replace('scom-repos', '@scom');
-    const contractScript = await this.getContent(contract);
+    const {
+      script,
+      dependencies
+    } = await this.getContent(contract);
+    const data = { contract, dependencies, script };
+    this.pnlDeploy.visible = !!script;
 
     if (!this.contractWiget) {
       const lib = await application.loadPackage('@scom/contract-deployer-widget');
-      const contractWiget = await lib.create({ contract, script: contractScript });
+      const contractWiget = await lib.create(data);
       this.contractWiget = contractWiget;
       this.pnlDeploy.append(contractWiget);
     } else {
-      await this.contractWiget.setData({ contract, script: contractScript });
+      await this.contractWiget.setData(data);
     }
 
     const pkgScconfig = await getScconfig(contract);
@@ -121,11 +126,9 @@ export class ScomWidgetReposDeployer extends Module {
 
   private async getContent(contract: string) {
     if (this.cachedContract[contract]) return this.cachedContract[contract];
-    const splitted = contract.split('/');
-    const name = splitted[splitted.length - 1];
-    const content = await getPackage(name);
-    this.cachedContract[contract] = content;
-    return content;
+    const result = await getPackage(contract);
+    this.cachedContract[contract] = {...result};
+    return {...result};
   }
 
   private toHexString(arr: Uint8Array) {
@@ -183,6 +186,7 @@ export class ScomWidgetReposDeployer extends Module {
 
   private handleNext() {
     this.pnlEnclave.visible = false;
+    this.pnlDeploy.visible = false;
     this.formEl.visible = true;
     this.btnPrev.visible = true;
     this.btnNext.visible = false;

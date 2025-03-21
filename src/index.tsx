@@ -10,7 +10,7 @@ import {
 import { ScomWidgetReposGithub, ScomWidgetReposCreateRepo } from './components/index';
 import { searchPanelStyle } from "./index.css";
 import { IContractInfo } from "./interface";
-import { setContractInfoByChain, setScomCid, setStorageConfig, setTransportEndpoint } from "./store/index";
+import { setContractInfoByChain, setRootCid, setStorageConfig, setTransportEndpoint } from "./store/index";
 import { mainJson } from "./languages/index";
 import { getPackages } from "./utils";
 
@@ -28,7 +28,7 @@ interface ScomWidgetReposElement extends ControlElement {
   prefix?: string;
   isProject?: boolean;
   isProjectOwner?: boolean;
-  scomCid?: string;
+  rootCid?: string;
 }
 
 interface IWidgetRepos {
@@ -41,7 +41,7 @@ interface IWidgetRepos {
   baseUrl?: string;
   transportEndpoint?: string;
   signer?: IPFS.ISigner;
-  scomCid?: string;
+  rootCid?: string;
 }
 
 declare global {
@@ -122,7 +122,7 @@ export class ScomWidgetRepos extends Module {
     this._data = value;
     setContractInfoByChain(this.contractInfo);
     setTransportEndpoint(this._data.transportEndpoint);
-    setScomCid(this._data.scomCid);
+    setRootCid(this._data.rootCid);
     if (this._data.transportEndpoint) {
       setStorageConfig({
         transportEndpoint: this._data.transportEndpoint,
