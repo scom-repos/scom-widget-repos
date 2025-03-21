@@ -7,7 +7,7 @@ const state = {
   transportEndpoint: '',
   mode: 'development',
   storageConfig: {},
-  scomCid: ''
+  rootCid: ''
 }
 
 export const getContractInfoByChain = () => {
@@ -56,10 +56,10 @@ export const getStorageConfig = () => {
   return state.storageConfig;
 }
 
-export const setScomCid = (scomCid: string) => {
-  state.scomCid = scomCid;
+export const setRootCid = (rootCid: string) => {
+  state.rootCid = rootCid;
 }
 
-export const getScomCid = () => {
-  return state.scomCid;
+export const getRootCid = () => {
+  return state.rootCid;
 }

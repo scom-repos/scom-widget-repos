@@ -47,13 +47,13 @@ define("@scom/scom-widget-repos/interface.ts", ["require", "exports"], function 
 define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet"], function (require, exports, components_1, eth_wallet_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.getScomCid = exports.setScomCid = exports.getStorageConfig = exports.setStorageConfig = exports.isLoggedIn = exports.getTransportEndpoint = exports.setTransportEndpoint = exports.getContractInfo = exports.getContractAddress = exports.setContractInfoByChain = exports.getContractInfoByChain = void 0;
+    exports.getRootCid = exports.setRootCid = exports.getStorageConfig = exports.setStorageConfig = exports.isLoggedIn = exports.getTransportEndpoint = exports.setTransportEndpoint = exports.getContractInfo = exports.getContractAddress = exports.setContractInfoByChain = exports.getContractInfoByChain = void 0;
     const state = {
         contractInfo: {},
         transportEndpoint: '',
         mode: 'development',
         storageConfig: {},
-        scomCid: ''
+        rootCid: ''
     };
     const getContractInfoByChain = () => {
         return state.contractInfo;
@@ -101,14 +101,14 @@ define("@scom/scom-widget-repos/store/index.ts", ["require", "exports", "@ijstec
         return state.storageConfig;
     };
     exports.getStorageConfig = getStorageConfig;
-    const setScomCid = (scomCid) => {
-        state.scomCid = scomCid;
+    const setRootCid = (rootCid) => {
+        state.rootCid = rootCid;
     };
-    exports.setScomCid = setScomCid;
-    const getScomCid = () => {
-        return state.scomCid;
+    exports.setRootCid = setRootCid;
+    const getRootCid = () => {
+        return state.rootCid;
     };
-    exports.getScomCid = getScomCid;
+    exports.getRootCid = getRootCid;
 });
 define("@scom/scom-widget-repos/utils/API.ts", ["require", "exports", "@ijstech/components", "@ijstech/eth-wallet", "@scom/scom-widget-repos/interface.ts", "@scom/scom-widget-repos/store/index.ts"], function (require, exports, components_2, eth_wallet_2, interface_1, index_1) {
     "use strict";
@@ -1001,9 +1001,32 @@ define("@scom/scom-widget-repos/utils/storage.ts", ["require", "exports", "@scom
     };
     const getPackages = async () => {
         try {
-            const response = await fetch(`${(0, index_2.getTransportEndpoint)()}/stat/${(0, index_2.getScomCid)()}`);
+            const response = await fetch(`${(0, index_2.getTransportEndpoint)()}/stat/${(0, index_2.getRootCid)()}`);
             const data = await response.json();
-            store.packages = data?.links || [];
+            let scomCid = '';
+            let ijstechCid = '';
+            for (const link of data?.links || []) {
+                if (link.name === 'scom-repos')
+                    scomCid = link.cid;
+                if (link.name === 'ijstech')
+                    ijstechCid = link.cid;
+            }
+            const promises = [];
+            if (scomCid)
+                promises.push(getFileContent(`${scomCid}`));
+            if (ijstechCid)
+                promises.push(getFileContent(`${ijstechCid}`));
+            let [scom, ijstech] = await Promise.all(promises);
+            if (scom)
+                scom = JSON.parse(scom);
+            if (ijstech)
+                ijstech = JSON.parse(ijstech);
+            const scomLinks = (scom?.links || []).map(link => ({ ...link, name: `@scom/${link.name}` }));
+            const ijstechLinks = (ijstech?.links || []).map(link => ({ ...link, name: `@ijstech/${link.name}` }));
+            store.packages = [
+                ...scomLinks,
+                ...ijstechLinks
+            ];
         }
         catch (error) {
             console.error(error);
@@ -1015,11 +1038,11 @@ define("@scom/scom-widget-repos/utils/storage.ts", ["require", "exports", "@scom
         const finded = store.packages.find(item => item.name === name);
         return finded?.cid;
     };
-    const getPackage = async (name) => {
+    const getPackageScript = async (name) => {
         try {
             const cid = getPackageCid(name);
             if (!cid)
-                return;
+                throw new Error('Cannot fetch package info ' + name);
             const packageJson = await getFileContent(`${cid}/package.json`);
             const packageJsonObj = packageJson ? JSON.parse(packageJson) : {};
             let mainDir = packageJsonObj.plugin || packageJsonObj.browser || packageJsonObj.main;
@@ -1028,17 +1051,45 @@ define("@scom/scom-widget-repos/utils/storage.ts", ["require", "exports", "@scom
             if (mainDir.startsWith('/'))
                 mainDir = mainDir.slice(1);
             const mainContent = await getFileContent(`${cid}/${mainDir}`);
-            return mainContent;
+            const dependencies = packageJsonObj?.dependencies || {};
+            return {
+                module: name,
+                dependencies,
+                script: mainContent
+            };
+        }
+        catch (err) {
+            console.error(err);
+        }
+        return {
+            module: name,
+            script: '',
+            dependencies: {}
+        };
+    };
+    const getPackage = async (name) => {
+        try {
+            const { script, dependencies = {} } = await getPackageScript(name);
+            const dependPromises = [];
+            for (const key in dependencies) {
+                dependPromises.push(getPackageScript(key));
+            }
+            const dependScripts = await Promise.all(dependPromises) || [];
+            return {
+                dependencies: dependScripts,
+                script
+            };
         }
         catch { }
-        return '';
+        return {
+            script: '',
+            dependencies: []
+        };
     };
     exports.getPackage = getPackage;
     const getScconfig = async (name) => {
         try {
-            const splitted = name.split('/');
-            const contractName = splitted[splitted.length - 1];
-            const cid = getPackageCid(contractName);
+            const cid = getPackageCid(name);
             if (!cid)
                 return;
             const scconfigJson = await getFileContent(`${cid}/scconfig.json`);
@@ -2853,15 +2904,17 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             if (this.pnlLoader)
                 this.pnlLoader.visible = true;
             const contract = (this.contract || '').replace('scom-repos', '@scom');
-            const contractScript = await this.getContent(contract);
+            const { script, dependencies } = await this.getContent(contract);
+            const data = { contract, dependencies, script };
+            this.pnlDeploy.visible = !!script;
             if (!this.contractWiget) {
                 const lib = await components_8.application.loadPackage('@scom/contract-deployer-widget');
-                const contractWiget = await lib.create({ contract, script: contractScript });
+                const contractWiget = await lib.create(data);
                 this.contractWiget = contractWiget;
                 this.pnlDeploy.append(contractWiget);
             }
             else {
-                await this.contractWiget.setData({ contract, script: contractScript });
+                await this.contractWiget.setData(data);
             }
             const pkgScconfig = await (0, utils_1.getScconfig)(contract);
             const parsedScconfig = pkgScconfig ? JSON.parse(pkgScconfig) : null;
@@ -2878,11 +2931,9 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         async getContent(contract) {
             if (this.cachedContract[contract])
                 return this.cachedContract[contract];
-            const splitted = contract.split('/');
-            const name = splitted[splitted.length - 1];
-            const content = await (0, utils_1.getPackage)(name);
-            this.cachedContract[contract] = content;
-            return content;
+            const result = await (0, utils_1.getPackage)(contract);
+            this.cachedContract[contract] = { ...result };
+            return { ...result };
         }
         toHexString(arr) {
             return Array.from(arr, i => i.toString(16).padStart(2, "0")).join("");
@@ -2917,6 +2968,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         clear() {
             this.formEl.visible = false;
             this.pnlEnclave.visible = false;
+            this.pnlDeploy.visible = false;
         }
         init() {
             this.i18n.init({ ...index_7.repoJson });
@@ -4485,7 +4537,7 @@ define("@scom/scom-widget-repos", ["require", "exports", "@ijstech/components", 
             this._data = value;
             (0, index_20.setContractInfoByChain)(this.contractInfo);
             (0, index_20.setTransportEndpoint)(this._data.transportEndpoint);
-            (0, index_20.setScomCid)(this._data.scomCid);
+            (0, index_20.setRootCid)(this._data.rootCid);
             if (this._data.transportEndpoint) {
                 (0, index_20.setStorageConfig)({
                     transportEndpoint: this._data.transportEndpoint,
