@@ -43,6 +43,7 @@ export class ScomWidgetReposDeployer extends Module {
   private lblVerificationMessage: Label;
   private iconExpand: Icon;
   private formEl: ScomWidgetReposForm;
+  private contractWiget: any;
 
   onExpand?: (value: boolean) => void;
 
@@ -83,40 +84,16 @@ export class ScomWidgetReposDeployer extends Module {
 
   private async handleInit() {
     if (this.pnlLoader) this.pnlLoader.visible = true;
-    this.pnlDeploy.clearInnerHTML();
-    let rootDir = application.rootDir;
-    if (rootDir.endsWith('/')) rootDir = rootDir.slice(0, -1);
-    if (rootDir.startsWith('/')) rootDir = rootDir.slice(1);
-    const mainPath = `${window.location.origin}/${rootDir ? rootDir + '/' : ''}libs/@scom/contract-deployer`;
-    const scconfigPath = `${mainPath}/scconfig.json`;
-
-    const scconfig = await fetch(scconfigPath).then(res => res.json());
     const contract = (this.contract || '').replace('scom-repos', '@scom');
+    const contractScript = await this.getContent(contract);
 
-    if (scconfig) {
-      scconfig.contract = contract;
-      scconfig.rootDir = mainPath
-      scconfig.type = 'widget';
-    }
-
-    try {
-      const content = await this.getContent(contract);
-      if (!content) throw new Error('Contract not found');
-      await application.loadScript(contract, content, true);
-      const module = await application.newModule(scconfig.main, scconfig);
-      if (module) {
-        this.pnlDeploy.append(module);
-        const firstChild = module.firstChild as Panel;
-        const pnlMain = firstChild?.children?.[2] as Panel;
-
-        if (pnlMain) {
-          const innerModule = await application.newModule("@modules/module1", scconfig);
-          pnlMain.clearInnerHTML();
-          pnlMain.append(innerModule);
-        }
-      }
-    } catch (err) {
-      console.error('deploy error', err);
+    if (!this.contractWiget) {
+      const lib = await application.loadPackage('@scom/contract-deployer-widget');
+      const contractWiget = await lib.create({ contract, script: contractScript });
+      this.contractWiget = contractWiget;
+      this.pnlDeploy.append(contractWiget);
+    } else {
+      await this.contractWiget.setData({ contract, script: contractScript });
     }
 
     const pkgScconfig = await getScconfig(contract);
@@ -156,7 +133,6 @@ export class ScomWidgetReposDeployer extends Module {
   }
 
   clear() {
-    this.pnlDeploy.clearInnerHTML();
     this.formEl.visible = false;
   }
 

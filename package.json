@@ -14,14 +14,14 @@
         "@scom/scom-code-editor": "^0.1.6",
         "@scom/scom-designer": "^0.1.22",
         "@scom/scom-widget-builder": "^0.1.13",
-        "@scom/scom-enclave-attestation": "^0.1.0"
+        "@scom/scom-enclave-attestation": "^0.1.0",
+        "@scom/contract-deployer-widget": "https://github.com/scom-repos/contract-deployer-widget.git"
     },
     "devDependencies": {
         "@ijstech/cli": "^0.1.28",
         "@ijstech/eth-contract": "^0.1.8",
         "@ijstech/eth-wallet": "^0.1.29",
-        "@ijstech/compiler": "^0.1.41",
-        "@scom/contract-deployer": "^0.1.5"
+        "@ijstech/compiler": "^0.1.41"
     },
     "scripts": {
         "build": "rm -rf dist && npx @ijstech/compiler",
