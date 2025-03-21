@@ -10,7 +10,8 @@ import {
   Label,
   ComboBox,
   IComboItem,
-  Icon
+  Icon,
+  Input
 } from '@ijstech/components';
 import { getPackage, getScconfig } from '../utils';
 import { spinnerStyle } from './github/index.css';
@@ -44,6 +45,8 @@ export class ScomWidgetReposDeployer extends Module {
   private iconExpand: Icon;
   private formEl: ScomWidgetReposForm;
   private contractWiget: any;
+  private pnlEnclave: Panel;
+  private edtUserData: Input;
 
   onExpand?: (value: boolean) => void;
 
@@ -99,8 +102,11 @@ export class ScomWidgetReposDeployer extends Module {
     const pkgScconfig = await getScconfig(contract);
     const parsedScconfig = pkgScconfig ? JSON.parse(pkgScconfig) : null;
     if (parsedScconfig?.type === 'worker') {
-      this.formEl.visible = true;
-      this.formEl.setData({value: pkgScconfig});
+      this.pnlEnclave.visible = true;
+      this.formEl.setData({ value: pkgScconfig });
+    }
+    else {
+      this.pnlEnclave.visible = false;
     }
 
     if (this.pnlLoader) this.pnlLoader.visible = false;
@@ -115,12 +121,29 @@ export class ScomWidgetReposDeployer extends Module {
     return content;
   }
 
+  private toHexString(arr: Uint8Array) {
+    return Array.from(arr, i => i.toString(16).padStart(2, "0")).join("");
+  }
+
+  private toPossibleString(arr: Uint8Array) {
+    return Array.from(arr).some(i => i < 32 || i > 126) ? this.toHexString(arr) : new TextDecoder().decode(arr)
+  }
+
   private async onOpenVerify() {
     const moduleDir = application.currentModuleDir;
     const selectedItem = this.comboEnclave.selectedItem;
-    let doc = new Uint8Array(await (await fetch(selectedItem.value)).arrayBuffer());
+    const nonce = this.toHexString(window.crypto.getRandomValues(new Uint8Array(32)));
+    let url = `${selectedItem.value}?nonce=${nonce}&publicKey=abcd`;
+    if (this.edtUserData.value) {
+      url += `&userData=${this.edtUserData.value}`;
+    }
+    let doc = new Uint8Array(await (await fetch(url)).arrayBuffer());
     let rootCert = await (await fetch("certs/aws-root.pem")).text();
     let { attDoc, verified } = await verify(doc, rootCert);
+    console.log(attDoc, verified);
+    console.log("publicKey", this.toPossibleString(attDoc.public_key));
+    console.log("userData", this.toPossibleString(attDoc.user_data));
+    console.log("nonce", this.toPossibleString(attDoc.nonce));
     this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
   }
 
@@ -134,6 +157,7 @@ export class ScomWidgetReposDeployer extends Module {
 
   clear() {
     this.formEl.visible = false;
+    this.pnlEnclave.visible = false;
   }
 
   init() {
@@ -160,7 +184,7 @@ export class ScomWidgetReposDeployer extends Module {
             name="expand"
             width={20} height={20}
             fill={Theme.colors.primary.main}
-            padding={{top: 8, left: 8}}
+            padding={{ top: 8, left: 8 }}
           ></i-icon>
         </i-panel>
         <i-vstack
@@ -178,32 +202,42 @@ export class ScomWidgetReposDeployer extends Module {
           <i-panel class={spinnerStyle} />
         </i-vstack>
         <i-stack direction='vertical' width="100%" height="100%">
-          <i-label caption='$enclave' font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
-          <i-combo-box
-            id="comboEnclave"
-            height={36}
-            width='100%'
-            icon={{ width: 14, height: 14, name: 'angle-down' }}
-            border={{ radius: 5 }}
-          ></i-combo-box>
-          <i-button
-            id="btnVerify"
-            caption="$verify"
-            stack={{ shrink: '0' }}
-            padding={{ top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }}
-            font={{ color: Theme.colors.primary.contrastText }}
-            background={{ color: '#17a2b8' }}
-            onClick={this.onOpenVerify}
-          />
-          <i-label id="lblVerificationMessage" caption="" font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
-          <i-scom-widget-repos--form
-            id="formEl"
-            width="100%"
-            stack={{ 'grow': '1' }}
-            maxHeight={`100%`}
-            display='block'
-            visible={false}
-          />
+          <i-stack direction='vertical' width="100%" gap="0.5rem" id='pnlEnclave' visible={false}>
+            <i-label caption='$enclave' font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
+            <i-combo-box
+              id="comboEnclave"
+              height={36}
+              width='100%'
+              icon={{ width: 14, height: 14, name: 'angle-down' }}
+              border={{ radius: 5 }}
+            ></i-combo-box>
+            <i-label caption='$user_data' font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
+            <i-input
+              id="edtUserData"
+              inputType={'textarea'}
+              rows={4}
+              height={'unset'}
+              width={'100%'}
+              padding={{ left: '0.5rem', right: '0.5rem' }}
+              border={{ radius: 5 }}
+            ></i-input>
+            <i-hstack gap="0.5rem" verticalAlignment="center" horizontalAlignment="end">
+              <i-button
+                id="btnVerify"
+                caption='$verify'
+                padding={{ top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }}
+                onClick={this.onOpenVerify}
+              ></i-button>
+            </i-hstack>
+            <i-label id="lblVerificationMessage" caption="" font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
+            <i-scom-widget-repos--form
+              id="formEl"
+              width="100%"
+              stack={{ 'grow': '1' }}
+              maxHeight={`100%`}
+              display='block'
+            />
+          </i-stack>
           <i-panel id="pnlDeploy" width="100%" height="100%"></i-panel>
         </i-stack>
       </i-panel>

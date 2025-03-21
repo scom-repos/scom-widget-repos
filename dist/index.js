@@ -1112,43 +1112,6 @@ define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], functi
             "schema": {
                 "type": "object",
                 "properties": {
-                    "workers": {
-                        "type": "object",
-                        "description": "Map of worker definitions. The key is the worker name.",
-                        "patternProperties": {
-                            "^[a-zA-Z0-9_-]+$": {
-                                "type": "object",
-                                "properties": {
-                                    "module": {
-                                        "type": "string",
-                                        "description": "Module path for the worker"
-                                    },
-                                    "plugins": {
-                                        "type": "object",
-                                        "description": "Predefined plugins for the worker",
-                                        "properties": {
-                                            "cache": {
-                                                "type": "boolean"
-                                            },
-                                            "db": {
-                                                "type": "boolean"
-                                            },
-                                            "wallet": {
-                                                "type": "boolean"
-                                            },
-                                            "fetch": {
-                                                "type": "boolean"
-                                            }
-                                        },
-                                        "additionalProperties": false
-                                    }
-                                },
-                                "required": ["module", "plugins"]
-                            }
-                        },
-                        "additionalProperties": false,
-                        "properties": workers
-                    },
                     "scheduler": {
                         "type": "object",
                         "properties": {
@@ -1226,54 +1189,11 @@ define("@scom/scom-widget-repos/utils/schema.ts", ["require", "exports"], functi
                         "required": ["routes"]
                     }
                 },
-                "required": ["workers", "scheduler", "router"]
+                "required": ["scheduler", "router"]
             },
             "uischema": {
                 "type": "VerticalLayout",
                 "elements": [
-                    {
-                        "type": "Group",
-                        "label": "Workers",
-                        "elements": [
-                            {
-                                "type": "Control",
-                                "scope": "#/properties/workers",
-                                "options": {
-                                    "detail": {
-                                        "type": "VerticalLayout",
-                                        "elements": [
-                                            {
-                                                "type": "Control",
-                                                "scope": "#/properties/module"
-                                            },
-                                            {
-                                                "type": "Group",
-                                                "label": "Plugins",
-                                                "elements": [
-                                                    {
-                                                        "type": "Control",
-                                                        "scope": "#/properties/plugins/properties/cache"
-                                                    },
-                                                    {
-                                                        "type": "Control",
-                                                        "scope": "#/properties/plugins/properties/db"
-                                                    },
-                                                    {
-                                                        "type": "Control",
-                                                        "scope": "#/properties/plugins/properties/wallet"
-                                                    },
-                                                    {
-                                                        "type": "Control",
-                                                        "scope": "#/properties/plugins/properties/fetch"
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                }
-                            }
-                        ]
-                    },
                     {
                         "type": "Group",
                         "label": "Scheduler",
@@ -1713,7 +1633,8 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "verify": "Verify",
             'enclave': 'Enclave',
             'enclave_verification_successful': 'Enclave verification successful',
-            'enclave_verification_failed': 'Enclave verification failed'
+            'enclave_verification_failed': 'Enclave verification failed',
+            'user_data': 'User Data',
         },
         "zh-hant": {
             "all": "全部",
@@ -1784,7 +1705,8 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "verify": "驗證",
             'enclave': '飛地',
             'enclave_verification_successful': '飛地驗證成功',
-            'enclave_verification_failed': '飛地驗證失敗'
+            'enclave_verification_failed': '飛地驗證失敗',
+            'user_data': '用戶數據',
         },
         "vi": {
             "all": "Tất cả",
@@ -1855,7 +1777,8 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "verify": "Xác minh",
             'enclave': 'Enclave',
             'enclave_verification_successful': 'Xác minh Enclave thành công',
-            'enclave_verification_failed': 'Xác minh Enclave thất bại'
+            'enclave_verification_failed': 'Xác minh Enclave thất bại',
+            'user_data': 'Dữ liệu người dùng',
         }
     };
 });
@@ -2943,8 +2866,11 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             const pkgScconfig = await (0, utils_1.getScconfig)(contract);
             const parsedScconfig = pkgScconfig ? JSON.parse(pkgScconfig) : null;
             if (parsedScconfig?.type === 'worker') {
-                this.formEl.visible = true;
+                this.pnlEnclave.visible = true;
                 this.formEl.setData({ value: pkgScconfig });
+            }
+            else {
+                this.pnlEnclave.visible = false;
             }
             if (this.pnlLoader)
                 this.pnlLoader.visible = false;
@@ -2958,12 +2884,27 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             this.cachedContract[contract] = content;
             return content;
         }
+        toHexString(arr) {
+            return Array.from(arr, i => i.toString(16).padStart(2, "0")).join("");
+        }
+        toPossibleString(arr) {
+            return Array.from(arr).some(i => i < 32 || i > 126) ? this.toHexString(arr) : new TextDecoder().decode(arr);
+        }
         async onOpenVerify() {
             const moduleDir = components_8.application.currentModuleDir;
             const selectedItem = this.comboEnclave.selectedItem;
-            let doc = new Uint8Array(await (await fetch(selectedItem.value)).arrayBuffer());
+            const nonce = this.toHexString(window.crypto.getRandomValues(new Uint8Array(32)));
+            let url = `${selectedItem.value}?nonce=${nonce}&publicKey=abcd`;
+            if (this.edtUserData.value) {
+                url += `&userData=${this.edtUserData.value}`;
+            }
+            let doc = new Uint8Array(await (await fetch(url)).arrayBuffer());
             let rootCert = await (await fetch("certs/aws-root.pem")).text();
             let { attDoc, verified } = await (0, scom_enclave_attestation_1.verify)(doc, rootCert);
+            console.log(attDoc, verified);
+            console.log("publicKey", this.toPossibleString(attDoc.public_key));
+            console.log("userData", this.toPossibleString(attDoc.user_data));
+            console.log("nonce", this.toPossibleString(attDoc.nonce));
             this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
         }
         handleExpand() {
@@ -2975,6 +2916,7 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         }
         clear() {
             this.formEl.visible = false;
+            this.pnlEnclave.visible = false;
         }
         init() {
             this.i18n.init({ ...index_7.repoJson });
@@ -2991,11 +2933,15 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
                 this.$render("i-vstack", { id: "pnlLoader", position: "absolute", width: "100%", height: "100%", minHeight: 400, horizontalAlignment: "center", verticalAlignment: "center", background: { color: Theme.background.main }, padding: { top: "1rem", bottom: "1rem", left: "1rem", right: "1rem" }, visible: false },
                     this.$render("i-panel", { class: index_css_2.spinnerStyle })),
                 this.$render("i-stack", { direction: 'vertical', width: "100%", height: "100%" },
-                    this.$render("i-label", { caption: '$enclave', font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
-                    this.$render("i-combo-box", { id: "comboEnclave", height: 36, width: '100%', icon: { width: 14, height: 14, name: 'angle-down' }, border: { radius: 5 } }),
-                    this.$render("i-button", { id: "btnVerify", caption: "$verify", stack: { shrink: '0' }, padding: { top: '0.5rem', bottom: '0.5rem', left: '0.75rem', right: '0.75rem' }, font: { color: Theme.colors.primary.contrastText }, background: { color: '#17a2b8' }, onClick: this.onOpenVerify }),
-                    this.$render("i-label", { id: "lblVerificationMessage", caption: "", font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
-                    this.$render("i-scom-widget-repos--form", { id: "formEl", width: "100%", stack: { 'grow': '1' }, maxHeight: `100%`, display: 'block', visible: false }),
+                    this.$render("i-stack", { direction: 'vertical', width: "100%", gap: "0.5rem", id: 'pnlEnclave', visible: false },
+                        this.$render("i-label", { caption: '$enclave', font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
+                        this.$render("i-combo-box", { id: "comboEnclave", height: 36, width: '100%', icon: { width: 14, height: 14, name: 'angle-down' }, border: { radius: 5 } }),
+                        this.$render("i-label", { caption: '$user_data', font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
+                        this.$render("i-input", { id: "edtUserData", inputType: 'textarea', rows: 4, height: 'unset', width: '100%', padding: { left: '0.5rem', right: '0.5rem' }, border: { radius: 5 } }),
+                        this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "end" },
+                            this.$render("i-button", { id: "btnVerify", caption: '$verify', padding: { top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }, onClick: this.onOpenVerify })),
+                        this.$render("i-label", { id: "lblVerificationMessage", caption: "", font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
+                        this.$render("i-scom-widget-repos--form", { id: "formEl", width: "100%", stack: { 'grow': '1' }, maxHeight: `100%`, display: 'block' })),
                     this.$render("i-panel", { id: "pnlDeploy", width: "100%", height: "100%" }))));
         }
     };

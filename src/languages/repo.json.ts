@@ -68,7 +68,8 @@ export default {
     "verify": "Verify",
     'enclave': 'Enclave',
     'enclave_verification_successful': 'Enclave verification successful',
-    'enclave_verification_failed': 'Enclave verification failed'
+    'enclave_verification_failed': 'Enclave verification failed',
+    'user_data': 'User Data',
   },
   "zh-hant": {
     "all": "全部",
@@ -139,7 +140,8 @@ export default {
     "verify": "驗證",
     'enclave': '飛地',
     'enclave_verification_successful': '飛地驗證成功',
-    'enclave_verification_failed': '飛地驗證失敗'
+    'enclave_verification_failed': '飛地驗證失敗',
+    'user_data': '用戶數據',
   },
   "vi": {
     "all": "Tất cả",
@@ -210,6 +212,7 @@ export default {
     "verify": "Xác minh",
     'enclave': 'Enclave',
     'enclave_verification_successful': 'Xác minh Enclave thành công',
-    'enclave_verification_failed': 'Xác minh Enclave thất bại'
+    'enclave_verification_failed': 'Xác minh Enclave thất bại',
+    'user_data': 'Dữ liệu người dùng',
   }
 }
