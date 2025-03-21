@@ -11,7 +11,8 @@ import {
   ComboBox,
   IComboItem,
   Icon,
-  Input
+  Input,
+  Button
 } from '@ijstech/components';
 import { getPackage, getScconfig } from '../utils';
 import { spinnerStyle } from './github/index.css';
@@ -41,12 +42,19 @@ export class ScomWidgetReposDeployer extends Module {
   private pnlLoader: VStack;
   private comboEnclave: ComboBox;
   private enclaveItems: IComboItem[];
-  private lblVerificationMessage: Label;
+  private lblVerificationStatus: Label;
   private iconExpand: Icon;
   private formEl: ScomWidgetReposForm;
   private contractWiget: any;
   private pnlEnclave: Panel;
   private edtUserData: Input;
+  private lblPublicKey: Label;
+  private lblUserData: Label;
+  private lblNonce: Label;
+  private pnlVerificationResult: Panel;
+  private pnlPrevNext: Panel;
+  private btnPrev: Button;
+  private btnNext: Button;
 
   onExpand?: (value: boolean) => void;
 
@@ -101,12 +109,11 @@ export class ScomWidgetReposDeployer extends Module {
 
     const pkgScconfig = await getScconfig(contract);
     const parsedScconfig = pkgScconfig ? JSON.parse(pkgScconfig) : null;
+    this.pnlDeploy.visible = parsedScconfig?.type === 'contract';
+    this.pnlEnclave.visible = parsedScconfig?.type === 'worker';
+    this.pnlPrevNext.visible = parsedScconfig?.type === 'worker';
     if (parsedScconfig?.type === 'worker') {
-      this.pnlEnclave.visible = true;
       this.formEl.setData({ value: pkgScconfig });
-    }
-    else {
-      this.pnlEnclave.visible = false;
     }
 
     if (this.pnlLoader) this.pnlLoader.visible = false;
@@ -137,14 +144,26 @@ export class ScomWidgetReposDeployer extends Module {
     if (this.edtUserData.value) {
       url += `&userData=${this.edtUserData.value}`;
     }
-    let doc = new Uint8Array(await (await fetch(url)).arrayBuffer());
-    let rootCert = await (await fetch("certs/aws-root.pem")).text();
-    let { attDoc, verified } = await verify(doc, rootCert);
+    let attDoc;
+    let verified;
+    try {
+      let doc = new Uint8Array(await (await fetch(url)).arrayBuffer());
+      let rootCert = await (await fetch("certs/aws-root.pem")).text();
+      let verifyResult = await verify(doc, rootCert);
+      attDoc = verifyResult.attDoc;
+      verified = verifyResult.verified;
+    }
+    catch (e) {
+      console.error(e);
+    }
     console.log(attDoc, verified);
-    console.log("publicKey", this.toPossibleString(attDoc.public_key));
-    console.log("userData", this.toPossibleString(attDoc.user_data));
-    console.log("nonce", this.toPossibleString(attDoc.nonce));
-    this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
+    this.pnlVerificationResult.visible = true;
+    this.lblVerificationStatus.caption = verified?.result ? '$verified' : '$check_needed';
+    if (attDoc) {
+      this.lblPublicKey.caption = this.toPossibleString(attDoc.public_key);
+      this.lblUserData.caption = this.toPossibleString(attDoc.user_data);
+      this.lblNonce.caption = this.toPossibleString(attDoc.nonce);
+    }
   }
 
   private handleExpand() {
@@ -155,9 +174,27 @@ export class ScomWidgetReposDeployer extends Module {
     this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
   }
 
-  clear() {
+  private handlePrev() {
+    this.pnlEnclave.visible = true;
     this.formEl.visible = false;
+    this.btnPrev.visible = false;
+    this.btnNext.visible = true;
+  }
+
+  private handleNext() {
     this.pnlEnclave.visible = false;
+    this.formEl.visible = true;
+    this.btnPrev.visible = true;
+    this.btnNext.visible = false;
+  }
+
+  clear() {
+    this.pnlEnclave.visible = false;
+    this.formEl.visible = false;
+    this.pnlVerificationResult.visible = false;
+    this.pnlPrevNext.visible = false;
+    this.btnPrev.visible = false;
+    this.btnNext.visible = true;
   }
 
   init() {
@@ -229,16 +266,49 @@ export class ScomWidgetReposDeployer extends Module {
                 onClick={this.onOpenVerify}
               ></i-button>
             </i-hstack>
-            <i-label id="lblVerificationMessage" caption="" font={{ size: '1rem' }} margin={{ top: '0.625rem', bottom: '0.625rem' }} ></i-label>
-            <i-scom-widget-repos--form
-              id="formEl"
-              width="100%"
-              stack={{ 'grow': '1' }}
-              maxHeight={`100%`}
-              display='block'
-            />
+            <i-stack id="pnlVerificationResult" direction='vertical' width="100%" gap="0.5rem" visible={false}>
+              <i-stack direction="horizontal" width="100%" alignItems="center" justifyContent="space-between" gap={10}>
+                <i-label caption='$verification_status' font={{ bold: true, size: '1rem' }}></i-label>
+                <i-label id="lblVerificationStatus" font={{ size: '1rem' }}></i-label>
+              </i-stack>
+              <i-stack direction="horizontal" width="100%" alignItems="center" justifyContent="space-between" gap={10}>
+                <i-label caption='$public_key' font={{ bold: true, size: '1rem' }}></i-label>
+                <i-label id="lblPublicKey" font={{ size: '1rem' }}></i-label>
+              </i-stack>
+              <i-stack direction="horizontal" width="100%" alignItems="center" justifyContent="space-between" gap={10}>
+                <i-label caption='$user_data' font={{ bold: true, size: '1rem' }}></i-label>
+                <i-label id="lblUserData" font={{ size: '1rem' }}></i-label>
+              </i-stack>
+              <i-stack direction="horizontal" width="100%" alignItems="center" justifyContent="space-between" gap={10}>
+                <i-label caption='$nonce' font={{ bold: true, size: '1rem' }}></i-label>
+                <i-label id="lblNonce" font={{ size: '1rem' }}></i-label>
+              </i-stack>
+            </i-stack>
           </i-stack>
-          <i-panel id="pnlDeploy" width="100%" height="100%"></i-panel>
+          <i-scom-widget-repos--form
+            id="formEl"
+            width="100%"
+            stack={{ 'grow': '1' }}
+            maxHeight={`100%`}
+            display='block'
+            visible={false}
+          />
+          <i-hstack gap="0.5rem" verticalAlignment="center" visible={false} id="pnlPrevNext">
+              <i-button
+                id="btnPrev"
+                caption='$prev'
+                padding={{ top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }}
+                onClick={this.handlePrev}
+                visible={false}
+              ></i-button>
+              <i-button
+                id="btnNext"
+                caption='$next'
+                padding={{ top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }}
+                onClick={this.handleNext}
+              ></i-button>
+            </i-hstack>
+          <i-panel id="pnlDeploy" width="100%" height="100%" visible={false}></i-panel>
         </i-stack>
       </i-panel>
     )
