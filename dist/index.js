@@ -1632,9 +1632,14 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "view": "View",
             "verify": "Verify",
             'enclave': 'Enclave',
-            'enclave_verification_successful': 'Enclave verification successful',
-            'enclave_verification_failed': 'Enclave verification failed',
+            'verification_status': 'Verification Status',
+            'verified': 'Verified',
+            'check_needed': 'Check Needed',
             'user_data': 'User Data',
+            'public_key': 'Public Key',
+            'nonce': 'Nonce',
+            'prev': 'Previous',
+            'next': 'Next',
         },
         "zh-hant": {
             "all": "全部",
@@ -1704,9 +1709,14 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "view": "查看",
             "verify": "驗證",
             'enclave': '飛地',
-            'enclave_verification_successful': '飛地驗證成功',
-            'enclave_verification_failed': '飛地驗證失敗',
+            'verification_status': '驗證狀態',
+            'verified': '已驗證',
+            'check_needed': '需要檢查',
             'user_data': '用戶數據',
+            'public_key': '公鑰',
+            'nonce': '隨機數',
+            'prev': '上一頁',
+            'next': '下一頁',
         },
         "vi": {
             "all": "Tất cả",
@@ -1776,9 +1786,14 @@ define("@scom/scom-widget-repos/languages/repo.json.ts", ["require", "exports"],
             "view": "Xem",
             "verify": "Xác minh",
             'enclave': 'Enclave',
-            'enclave_verification_successful': 'Xác minh Enclave thành công',
-            'enclave_verification_failed': 'Xác minh Enclave thất bại',
+            'verification_status': 'Trạng thái xác minh',
+            'verified': 'Đã xác minh',
+            'check_needed': 'Cần kiểm tra',
             'user_data': 'Dữ liệu người dùng',
+            'public_key': 'Khóa công khai',
+            'nonce': 'Nonce',
+            'prev': 'Trước',
+            'next': 'Tiếp',
         }
     };
 });
@@ -2865,12 +2880,11 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             }
             const pkgScconfig = await (0, utils_1.getScconfig)(contract);
             const parsedScconfig = pkgScconfig ? JSON.parse(pkgScconfig) : null;
+            this.pnlDeploy.visible = parsedScconfig?.type === 'contract';
+            this.pnlEnclave.visible = parsedScconfig?.type === 'worker';
+            this.pnlPrevNext.visible = parsedScconfig?.type === 'worker';
             if (parsedScconfig?.type === 'worker') {
-                this.pnlEnclave.visible = true;
                 this.formEl.setData({ value: pkgScconfig });
-            }
-            else {
-                this.pnlEnclave.visible = false;
             }
             if (this.pnlLoader)
                 this.pnlLoader.visible = false;
@@ -2898,14 +2912,26 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             if (this.edtUserData.value) {
                 url += `&userData=${this.edtUserData.value}`;
             }
-            let doc = new Uint8Array(await (await fetch(url)).arrayBuffer());
-            let rootCert = await (await fetch("certs/aws-root.pem")).text();
-            let { attDoc, verified } = await (0, scom_enclave_attestation_1.verify)(doc, rootCert);
+            let attDoc;
+            let verified;
+            try {
+                let doc = new Uint8Array(await (await fetch(url)).arrayBuffer());
+                let rootCert = await (await fetch("certs/aws-root.pem")).text();
+                let verifyResult = await (0, scom_enclave_attestation_1.verify)(doc, rootCert);
+                attDoc = verifyResult.attDoc;
+                verified = verifyResult.verified;
+            }
+            catch (e) {
+                console.error(e);
+            }
             console.log(attDoc, verified);
-            console.log("publicKey", this.toPossibleString(attDoc.public_key));
-            console.log("userData", this.toPossibleString(attDoc.user_data));
-            console.log("nonce", this.toPossibleString(attDoc.nonce));
-            this.lblVerificationMessage.caption = verified ? '$enclave_verification_successful' : '$enclave_verification_failed';
+            this.pnlVerificationResult.visible = true;
+            this.lblVerificationStatus.caption = verified?.result ? '$verified' : '$check_needed';
+            if (attDoc) {
+                this.lblPublicKey.caption = this.toPossibleString(attDoc.public_key);
+                this.lblUserData.caption = this.toPossibleString(attDoc.user_data);
+                this.lblNonce.caption = this.toPossibleString(attDoc.nonce);
+            }
         }
         handleExpand() {
             this._isExpanded = !this._isExpanded;
@@ -2914,9 +2940,25 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
             }
             this.iconExpand.name = this._isExpanded ? 'compress' : 'expand';
         }
-        clear() {
+        handlePrev() {
+            this.pnlEnclave.visible = true;
             this.formEl.visible = false;
+            this.btnPrev.visible = false;
+            this.btnNext.visible = true;
+        }
+        handleNext() {
             this.pnlEnclave.visible = false;
+            this.formEl.visible = true;
+            this.btnPrev.visible = true;
+            this.btnNext.visible = false;
+        }
+        clear() {
+            this.pnlEnclave.visible = false;
+            this.formEl.visible = false;
+            this.pnlVerificationResult.visible = false;
+            this.pnlPrevNext.visible = false;
+            this.btnPrev.visible = false;
+            this.btnNext.visible = true;
         }
         init() {
             this.i18n.init({ ...index_7.repoJson });
@@ -2940,9 +2982,24 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
                         this.$render("i-input", { id: "edtUserData", inputType: 'textarea', rows: 4, height: 'unset', width: '100%', padding: { left: '0.5rem', right: '0.5rem' }, border: { radius: 5 } }),
                         this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", horizontalAlignment: "end" },
                             this.$render("i-button", { id: "btnVerify", caption: '$verify', padding: { top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }, onClick: this.onOpenVerify })),
-                        this.$render("i-label", { id: "lblVerificationMessage", caption: "", font: { size: '1rem' }, margin: { top: '0.625rem', bottom: '0.625rem' } }),
-                        this.$render("i-scom-widget-repos--form", { id: "formEl", width: "100%", stack: { 'grow': '1' }, maxHeight: `100%`, display: 'block' })),
-                    this.$render("i-panel", { id: "pnlDeploy", width: "100%", height: "100%" }))));
+                        this.$render("i-stack", { id: "pnlVerificationResult", direction: 'vertical', width: "100%", gap: "0.5rem", visible: false },
+                            this.$render("i-stack", { direction: "horizontal", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 10 },
+                                this.$render("i-label", { caption: '$verification_status', font: { bold: true, size: '1rem' } }),
+                                this.$render("i-label", { id: "lblVerificationStatus", font: { size: '1rem' } })),
+                            this.$render("i-stack", { direction: "horizontal", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 10 },
+                                this.$render("i-label", { caption: '$public_key', font: { bold: true, size: '1rem' } }),
+                                this.$render("i-label", { id: "lblPublicKey", font: { size: '1rem' } })),
+                            this.$render("i-stack", { direction: "horizontal", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 10 },
+                                this.$render("i-label", { caption: '$user_data', font: { bold: true, size: '1rem' } }),
+                                this.$render("i-label", { id: "lblUserData", font: { size: '1rem' } })),
+                            this.$render("i-stack", { direction: "horizontal", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 10 },
+                                this.$render("i-label", { caption: '$nonce', font: { bold: true, size: '1rem' } }),
+                                this.$render("i-label", { id: "lblNonce", font: { size: '1rem' } })))),
+                    this.$render("i-scom-widget-repos--form", { id: "formEl", width: "100%", stack: { 'grow': '1' }, maxHeight: `100%`, display: 'block', visible: false }),
+                    this.$render("i-hstack", { gap: "0.5rem", verticalAlignment: "center", visible: false, id: "pnlPrevNext" },
+                        this.$render("i-button", { id: "btnPrev", caption: '$prev', padding: { top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }, onClick: this.handlePrev, visible: false }),
+                        this.$render("i-button", { id: "btnNext", caption: '$next', padding: { top: '0.5rem', bottom: '0.5rem', left: '1rem', right: '1rem' }, onClick: this.handleNext })),
+                    this.$render("i-panel", { id: "pnlDeploy", width: "100%", height: "100%", visible: false }))));
         }
     };
     ScomWidgetReposDeployer = __decorate([
