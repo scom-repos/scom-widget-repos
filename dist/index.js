@@ -2999,13 +2999,13 @@ define("@scom/scom-widget-repos/components/deployer.tsx", ["require", "exports",
         }
         handleNext() {
             this.pnlEnclave.visible = false;
+            this.pnlDeploy.visible = false;
             this.formEl.visible = true;
             this.btnPrev.visible = true;
             this.btnNext.visible = false;
         }
         clear() {
             this.pnlEnclave.visible = false;
-            this.pnlDeploy.visible = false;
             this.formEl.visible = false;
             this.pnlVerificationResult.visible = false;
             this.pnlPrevNext.visible = false;
