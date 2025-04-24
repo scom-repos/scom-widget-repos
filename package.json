@@ -1,6 +1,6 @@
 {
     "name": "@scom/scom-widget-repos",
-    "version": "0.1.16",
+    "version": "0.1.18",
     "main": "dist/index.js",
     "plugin": "dist",
     "pluginTypes": "pluginTypes/index.d.ts",
@@ -15,7 +15,7 @@
         "@scom/scom-designer": "^0.1.22",
         "@scom/scom-widget-builder": "^0.1.13",
         "@scom/scom-enclave-attestation": "^0.1.0",
-        "@scom/contract-deployer-widget": "https://github.com/scom-repos/contract-deployer-widget.git"
+        "@scom/contract-deployer-widget": "^0.1.1"
     },
     "devDependencies": {
         "@ijstech/cli": "^0.1.28",
